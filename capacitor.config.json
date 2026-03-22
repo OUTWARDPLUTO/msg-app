@@ -1,0 +1,26 @@
+{
+  "$schema": "https://capacitorjs.com/docs/schema/config.v0.schema.json",
+  "appId": "com.mysmartgains.app",
+  "appName": "My Smart Gains",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "buildOptions": {
+      "keystorePath": null,
+      "keystoreAlias": null
+    },
+    "minWebViewVersion": 60
+  },
+  "ios": {
+    "contentInset": "always"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0,
+      "backgroundColor": "#09090C",
+      "showSpinner": false
+    }
+  }
+}
