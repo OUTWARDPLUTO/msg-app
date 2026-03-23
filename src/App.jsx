@@ -2,13 +2,59 @@ import { useState, useEffect, useRef } from "react";
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 
 // ─── Design Tokens ─────────────────────────────────────────────────────────
-const C = {
-  bg:'#09090C', s1:'#111115', s2:'#16161B', s3:'#1D1D24', s4:'#25252E',
-  accent:'#C4FF47', accentD:'rgba(196,255,71,0.1)',
-  orange:'#FF6240', blue:'#4E9FFF', purple:'#A78BFA', teal:'#2DD4BF', pink:'#F472B6',
-  green:'#4ADE80', red:'#F87171',
-  text:'#EFEFF5', sub:'#8888A0', muted:'#50505F', border:'#20202A',
+// 🔥 THEME SYSTEM
+const DARK = {
+  bg:'#111111',
+  s1:'#1A1A1A',
+  s2:'#2F2F2F',
+  s3:'#2F2F2F',
+  s4:'#2F2F2F',
+
+  accent:'#FFCB74',
+  accentD:'rgba(255,203,116,0.15)',
+
+  orange:'#FFCB74',
+  blue:'#888888',
+  purple:'#AAAAAA',
+  teal:'#BBBBBB',
+  pink:'#CCCCCC',
+
+  green:'#4ADE80',
+  red:'#F87171',
+
+  text:'#FFFFFF',
+  sub:'#A1A1AA',
+  muted:'#6B6B6B',
+  border:'#2F2F2F',
 };
+
+const LIGHT = {
+  bg:'#F6F6F6',
+  s1:'#FFFFFF',
+  s2:'#FFFFFF',
+  s3:'#FFFFFF',
+  s4:'#FFFFFF',
+
+  accent:'#D99A2B',
+  accentD: 'rgba(217,154,43,0.15)',
+
+  orange:'#D99A2B',
+  blue:'#666666',
+  purple:'#888888',
+  teal:'#999999',
+  pink:'#AAAAAA',
+
+  green:'#4ADE80',
+  red:'#F87171',
+
+  text:'#111111',
+  sub:'#555555',
+  muted:'#777777',
+  border:'#E5E5E5',
+};
+
+// DEFAULT
+let C = DARK;
 const fn = "'Plus Jakarta Sans', sans-serif";
 const fb = "'Plus Jakarta Sans', sans-serif";
 const MC = { chest:C.blue, back:C.teal, shoulders:C.purple, arms:C.orange, core:C.accent, legs:'#FF6B6B' };
@@ -194,13 +240,28 @@ const DEF_LOGS = [
   { date:'Mar 14', weight:72.5, bodyFat:16.8, chest:98,   waist:78.5, arms:37,   legs:56.5, notes:'PR on bench today 🔥' },
 ];
 
-// ─── Claude API ─────────────────────────────────────────────────────────────
-async function callClaude(sys, user) {
-  const r = await fetch("https://api.anthropic.com/v1/messages", {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, system:sys, messages:[{role:'user',content:user}] }),
+// ─── OpenRouter API ─────────────────────────────────────────────────────────────
+async function callAI(sys, user) {
+  const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "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",
+      "HTTP-Referer": "http://localhost:3000",
+      "X-Title": "Fitness AI App"
+    },
+    body: JSON.stringify({
+      model: "openai/gpt-4o-mini",
+      messages: [
+        { role: "system", content: sys },
+        { role: "user", content: user }
+      ],
+      max_tokens: 1000
+    })
   });
-  return (await r.json()).content[0].text;
+
+  const data = await r.json();
+  return data.choices[0].message.content;
 }
 
 // ─── Primitives ─────────────────────────────────────────────────────────────
@@ -683,7 +744,7 @@ function WorkoutSection({ weekPlan, setWeekPlan }) {
     try {
       const sys = `You are an expert personal trainer. Return ONLY valid JSON, no markdown. Schema: {"week_plan":[{"day":"string","focus":"string","duration":"string","exercises":[{"name":"string","muscle":"string","primary":"string","secondary":"string","equip":"string","level":"string","sets":number,"reps":"string","rest":number,"steps":["string"],"tip":"string"}]}]}`;
       const prompt = `Create a ${days}-day per week ${goal} workout plan for a ${level} trainee using ${equip} equipment. Weekly structure: ${dayList}. Each day should have 5 exercises. ${injuryNote} Return full JSON.`;
-      const text = await callClaude(sys, prompt);
+      const text = await callAI(sys, prompt);
       const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
       setWeekPlan(parsed.week_plan);
     } catch {
@@ -1291,7 +1352,7 @@ function DietSection({ dietGoal, setDietGoal, mealLog, setMealLog }) {
     // Unknown food — try AI if available
     try {
       const sys = `Precise nutritionist. Return nutrition for the EXACT quantity stated. ONLY valid JSON, no markdown. Schema: {"name":"string","calories":number,"protein":number,"carbs":number,"fat":number,"fiber":number,"sodium":number,"potassium":number,"calcium":number,"iron":number,"vitaminA":number,"vitaminB12":number,"vitaminC":number,"vitaminD":number,"vitaminE":number,"magnesium":number,"zinc":number}`;
-      const text = await callClaude(sys, `Food: "${q}"`);
+      const text = await callAI(sys, `Food: "${q}"`);
       const item = JSON.parse(text.replace(/```json|```/g,'').trim());
       if (item.calories > 3000) item.calories = Math.round(item.calories / 10);
       setMealLog(p => [{...item, name:item.name||q}, ...p]);
@@ -1928,11 +1989,16 @@ function SettingsRow({ label, sub, on, onTap }) {
 }
 
 // ─── Settings Screen ──────────────────────────────────────────────────────────
-function SettingsScreen({ onClose, onResetDiet, onResetWorkout }) {
+function SettingsScreen({ onClose, onResetDiet, onResetWorkout, darkMode, setDarkMode }) {
   const [settings, setSettings] = useState({
-    units:'kg', notifications:true, workoutReminder:true, mealReminder:false,
-    darkMode:true, autoTimer:true, showMicros:true, weekStart:'Mon',
-  });
+  units:'kg',
+  notifications:true,
+  workoutReminder:true,
+  mealReminder:false,
+  autoTimer:true,
+  showMicros:true,
+  weekStart:'Mon'
+});
   const tog = k => setSettings(s=>({...s,[k]:!s[k]}));
   const sections = [
     { title:'GENERAL', rows:[
@@ -1966,6 +2032,33 @@ function SettingsScreen({ onClose, onResetDiet, onResetWorkout }) {
   return (
     <ModalShell title="SETTINGS" onClose={onClose}>
       <div style={{ padding:'8px 20px 30px' }}>
+        <div style={{
+  background:C.s2,
+  border:`1px solid ${C.border}`,
+  borderRadius:12,
+  padding:16,
+  marginBottom:20,
+  display:'flex',
+  justifyContent:'space-between',
+  alignItems:'center'
+}}>
+  <span style={{ color:C.text, fontWeight:600 }}>Theme</span>
+
+  <button
+    onClick={() => setDarkMode(!darkMode)}
+    style={{
+      background: darkMode ? C.accent : C.s3,
+      color: darkMode ? C.bg : C.text,
+      border:'none',
+      borderRadius:20,
+      padding:'6px 14px',
+      cursor:'pointer',
+      fontWeight:600
+    }}
+  >
+    {darkMode ? 'Dark' : 'Light'}
+  </button>
+</div>
         {sections.map(sec => (
           <div key={sec.title} style={{ marginBottom:24 }}>
             <div style={{ color:C.muted, fontSize:10, fontFamily:fb, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', padding:'16px 0 4px' }}>{sec.title}</div>
@@ -2206,6 +2299,11 @@ function BottomNav({ tab, setTab }) {
 
 // ─── App Root ────────────────────────────────────────────────────────────────
 export default function MSG() {
+  const [darkMode, setDarkMode] = useState(true);
+const theme = darkMode ? DARK : LIGHT;
+
+// override global C
+C = theme;
   const [tab, setTab] = useState('home');
   const [showProfile, setShowProfile] = useState(false);
   const [showLogModal, setShowLogModal] = useState(false);
@@ -2222,6 +2320,16 @@ export default function MSG() {
     { date:'Mar 7',  weight:72.8, bodyFat:17.1, chest:97.5, waist:79,   arms:36.5, legs:56,   notes:'' },
     { date:'Mar 14', weight:72.5, bodyFat:16.8, chest:98,   waist:78.5, arms:37,   legs:56.5, notes:'PR on bench today 🔥' },
   ]);
+  // 🌙 SAVE THEME
+useEffect(() => {
+  localStorage.setItem("theme", darkMode ? "dark" : "light");
+}, [darkMode]);
+
+// 🌙 LOAD THEME
+useEffect(() => {
+  const saved = localStorage.getItem("theme");
+  if (saved === "light") setDarkMode(false);
+}, []);
 
   useEffect(() => {
     if (!document.getElementById('msg-gf')) {
@@ -2303,7 +2411,7 @@ export default function MSG() {
         <button onClick={()=>setShowProfile(p=>!p)} style={{
           width:36, height:36, borderRadius:'50%', background:C.accent,
           border:`2px solid ${showProfile?C.text:'transparent'}`, cursor:'pointer',
-          fontFamily:fn, fontSize:13, color:'#000', letterSpacing:'0.04em', transition:'border 0.2s',
+          fontFamily:fn, fontSize:13, color: theme.bg, letterSpacing:'0.04em', transition:'border 0.2s',
         }}>BS</button>
       </div>
 
@@ -2319,7 +2427,7 @@ export default function MSG() {
 
       {/* Profile sub-screens rendered as overlays */}
       {profileScreen==='profile' && <ProfileScreen onClose={()=>setProfileScreen(null)} progressLogs={progressLogs} dietGoal={dietGoal} />}
-      {profileScreen==='settings' && <SettingsScreen onClose={()=>setProfileScreen(null)} onResetDiet={()=>setDietGoal(null)} onResetWorkout={()=>setWeekPlan(null)} />}
+      {profileScreen==='settings' && <SettingsScreen onClose={() => setProfileScreen(null)} onResetDiet={() => setDietGoal(null)} onResetWorkout={() => setWeekPlan(null)} darkMode={darkMode} setDarkMode={setDarkMode}/>}
       {profileScreen==='language' && <LanguageScreen onClose={()=>setProfileScreen(null)} />}
 
       <div className="msg-scroll" style={{ flex:1, overflowY:'auto' }}>
