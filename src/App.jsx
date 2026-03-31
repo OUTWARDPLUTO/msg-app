@@ -2254,7 +2254,7 @@ function NavIcon({ id, active }) {
   return null;
 }
 
-function BottomNav({ tab, setTab }) {
+function BottomNav({ tab, setTab, darkMode }) {
   const tabs = ['home', 'workout', 'diet', 'explore', 'progress'];
   return (
     <div style={{ background: C.s1, borderTop: `1px solid ${C.border}`, display: 'flex', padding: '10px 0', flexShrink: 0, paddingBottom: 'max(18px, env(safe-area-inset-bottom))', boxShadow: `0 -4px 20px rgba(0,0,0,${darkMode ? '0.3' : '0.08'})` }}>
@@ -2272,46 +2272,47 @@ function BottomNav({ tab, setTab }) {
 // ─── Profile Setup Screen (shown once after first signup) ─────────────────────
 function ProfileSetupScreen({ user, onComplete }) {
   const [form, setForm] = useState({
-    age: '', gender: '', height: '', currentWeight: '', targetWeight: '',
-    goal: 'Gain Weight', activity: 'Moderately Active', diet: 'Flexible', city: '',
+    name: user?.name || '', age: '', gender: '', height: '', currentWeight: '', targetWeight: '',
+    goal: 'Build Strength', activity: 'Moderately Active', diet: 'Flexible', city: '',
   });
   const [step, setStep] = useState(0);
   const sp = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   const steps = [
     {
-      title: 'Basic Info', sub: 'Tell us about yourself',
+      title: 'Who Are You? 👋', sub: 'Let\'s personalise your experience from day one.',
       fields: [
-        { l: 'Age', k: 'age', p: 'e.g. 20', type: 'number' },
-        { l: 'City', k: 'city', p: 'e.g. Jaipur', type: 'text' },
-        { l: 'Height (cm)', k: 'height', p: 'e.g. 175', type: 'number' },
+        { l: 'Display Name', k: 'name', p: 'What should we call you?', type: 'text' },
+        { l: 'Age', k: 'age', p: 'e.g. 22', type: 'number' },
+        { l: 'City / Location', k: 'city', p: 'e.g. Mumbai', type: 'text' },
       ],
     },
     {
-      title: 'Your Body', sub: 'We use this to calculate your targets',
+      title: 'Your Body 💪', sub: 'Honest numbers = smarter targets. We\'ve got you.',
       fields: [
+        { l: 'Height (cm)', k: 'height', p: 'e.g. 175', type: 'number' },
         { l: 'Current Weight (kg)', k: 'currentWeight', p: 'e.g. 72.5', type: 'number' },
-        { l: 'Target Weight (kg)', k: 'targetWeight', p: 'e.g. 68.0', type: 'number' },
+        { l: 'Goal Weight (kg)', k: 'targetWeight', p: 'e.g. 68.0', type: 'number' },
       ],
     },
   ];
 
   const selOpts = [
     { l: 'Gender', k: 'gender', opts: ['Male', 'Female', 'Other', 'Prefer not to say'] },
-    { l: 'Primary Goal', k: 'goal', opts: ['Lose Weight', 'Gain Weight', 'Maintain', 'Build Strength'] },
+    { l: 'Primary Goal', k: 'goal', opts: ['Lose Fat', 'Build Muscle', 'Maintain', 'Build Strength'] },
     { l: 'Activity Level', k: 'activity', opts: ['Sedentary', 'Lightly Active', 'Moderately Active', 'Very Active'] },
-    { l: 'Diet Preference', k: 'diet', opts: ['Flexible', 'Non-Vegetarian', 'Vegetarian', 'Vegan'] },
+    { l: 'Diet Style', k: 'diet', opts: ['Flexible', 'Non-Vegetarian', 'Vegetarian', 'Vegan'] },
   ];
-  const selStep = { title: 'Your Goals', sub: 'Shape your personalised plan', sels: selOpts };
+  const selStep = { title: 'Your Mission 🎯', sub: 'Set the direction. We\'ll handle the plan.', sels: selOpts };
 
   const allSteps = [...steps, selStep];
   const cur = allSteps[step];
   const isLast = step === allSteps.length - 1;
 
   const canNext = step === 0
-    ? form.age && form.height
+    ? form.name && form.age
     : step === 1
-      ? form.currentWeight && form.targetWeight
+      ? form.height && form.currentWeight && form.targetWeight
       : form.gender && form.goal;
 
   return (
@@ -2360,19 +2361,19 @@ function ProfileSetupScreen({ user, onComplete }) {
           <button onClick={() => setStep(s => s - 1)} style={{ flex: 1, padding: '14px', background: C.s2, border: `1px solid ${C.border}`, borderRadius: 14, color: C.sub, fontFamily: fn, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>← Back</button>
         )}
         <button onClick={() => {
-          if (isLast) onComplete({ ...user, profile: form });
+          if (isLast) onComplete({ ...user, name: form.name || user?.name, profile: form });
           else setStep(s => s + 1);
         }} disabled={!canNext} style={{
           flex: 2, padding: '14px', background: canNext ? C.accent : C.s4, color: canNext ? '#111' : C.muted,
           border: 'none', borderRadius: 14, fontFamily: fn, fontWeight: 800, fontSize: 14,
           cursor: canNext ? 'pointer' : 'not-allowed', boxShadow: canNext ? C.accentShadow : 'none', transition: 'all 0.2s',
         }}>
-          {isLast ? 'Start Training 🚀' : 'Continue →'}
+          {isLast ? 'Let\'s Go 🚀' : 'Next →'}
         </button>
       </div>
 
       <button onClick={() => onComplete(user)} style={{ marginTop: 16, background: 'none', border: 'none', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: fn }}>
-        Skip for now
+        Fill this in later
       </button>
     </div>
   );
@@ -2781,7 +2782,7 @@ export default function MSG() {
       <div className="msg-scroll" style={{ flex: 1, overflowY: 'auto' }}>
         {views[tab]}
       </div>
-      <BottomNav tab={tab} setTab={setTab} />
+      <BottomNav tab={tab} setTab={setTab} darkMode={darkMode} />
     </div>
   );
 }
