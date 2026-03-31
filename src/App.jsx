@@ -2651,16 +2651,9 @@ export default function MSG() {
 
   // ── Persisted state ──────────────────────────────────────────────────────────
   const [dietGoal, setDietGoalRaw] = useState(() => load('msg_diet_goal', null));
-  const [mealLog, setMealLogRaw] = useState(() => load('msg_meal_log', DEF_MEALS));
+  const [mealLog, setMealLogRaw] = useState(() => load('msg_meal_log', []));
   const [weekPlan, setWeekPlanRaw] = useState(() => load('msg_week_plan', null));
-  const [progressLogs, setProgressLogsRaw] = useState(() => load('msg_progress', [
-    { date: 'Feb 7', weight: 74.2, bodyFat: 18.5, chest: 96, waist: 82, arms: 35, legs: 55, notes: '' },
-    { date: 'Feb 14', weight: 73.8, bodyFat: 18.1, chest: 96.5, waist: 81, arms: 35.5, legs: 55, notes: 'Feeling more energy' },
-    { date: 'Feb 21', weight: 73.5, bodyFat: 17.8, chest: 97, waist: 80.5, arms: 36, legs: 55.5, notes: '' },
-    { date: 'Feb 28', weight: 73.1, bodyFat: 17.4, chest: 97, waist: 80, arms: 36, legs: 56, notes: 'Sleep getting better' },
-    { date: 'Mar 7', weight: 72.8, bodyFat: 17.1, chest: 97.5, waist: 79, arms: 36.5, legs: 56, notes: '' },
-    { date: 'Mar 14', weight: 72.5, bodyFat: 16.8, chest: 98, waist: 78.5, arms: 37, legs: 56.5, notes: 'PR on bench today 🔥' },
-  ]));
+  const [progressLogs, setProgressLogsRaw] = useState(() => load('msg_progress', []));
 
   // Save wrappers — write to state + localStorage atomically
   const setDietGoal = v => { setDietGoalRaw(v); save('msg_diet_goal', v); };
@@ -2702,6 +2695,14 @@ export default function MSG() {
   const [showProfileSetup, setShowProfileSetup] = useState(false);
 
   const handleLogin = (u, isNew = false) => {
+    // If a different user was previously logged in, wipe their data
+    const prevUser = load('msg_user', null);
+    if (!prevUser || prevUser.uid !== u.uid) {
+      setDietGoal(null);
+      setMealLog([]);
+      setWeekPlan(null);
+      setProgressLogs([]);
+    }
     setUser(u); save('msg_user', u);
     if (isNew) setShowProfileSetup(true);
   };
@@ -2710,7 +2711,7 @@ export default function MSG() {
     try { const auth = await getFBAuth(); await auth.signOut(); } catch { }
     setUser(null); save('msg_user', null);
     setShowProfile(false); setProfileScreen(null); setTab('home');
-    setMealLog(DEF_MEALS); setProgressLogs([]); setDietGoal(null); setWeekPlan(null);
+    setMealLog([]); setProgressLogs([]); setDietGoal(null); setWeekPlan(null);
   };
 
   // Re-sync Firebase auth state on mount (handles page refresh while logged in)
@@ -2745,22 +2746,17 @@ export default function MSG() {
           <div style={{ fontFamily: fn, fontSize: 20, fontWeight: 800, letterSpacing: '-0.01em', color: C.accent }}>MSG</div>
           <div style={{ fontFamily: fn, fontSize: 8.5, fontWeight: 600, letterSpacing: '0.12em', color: C.muted, textTransform: 'uppercase', marginTop: 1 }}>My Smart Gains</div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <button onClick={toggleTheme} style={{ width: 32, height: 32, borderRadius: '50%', background: C.s3, border: `1px solid ${C.border}`, cursor: 'pointer', fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: C.cardShadow }}>
-            {darkMode ? '☀️' : '🌙'}
-          </button>
-          <button onClick={() => setShowProfile(p => !p)} style={{
-            width: 36, height: 36, borderRadius: '50%', background: C.accent,
-            border: `2px solid ${showProfile ? C.text : 'transparent'}`, cursor: 'pointer',
-            fontFamily: fn, fontSize: 11, fontWeight: 800, color: '#111', transition: 'all 0.2s',
-            boxShadow: C.accentShadow, overflow: 'hidden', padding: 0,
-          }}>
-            {user?.photo
-              ? <img src={user.photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              : (user?.name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
-            }
-          </button>
-        </div>
+        <button onClick={() => setShowProfile(p => !p)} style={{
+          width: 36, height: 36, borderRadius: '50%', background: C.accent,
+          border: `2px solid ${showProfile ? C.text : 'transparent'}`, cursor: 'pointer',
+          fontFamily: fn, fontSize: 11, fontWeight: 800, color: '#111', transition: 'all 0.2s',
+          boxShadow: C.accentShadow, overflow: 'hidden', padding: 0,
+        }}>
+          {user?.photo
+            ? <img src={user.photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            : (user?.name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+          }
+        </button>
       </div>
 
       {showProfile && (
