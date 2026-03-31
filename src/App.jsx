@@ -209,33 +209,36 @@ const DEF_LOGS = [
   { date: 'Mar 14', weight: 72.5, bodyFat: 16.8, chest: 98, waist: 78.5, arms: 37, legs: 56.5, notes: 'PR on bench today 🔥' },
 ];
 
-// ─── AI API (OpenRouter — key stays on your proxy server, never in browser) ──
-// Set VITE_AI_PROXY_URL in your .env file pointing to your backend proxy.
-// If no proxy is configured, local food DB handles all lookups — AI is optional.
-// AI proxy URL — set window.__MSG_PROXY__ = 'https://your-proxy/api/ai' in index.html
-// or configure VITE_AI_PROXY_URL at build time via Vite.
-const AI_PROXY = (typeof window !== 'undefined' && window.__MSG_PROXY__)
-  ? window.__MSG_PROXY__
-  : null;
+// ─── AI API (OpenRouter) ───────────────────────────────────────────────────────
+// Key is loaded from .env (VITE_OR_KEY) — never hardcoded in source.
+// For Vercel: add VITE_OR_KEY in Project → Settings → Environment Variables.
+const OR_KEY = import.meta.env.VITE_OR_KEY ?? '';
+const OR_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
-async function callClaude(sys, user) {
-  if (!AI_PROXY) throw new Error('No AI proxy configured — using local DB');
-  const r = await fetch(AI_PROXY, {
+async function callClaude(sys, userMsg) {
+  const r = await fetch(OR_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${OR_KEY}`,
+      'HTTP-Referer': 'https://msg-app-mu.vercel.app',
+      'X-Title': 'MSG - My Smart Gains',
+    },
     body: JSON.stringify({
       model: 'mistralai/mistral-7b-instruct',
-      max_tokens: 1000,
+      max_tokens: 1200,
       messages: [
         { role: 'system', content: sys },
-        { role: 'user', content: user },
+        { role: 'user', content: userMsg },
       ],
     }),
   });
-  if (!r.ok) throw new Error(`AI proxy error ${r.status}`);
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error(err?.error?.message || `OpenRouter error ${r.status}`);
+  }
   const data = await r.json();
-  // OpenRouter returns OpenAI-compatible format
-  return data.choices?.[0]?.message?.content ?? data.content?.[0]?.text ?? '';
+  return data.choices?.[0]?.message?.content ?? '';
 }
 
 // ─── Primitives ─────────────────────────────────────────────────────────────
