@@ -2384,12 +2384,13 @@ function ProfileSetupScreen({ user, onComplete }) {
 // In the Claude artifact preview, use "Continue as Demo" to bypass.
 
 const FB_CONFIG = {
-  apiKey: "AIzaSyCNHqSQ4NVNbyrKsg96CmUW_BqcwFDvZic",
-  authDomain: "msg-app-eb0fa.firebaseapp.com",
-  projectId: "msg-app-eb0fa",
-  storageBucket: "msg-app-eb0fa.firebasestorage.app",
-  messagingSenderId: "349198354125",
-  appId: "1:349198354125:web:db60648aaa5ca14707cb84",
+  apiKey: "AIzaSyDhFd7sd_qioRmGoWgOkJweDkvqgMUKznE",
+  authDomain: "msg2-3da02.firebaseapp.com",
+  projectId: "msg2-3da02",
+  storageBucket: "msg2-3da02.firebasestorage.app",
+  messagingSenderId: "924373588150",
+  appId: "1:924373588150:web:c1c7c3739509f44a112e17",
+  measurementId: "G-N9K2PZHYCH",
 };
 
 function loadScript(src) {

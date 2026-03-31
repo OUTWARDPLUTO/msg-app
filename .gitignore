@@ -10,3 +10,4 @@ ios/
 .vscode/
 
 .vercel
+.env*.local
