@@ -2692,7 +2692,19 @@ export default function MSG() {
     }
   }, []);
 
+  // ── One-time migration: clear old hardcoded demo data ────────────────────────
+  useEffect(() => {
+    if (load('msg_data_version', 1) < 2) {
+      setMealLog([]);
+      setProgressLogs([]);
+      setDietGoal(null);
+      setWeekPlan(null);
+      save('msg_data_version', 2);
+    }
+  }, []); // eslint-disable-line
+
   const [showProfileSetup, setShowProfileSetup] = useState(false);
+
 
   const handleLogin = (u, isNew = false) => {
     // If a different user was previously logged in, wipe their data
