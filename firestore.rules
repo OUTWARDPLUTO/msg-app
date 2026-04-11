@@ -1,0 +1,69 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper functions ──────────────────────────────────────────────────────
+    function isAuth() { return request.auth != null; }
+    function isUser(uid) { return isAuth() && request.auth.uid == uid; }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function userGymId() { return getUserData().gymId; }
+    function userRole()  { return getUserData().role; }
+    function isOwnerOf(gymId) { return isAuth() && userGymId() == gymId && userRole() == 'owner'; }
+    function isMemberOf(gymId) { return isAuth() && userGymId() == gymId; }
+
+    // ── Users ─────────────────────────────────────────────────────────────────
+    // Users can read/write their own doc only
+    match /users/{uid} {
+      allow read:   if isUser(uid);
+      allow create: if isUser(uid);
+      allow update: if isUser(uid);
+      allow delete: if false;
+    }
+
+    // ── Gyms ──────────────────────────────────────────────────────────────────
+    // Anyone authenticated can read a gym (needed for join-by-code lookup)
+    // Only the gym owner can update settings
+    match /gyms/{gymId} {
+      allow read:   if isAuth();
+      allow create: if isAuth();   // creator will be stored as ownerUid in doc
+      allow update: if isOwnerOf(gymId);
+      allow delete: if false;
+    }
+
+    // ── Members ───────────────────────────────────────────────────────────────
+    // Members can read their own doc; owners can read/write all members in their gym
+    match /members/{docId} {
+      // docId is "{gymId}_{uid}"
+      allow read:   if isAuth() && (
+                      isMemberOf(resource.data.gymId) ||
+                      isOwnerOf(resource.data.gymId)
+                    );
+      allow create: if isAuth();
+      allow update: if isAuth() && (
+                      isUser(resource.data.uid) ||
+                      isOwnerOf(resource.data.gymId)
+                    );
+      allow delete: if isOwnerOf(resource.data.gymId);
+    }
+
+    // ── Attendance ────────────────────────────────────────────────────────────
+    match /attendance/{gymId}/logs/{logId} {
+      allow read:   if isOwnerOf(gymId) || (isMemberOf(gymId) && isUser(resource.data.uid));
+      allow create: if isMemberOf(gymId) && isUser(request.resource.data.uid);
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // ── Activity Logs ─────────────────────────────────────────────────────────
+    match /activityLogs/{gymId}/events/{eventId} {
+      allow read:   if isOwnerOf(gymId) || (isMemberOf(gymId) && isUser(resource.data.uid));
+      allow create: if isMemberOf(gymId) && isUser(request.resource.data.uid);
+      allow update: if false;
+      allow delete: if false;
+    }
+  }
+}
