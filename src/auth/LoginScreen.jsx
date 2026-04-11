@@ -168,14 +168,6 @@ export default function LoginScreen({ onLogin }) {
         </button>
       </div>
 
-      {/* Demo bypass */}
-      <button onClick={() => onLogin({ uid: 'demo', name: 'Demo User', email: 'demo@msg.app', photo: null }, false)} style={{
-        marginTop: 18, background: 'none', border: `1px solid ${C.border}`, borderRadius: 10,
-        padding: '10px 20px', color: C.muted, fontFamily: fn, fontWeight: 600, fontSize: 12,
-        cursor: 'pointer', width: '100%',
-      }}>
-        Continue as Demo (no account needed)
-      </button>
       <div style={{ color: C.muted, fontSize: 11, marginTop: 14, textAlign: 'center', lineHeight: 1.6 }}>
         By continuing you agree to our Terms of Service.
       </div>
