@@ -62,8 +62,13 @@ export default function GymOnboarding({ user, onGymJoined }) {
       onGymJoined(gym.id, 'member', gym.name);
     } catch (e) {
       setScreen('join');
-      setError('Something went wrong. Please try again.');
-      console.error(e);
+      const msg = e?.code === 'unavailable' || e?.message?.includes('network')
+        ? 'Network error. Check your internet connection and try again.'
+        : e?.code === 'permission-denied'
+        ? 'Access denied. Please log out and log back in.'
+        : `Error: ${e?.message || 'Something went wrong. Please try again.'}`;
+      setError(msg);
+      console.error('[MSG] handleJoin:', e);
     }
   };
 
@@ -82,8 +87,13 @@ export default function GymOnboarding({ user, onGymJoined }) {
       setScreen('subscription'); // → show pricing
     } catch (e) {
       setScreen('create');
-      setError('Could not create gym. Please try again.');
-      console.error(e);
+      const msg = e?.code === 'unavailable' || e?.message?.includes('network')
+        ? 'Network error. Check your internet connection and try again.'
+        : e?.code === 'permission-denied'
+        ? 'Access denied. Please log out and log back in.'
+        : `Error: ${e?.message || 'Could not create gym. Please try again.'}`;
+      setError(msg);
+      console.error('[MSG] handleCreate:', e);
     }
   };
 
@@ -270,23 +280,23 @@ export default function GymOnboarding({ user, onGymJoined }) {
         className={`ob-choice ob-card-2 ob-btn`}
         onClick={() => setSubPlan('yearly')}
         style={{
-          width: '100%', padding: '18px 20px', marginBottom: 20, textAlign: 'left',
+          width: '100%', padding: '16px 20px', marginBottom: 20, textAlign: 'left',
           background: subPlan === 'yearly'
             ? `linear-gradient(135deg, ${C.accent}22, ${C.accent}0A)`
             : C.s2,
           border: `2px solid ${subPlan === 'yearly' ? C.accent : C.border}`,
-          borderRadius: 18, cursor: 'pointer', position: 'relative', overflow: 'hidden',
-          boxShadow: subPlan === 'yearly' ? `0 0 0 3px ${C.accent}22, ${C.cardShadow}` : C.cardShadow,
+          borderRadius: 18, cursor: 'pointer',
+          boxShadow: subPlan === 'yearly' ? `0 0 0 3px ${C.accent}22` : 'none',
           transition: 'all 0.25s',
         }}
       >
-        {/* BEST VALUE badge */}
+        {/* BEST VALUE badge — inline, not absolute */}
         <div style={{
-          position: 'absolute', top: 0, right: 0,
+          display: 'inline-block', marginBottom: 10,
           background: C.accent, color: '#111',
           fontSize: 9, fontFamily: fb, fontWeight: 800, textTransform: 'uppercase',
-          letterSpacing: '0.06em', padding: '4px 12px', borderRadius: '0 18px 0 10px',
-        }}>BEST VALUE</div>
+          letterSpacing: '0.06em', padding: '3px 10px', borderRadius: 6,
+        }}>⭐ BEST VALUE</div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
@@ -304,12 +314,13 @@ export default function GymOnboarding({ user, onGymJoined }) {
               <span style={{ fontSize: 11, fontWeight: 700, color: C.green, background: C.green + '20', padding: '1px 7px', borderRadius: 4 }}>65% OFF</span>
             </div>
           </div>
-          <div style={{ textAlign: 'right', flexShrink: 0, marginTop: 16 }}>
-            <div style={{ fontSize: 10, fontFamily: fb, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Just ₹350/month</div>
-            <div style={{ fontSize: 11, color: C.sub, marginTop: 4 }}>Save ₹7,789/year</div>
+          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+            <div style={{ fontSize: 10, fontFamily: fb, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Just ₹350/mo</div>
+            <div style={{ fontSize: 11, color: C.sub, marginTop: 4 }}>Save ₹7,789</div>
           </div>
         </div>
       </button>
+
 
       {/* What's included */}
       <div className="ob-card-3" style={{ background: C.s2, border: `1px solid ${C.border}`, borderRadius: 14, padding: '14px 16px', marginBottom: 20 }}>

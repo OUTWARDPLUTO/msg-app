@@ -18,7 +18,7 @@ const NAV = [
 ];
 
 // ─── Owner Profile Dropdown ────────────────────────────────────────────────────
-function OwnerProfileDropdown({ user, gymName, gymCode, onLogout, onClose }) {
+function OwnerProfileDropdown({ user, gymName, gymCode, onLogout, onClose, onSettings }) {
   const ref = useRef(null);
 
   useEffect(() => {
@@ -91,7 +91,7 @@ function OwnerProfileDropdown({ user, gymName, gymCode, onLogout, onClose }) {
       </div>
 
       {/* Actions */}
-      {row('⚙️', 'Gym Settings', 'Manage gym code, name & alerts', null)}
+      {row('⚙️', 'Gym Settings', 'Manage gym code, name & alerts', onSettings)}
       {row('🚪', 'Log Out', null, onLogout, true)}
     </div>
   );
@@ -179,8 +179,10 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout }) {
           gymCode={gymCode}
           onLogout={onLogout}
           onClose={() => setShowProfile(false)}
+          onSettings={() => { handleTabChange('settings'); setShowProfile(false); }}
         />
       )}
+
 
       {/* Content — animated tab transitions */}
       <div className="msg-scroll" style={{ flex: 1, overflowY: 'auto' }}>

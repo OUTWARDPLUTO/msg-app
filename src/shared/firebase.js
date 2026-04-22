@@ -76,8 +76,9 @@ export async function getFBFirestore() {
     await pollFor(() => window.firebase?.firestore);
     ensureApp();
     _db = window.firebase.firestore();
-    // Enable offline persistence (best-effort)
-    try { await _db.enablePersistence({ synchronizeTabs: true }); } catch (_) {}
+    // Enable offline persistence (best-effort, Capacitor-compatible)
+    try { await _db.enablePersistence(); } catch (_) {}
+
     _dbCallbacks.forEach(cb => cb.res(_db));
     return _db;
   } catch (err) {
