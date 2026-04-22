@@ -303,7 +303,7 @@ function ExCard({ ex }) {
   const s = typeof ex.sets === 'number' ? ex.sets : 3;
 
   return (
-    <div style={{ background: C.s2, border: `1px solid ${allDone ? mc + '50' : C.border}`, borderLeft: `3px solid ${mc}`, borderRadius: '2px 14px 14px 2px', marginBottom: 10, overflow: 'hidden', transition: 'border-color 0.3s' }}>
+    <div className="msg-anim-fadeup" style={{ background: C.s2, border: `1px solid ${allDone ? mc + '50' : C.border}`, borderLeft: `3px solid ${mc}`, borderRadius: '2px 14px 14px 2px', marginBottom: 10, overflow: 'hidden', transition: 'border-color 0.3s, transform 0.2s, box-shadow 0.2s' }}>
       <div onClick={() => setOpen(o => !o)} style={{ display: 'flex', gap: 12, padding: '14px 16px', cursor: 'pointer', alignItems: 'flex-start' }}>
         {/* Muscle thumbnail */}
         <div style={{ width: 54, height: 62, borderRadius: 10, flexShrink: 0, background: `linear-gradient(135deg,${mc}20,${mc}08)`, border: `1px solid ${mc}30`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
@@ -659,8 +659,234 @@ const WEEK_STRUCTURES = {
   ],
 };
 
+// ─── Manual Plan Builder (wger API + local EX fallback) ──────────────────────
+function ManualPlanBuilder({ setWeekPlan, onBack }) {
+  const WGER_KEY = import.meta.env.VITE_WGER_KEY ?? '';
+  const [step, setStep] = useState(0); // 0=pick days, 1=enter exercises
+  const [days, setDays] = useState(null);
+  const [planDays, setPlanDays] = useState([]); // [{dayName, exercises:[]}]
+  const [activeDay, setActiveDay] = useState(0);
+  const [exInput, setExInput] = useState('');
+  const [searching, setSearching] = useState(false);
+  const [searchResult, setSearchResult] = useState(null); // pending exercise to confirm
+  const [dayNames] = useState(['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6']);
+
+  const initDays = (n) => {
+    setDays(n);
+    setPlanDays(Array.from({ length: n }, (_, i) => ({ dayName: `Day ${i + 1}`, focus: '', exercises: [] })));
+    setStep(1);
+  };
+
+  const searchExercise = async (name) => {
+    if (!name.trim()) return;
+    setSearching(true); setSearchResult(null);
+    // 1. Try wger API
+    if (WGER_KEY) {
+      try {
+        const r = await fetch(
+          `https://wger.de/api/v2/exercise/search/?term=${encodeURIComponent(name)}&language=2&format=json`,
+          { headers: { Authorization: `Token ${WGER_KEY}` } }
+        );
+        if (r.ok) {
+          const data = await r.json();
+          const hit = data.suggestions?.[0];
+          if (hit) {
+            setSearchResult({
+              name: hit.value,
+              muscle: hit.data?.category?.name?.toLowerCase() || 'general',
+              primary: hit.data?.category?.name || 'General',
+              secondary: '',
+              equip: 'Any',
+              level: 'intermediate',
+              sets: 3, reps: '10–12', rest: 60,
+              steps: ['Focus on proper form', 'Control the eccentric', 'Full range of motion'],
+              tip: 'Use wger.de for full exercise guide',
+              source: 'wger',
+            });
+            setSearching(false); return;
+          }
+        }
+      } catch (_) {}
+    }
+    // 2. Local EX DB fallback
+    const q = name.toLowerCase();
+    const found = EX.find(e => e.name.toLowerCase().includes(q) || q.includes(e.name.toLowerCase().split(' ')[0]));
+    if (found) { setSearchResult({ ...found, source: 'local' }); }
+    else {
+      // Generic placeholder
+      setSearchResult({
+        name: name.trim(), muscle: 'general', primary: 'General', secondary: '',
+        equip: 'Any', level: 'intermediate', sets: 3, reps: '10–12', rest: 60,
+        steps: ['Focus on proper form', 'Full range of motion', 'Controlled movement'],
+        tip: 'No data found — check exercise name',
+        source: 'manual',
+      });
+    }
+    setSearching(false);
+  };
+
+  const addExercise = (ex, sets, reps) => {
+    setPlanDays(prev => prev.map((d, i) => i === activeDay
+      ? { ...d, exercises: [...d.exercises, { ...ex, sets: parseInt(sets) || 3, reps: reps || '10–12' }] }
+      : d
+    ));
+    setExInput(''); setSearchResult(null);
+  };
+
+  const removeExercise = (dayIdx, exIdx) => {
+    setPlanDays(prev => prev.map((d, i) => i === dayIdx
+      ? { ...d, exercises: d.exercises.filter((_, j) => j !== exIdx) }
+      : d
+    ));
+  };
+
+  const savePlan = () => {
+    const plan = planDays.map(d => ({
+      day: d.dayName, focus: d.focus || d.dayName, duration: '45–60 min',
+      exercises: d.exercises,
+    }));
+    setWeekPlan(plan);
+  };
+
+  if (step === 0) return (
+    <div style={{ padding: '0 16px' }}>
+      <button onClick={onBack} style={{ background: 'none', border: 'none', color: C.muted, fontSize: 13, cursor: 'pointer', fontFamily: fn, marginBottom: 16, padding: 0 }}>← Back</button>
+      <div style={{ fontFamily: fn, fontSize: 20, fontWeight: 800, color: C.text, letterSpacing: '-0.02em', marginBottom: 6 }}>How many training days?</div>
+      <div style={{ fontSize: 13, color: C.sub, marginBottom: 20 }}>We'll create a day-by-day template for you to fill in.</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {[3, 4, 5, 6].map(n => (
+          <button key={n} onClick={() => initDays(n)} className="msg-anim-fadeup" style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            padding: '16px 18px', background: C.s2, border: `1px solid ${C.border}`,
+            borderRadius: 14, cursor: 'pointer', textAlign: 'left',
+            animationDelay: `${(n - 3) * 0.06}s`,
+          }}>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{n} Days / Week</div>
+              <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>{n === 3 ? 'Full Body' : n === 4 ? 'Upper / Lower' : n === 5 ? 'Push Pull Legs' : 'PPL × 2'}</div>
+            </div>
+            <div style={{ color: C.accent, fontSize: 18 }}>→</div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  const curDay = planDays[activeDay] || { exercises: [] };
+
+  return (
+    <div style={{ padding: '0 16px' }}>
+      {/* Day tabs */}
+      <div style={{ display: 'flex', gap: 5, overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: 4, marginBottom: 14 }}>
+        {planDays.map((d, i) => (
+          <button key={i} onClick={() => { setActiveDay(i); setSearchResult(null); setExInput(''); }} style={{
+            flexShrink: 0, padding: '7px 12px',
+            background: activeDay === i ? C.accent : C.s2,
+            border: `1px solid ${activeDay === i ? C.accent : C.border}`,
+            borderRadius: 8, color: activeDay === i ? '#000' : C.sub,
+            fontFamily: fn, fontWeight: 700, fontSize: 10, cursor: 'pointer',
+          }}>{d.dayName}</button>
+        ))}
+      </div>
+
+      {/* Day focus label */}
+      <input value={curDay.focus} onChange={e => setPlanDays(p => p.map((d, i) => i === activeDay ? { ...d, focus: e.target.value } : d))}
+        placeholder={`e.g. Chest & Triceps`}
+        style={{ width: '100%', boxSizing: 'border-box', background: C.s2, border: `1px solid ${C.border}`, borderRadius: 10, padding: '10px 12px', color: C.text, fontSize: 13, fontFamily: fn, outline: 'none', marginBottom: 12 }}
+      />
+
+      {/* Exercise search */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+        <input value={exInput} onChange={e => setExInput(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && searchExercise(exInput)}
+          placeholder="Type exercise name…"
+          style={{ flex: 1, background: C.s2, border: `1px solid ${C.border}`, borderRadius: 10, padding: '11px 12px', color: C.text, fontSize: 13, fontFamily: fn, outline: 'none' }}
+        />
+        <button onClick={() => searchExercise(exInput)} disabled={searching || !exInput.trim()} style={{
+          background: C.accent, border: 'none', borderRadius: 10, padding: '0 16px',
+          color: '#000', fontFamily: fn, fontWeight: 700, fontSize: 12, cursor: 'pointer',
+          opacity: !exInput.trim() ? 0.4 : 1,
+        }}>{searching ? '…' : 'Find'}</button>
+      </div>
+
+      {/* Search result — confirm card */}
+      {searchResult && <ExerciseConfirmCard ex={searchResult} onAdd={addExercise} onDismiss={() => setSearchResult(null)} />}
+
+      {/* Current day exercises */}
+      <div style={{ marginBottom: 16 }}>
+        {curDay.exercises.length === 0 && !searchResult && (
+          <div style={{ color: C.muted, fontSize: 12, textAlign: 'center', padding: '18px 0', border: `1px dashed ${C.border}`, borderRadius: 12 }}>
+            No exercises yet — search to add one
+          </div>
+        )}
+        {curDay.exercises.map((ex, i) => (
+          <div key={i} className="msg-anim-fadeup" style={{
+            display: 'flex', alignItems: 'center', gap: 10, padding: '10px 13px',
+            background: C.s2, border: `1px solid ${C.border}`, borderRadius: 12, marginBottom: 8,
+            animationDelay: `${i * 0.04}s`,
+          }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{ex.name}</div>
+              <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>{ex.sets} sets × {ex.reps} · {ex.primary}</div>
+            </div>
+            <button onClick={() => removeExercise(activeDay, i)} style={{ background: 'none', border: 'none', color: C.red, fontSize: 16, cursor: 'pointer', padding: '4px' }}>✕</button>
+          </div>
+        ))}
+      </div>
+
+      {/* Save plan button */}
+      <button onClick={savePlan} disabled={planDays.every(d => d.exercises.length === 0)} style={{
+        width: '100%', padding: '14px', marginBottom: 20,
+        background: planDays.some(d => d.exercises.length > 0) ? C.accent : C.s4,
+        color: planDays.some(d => d.exercises.length > 0) ? '#000' : C.muted,
+        border: 'none', borderRadius: 12, fontFamily: fn, fontWeight: 800, fontSize: 14, cursor: 'pointer',
+      }}>
+        Save My Plan ({planDays.filter(d => d.exercises.length > 0).length}/{days} days ready)
+      </button>
+    </div>
+  );
+}
+
+// Confirm card for wger/local exercise result
+function ExerciseConfirmCard({ ex, onAdd, onDismiss }) {
+  const [sets, setSets] = useState('3');
+  const [reps, setReps] = useState(ex.reps || '10–12');
+  const mc = MC[ex.muscle] || C.accent;
+  return (
+    <div className="msg-anim-scalein" style={{ background: C.s2, border: `2px solid ${mc}44`, borderLeft: `3px solid ${mc}`, borderRadius: '2px 14px 14px 2px', padding: '14px', marginBottom: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{ex.name}</div>
+          <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>{ex.primary}{ex.secondary ? ` · ${ex.secondary}` : ''} · {ex.equip}</div>
+        </div>
+        <span style={{ fontSize: 9, background: mc + '20', color: mc, padding: '2px 8px', borderRadius: 4, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          {ex.source === 'wger' ? 'wger' : ex.source === 'local' ? 'Library' : 'Custom'}
+        </span>
+      </div>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 9, color: C.muted, fontFamily: fb, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 4 }}>Sets</div>
+          <input value={sets} onChange={e => setSets(e.target.value)} type="number" min="1" max="10"
+            style={{ width: '100%', background: C.s3, border: `1px solid ${C.border}`, borderRadius: 8, padding: '8px 10px', color: C.text, fontSize: 14, fontFamily: fn, outline: 'none', textAlign: 'center' }} />
+        </div>
+        <div style={{ flex: 2 }}>
+          <div style={{ fontSize: 9, color: C.muted, fontFamily: fb, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 4 }}>Reps</div>
+          <input value={reps} onChange={e => setReps(e.target.value)}
+            style={{ width: '100%', background: C.s3, border: `1px solid ${C.border}`, borderRadius: 8, padding: '8px 10px', color: C.text, fontSize: 13, fontFamily: fn, outline: 'none' }} />
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button onClick={onDismiss} style={{ flex: 1, padding: '10px', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 10, color: C.muted, fontFamily: fn, fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>Dismiss</button>
+        <button onClick={() => onAdd(ex, sets, reps)} style={{ flex: 2, padding: '10px', background: mc, border: 'none', borderRadius: 10, color: '#111', fontFamily: fn, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>+ Add to Day</button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Workout Section ─────────────────────────────────────────────────────────
 function WorkoutSection({ weekPlan, setWeekPlan }) {
+  const [planMode, setPlanMode] = useState(null); // null | 'ai' | 'manual'
+
   // Wizard state
   const [wStep, setWStep] = useState(0);
   const [days, setDays] = useState(null);
@@ -689,6 +915,7 @@ function WorkoutSection({ weekPlan, setWeekPlan }) {
   };
 
   // Build fallback plan from local EX database
+
   const buildFallbackPlan = (daysN, goalV, levelV, equipV, injuryV) => {
     const struct = WEEK_STRUCTURES[daysN] || WEEK_STRUCTURES[4];
     return struct.map(d => {
@@ -830,9 +1057,44 @@ function WorkoutSection({ weekPlan, setWeekPlan }) {
       {view === 'plan' && (
         <div style={{ padding: '0 16px' }}>
 
-          {/* Wizard — before plan is generated */}
-          {!weekPlan && !loading && (
+          {/* Manual Plan Builder */}
+          {!weekPlan && planMode === 'manual' && (
+            <ManualPlanBuilder setWeekPlan={setWeekPlan} onBack={() => setPlanMode(null)} />
+          )}
+
+          {/* Two-path landing — shown when no plan AND no mode selected */}
+          {!weekPlan && !loading && planMode === null && (
             <div>
+              <div style={{ fontFamily: fn, fontSize: 20, fontWeight: 800, color: C.text, letterSpacing: '-0.02em', marginBottom: 6 }}>Create Your Workout Plan</div>
+              <div style={{ fontSize: 13, color: C.sub, marginBottom: 20, lineHeight: 1.5 }}>Choose how you want to build your week.</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <button onClick={() => setPlanMode('ai')} className="msg-anim-fadeup" style={{
+                  padding: '20px 18px', background: `linear-gradient(135deg, ${C.accent}20, ${C.accent}08)`,
+                  border: `1px solid ${C.accent}44`, borderRadius: 18, cursor: 'pointer', textAlign: 'left',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                }}>
+                  <div style={{ fontSize: 28, marginBottom: 8 }}>🤖</div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: C.accent, marginBottom: 4 }}>Build with AI</div>
+                  <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.5 }}>Answer a few questions — get a personalized week plan generated for you. Best for beginners.</div>
+                </button>
+                <button onClick={() => setPlanMode('manual')} className="msg-anim-fadeup msg-d2" style={{
+                  padding: '20px 18px', background: C.s2,
+                  border: `1px solid ${C.border}`, borderRadius: 18, cursor: 'pointer', textAlign: 'left',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                }}>
+                  <div style={{ fontSize: 28, marginBottom: 8 }}>📋</div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: C.text, marginBottom: 4 }}>Enter My Plan</div>
+                  <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.5 }}>Already have a routine? Type in your exercises — we auto-fill the details using the exercise database.</div>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* AI Wizard — before plan is generated */}
+          {!weekPlan && !loading && planMode === 'ai' && (
+            <div>
+              <button onClick={() => { setPlanMode(null); resetWizard(); }} style={{ background: 'none', border: 'none', color: C.muted, fontSize: 13, cursor: 'pointer', fontFamily: fn, marginBottom: 16, padding: 0 }}>← Back</button>
+
               {/* Progress bar */}
               <div style={{ display: 'flex', gap: 4, marginBottom: 20 }}>
                 {Array.from({ length: totalWizardSteps }).map((_, i) => (
@@ -1317,7 +1579,64 @@ function DietSection({ dietGoal, setDietGoal, mealLog, setMealLog }) {
     const local = parseEntry(q);
     if (local) { setMealLog(p => [local, ...p]); setLoading(false); return; }
 
-    // Unknown food — try AI if available
+    // ── USDA FDC API lookup (accurate macros/micros) ──────────────────────────
+    const USDA_KEY = import.meta.env.VITE_USDA_KEY ?? '';
+    const USDA_NUTRIENT_MAP = {
+      1008: 'calories', 1003: 'protein', 1005: 'carbs', 1004: 'fat',
+      1079: 'fiber', 1093: 'sodium', 1092: 'potassium', 1087: 'calcium',
+      1089: 'iron', 1106: 'vitaminA', 1178: 'vitaminB12', 1162: 'vitaminC',
+      1114: 'vitaminD', 1109: 'vitaminE', 1090: 'magnesium', 1095: 'zinc',
+    };
+    if (USDA_KEY) {
+      try {
+        // Extract gram amount from query for scaling
+        const gramsMatch = q.match(/(\d+\.?\d*)\s*g(?:ram)?s?\b/i);
+        const scaleFactor = gramsMatch ? parseFloat(gramsMatch[1]) / 100 : 1;
+        const searchTerm = q.replace(/\d+\.?\d*\s*g(?:ram)?s?\b/gi, '').trim() || q;
+
+        const resp = await fetch(
+          `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(searchTerm)}&api_key=${USDA_KEY}&dataType=Foundation,SR%20Legacy&pageSize=1`
+        );
+        if (resp.ok) {
+          const data = await resp.json();
+          const food = data.foods?.[0];
+          if (food) {
+            const nutrients = {};
+            (food.foodNutrients || []).forEach(n => {
+              const key = USDA_NUTRIENT_MAP[n.nutrientId];
+              if (key) nutrients[key] = Math.round((n.value || 0) * scaleFactor * 10) / 10;
+            });
+            if (nutrients.calories) {
+              const item = {
+                name: `${food.description}${gramsMatch ? ` (${gramsMatch[1]}g)` : ''}`,
+                calories: Math.round(nutrients.calories || 0),
+                protein: nutrients.protein || 0,
+                carbs: nutrients.carbs || 0,
+                fat: nutrients.fat || 0,
+                fiber: nutrients.fiber || 0,
+                sodium: nutrients.sodium || 0,
+                potassium: nutrients.potassium || 0,
+                calcium: nutrients.calcium || 0,
+                iron: nutrients.iron || 0,
+                vitaminA: nutrients.vitaminA || 0,
+                vitaminB12: nutrients.vitaminB12 || 0,
+                vitaminC: nutrients.vitaminC || 0,
+                vitaminD: nutrients.vitaminD || 0,
+                vitaminE: nutrients.vitaminE || 0,
+                magnesium: nutrients.magnesium || 0,
+                zinc: nutrients.zinc || 0,
+                source: 'USDA',
+              };
+              setMealLog(p => [item, ...p]);
+              setLoading(false);
+              return;
+            }
+          }
+        }
+      } catch (_) { /* fall through to AI */ }
+    }
+
+    // ── Claude AI fallback ────────────────────────────────────────────────────
     try {
       const sys = `Precise nutritionist. Return nutrition for the EXACT quantity stated. ONLY valid JSON, no markdown. Schema: {"name":"string","calories":number,"protein":number,"carbs":number,"fat":number,"fiber":number,"sodium":number,"potassium":number,"calcium":number,"iron":number,"vitaminA":number,"vitaminB12":number,"vitaminC":number,"vitaminD":number,"vitaminE":number,"magnesium":number,"zinc":number}`;
       const text = await callClaude(sys, `Food: "${q}"`);
@@ -1333,6 +1652,7 @@ function DietSection({ dietGoal, setDietGoal, mealLog, setMealLog }) {
     }
     setLoading(false);
   };
+
 
   // High protein sources by diet preference
   const proteinSources = {
@@ -2227,10 +2547,10 @@ function LogProgressModal({ onSave, onClose }) {
   );
 }
 
-// ─── Bottom Nav ──────────────────────────────────────────────────────────────
+// ─── Bottom Nav (Animated) ────────────────────────────────────────────────────
 function NavIcon({ id, active }) {
   const s = active ? C.accent : C.muted;
-  const p = { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: s, strokeWidth: '1.8', strokeLinecap: 'round', strokeLinejoin: 'round' };
+  const p = { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: s, strokeWidth: '1.8', strokeLinecap: 'round', strokeLinejoin: 'round', style: { transition: 'stroke 0.2s' } };
   if (id === 'home') return <svg {...p}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>;
   if (id === 'workout') return <svg {...p}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>;
   if (id === 'diet') return <svg {...p}><circle cx="12" cy="12" r="10" /><path d="M8 6s1 2 4 2 4-2 4-2" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="9" y1="12" x2="15" y2="12" /></svg>;
@@ -2239,17 +2559,37 @@ function NavIcon({ id, active }) {
   return null;
 }
 
-function BottomNav({ tab, setTab, darkMode }) {
+function BottomNavAnimated({ tab, setTab, darkMode }) {
   const tabs = ['home', 'workout', 'diet', 'explore', 'progress'];
   return (
-    <div style={{ background: C.s1, borderTop: `1px solid ${C.border}`, display: 'flex', padding: '10px 0', flexShrink: 0, paddingBottom: 'max(18px, env(safe-area-inset-bottom))', boxShadow: `0 -4px 20px rgba(0,0,0,${darkMode ? '0.3' : '0.08'})` }}>
-      {tabs.map(id => (
-        <button key={id} onClick={() => setTab(id)} style={{ flex: 1, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '2px 0' }}>
-          <NavIcon id={id} active={tab === id} />
-          <div style={{ fontSize: 8, fontFamily: fb, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: tab === id ? C.accent : C.muted, fontWeight: tab === id ? 700 : 500 }}>{id}</div>
-          {tab === id && <div style={{ width: 3, height: 3, borderRadius: '50%', background: C.accent, marginTop: -2 }} />}
-        </button>
-      ))}
+    <div style={{ background: C.s1, borderTop: `1px solid ${C.border}`, display: 'flex', padding: '8px 0', flexShrink: 0, paddingBottom: 'max(16px, env(safe-area-inset-bottom))', boxShadow: `0 -4px 24px rgba(0,0,0,${darkMode ? '0.35' : '0.1'})` }}>
+      {tabs.map(id => {
+        const active = tab === id;
+        return (
+          <button key={id} onClick={() => setTab(id)} style={{
+            flex: 1, background: 'none', border: 'none', cursor: 'pointer',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '2px 0',
+          }}>
+            <div style={{
+              transform: active ? 'scale(1.18) translateY(-2px)' : 'scale(1) translateY(0)',
+              transition: 'transform 0.25s cubic-bezier(.22,.68,0,1.4)',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+            }}>
+              <NavIcon id={id} active={active} />
+            </div>
+            <div style={{
+              fontSize: 8, fontFamily: fb, fontWeight: active ? 700 : 500,
+              letterSpacing: '0.06em', textTransform: 'uppercase',
+              color: active ? C.accent : C.muted,
+              transition: 'color 0.2s',
+            }}>{id}</div>
+            <div style={{
+              width: active ? 18 : 0, height: 2, borderRadius: 1, background: C.accent,
+              transition: 'width 0.3s cubic-bezier(.22,.68,0,1.4)', marginTop: -1,
+            }} />
+          </button>
+        );
+      })}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { Card, Lbl, ScoreRing, Spinner } from '../shared/primitives.jsx';
 import { getFBFirestore } from '../shared/firebase.js';
@@ -100,6 +100,8 @@ function OwnerProfileDropdown({ user, gymName, gymCode, onLogout, onClose }) {
 // ─── Owner Dashboard ──────────────────────────────────────────────────────────
 export default function OwnerDashboard({ gymId, gymName, user, onLogout }) {
   const [tab, setTab]           = useState('overview');
+  const [prevTab, setPrevTab]   = useState(null);
+  const [tabHistory, setTabHistory] = useState(['overview']);
   const [showProfile, setShowProfile] = useState(false);
   const [gymCode, setGymCode]   = useState('');
 
@@ -110,6 +112,30 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout }) {
       if (snap.exists) setGymCode(snap.data().gymCode || '');
     }).catch(() => {});
   }, [gymId]);
+
+  // ── Tab navigation with history ────────────────────────────────────────────
+  const handleTabChange = useCallback((newTab) => {
+    setPrevTab(tab);
+    setTab(newTab);
+    setTabHistory(h => [...h, newTab]);
+    window.history.pushState({ ownerTab: newTab }, '');
+  }, [tab]);
+
+  // ── Back button (browser + Android) ───────────────────────────────────────
+  useEffect(() => {
+    window.history.pushState({ ownerTab: 'overview' }, '');
+    const onPop = () => {
+      setTabHistory(h => {
+        if (h.length <= 1) { onLogout(); return h; }
+        const next = h[h.length - 2];
+        setPrevTab(tab);
+        setTab(next);
+        return h.slice(0, -1);
+      });
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []); // eslint-disable-line
 
   const initials = (user?.name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
@@ -156,14 +182,16 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout }) {
         />
       )}
 
-      {/* Content */}
+      {/* Content — animated tab transitions */}
       <div className="msg-scroll" style={{ flex: 1, overflowY: 'auto' }}>
-        {tab === 'overview'   && <OverviewTab gymId={gymId} user={user} />}
-        {tab === 'members'    && <MemberListTab gymId={gymId} />}
-        {tab === 'alerts'     && <AlertsTab gymId={gymId} />}
-        {tab === 'attendance' && <AttendanceTab gymId={gymId} />}
-        {tab === 'import'     && <CSVImport gymId={gymId} />}
-        {tab === 'settings'   && <GymSettingsTab gymId={gymId} gymName={gymName} ownerUid={user?.uid} />}
+        <div key={tab} className="msg-anim-slide-l">
+          {tab === 'overview'   && <OverviewTab gymId={gymId} user={user} />}
+          {tab === 'members'    && <MemberListTab gymId={gymId} />}
+          {tab === 'alerts'     && <AlertsTab gymId={gymId} />}
+          {tab === 'attendance' && <AttendanceTab gymId={gymId} />}
+          {tab === 'import'     && <CSVImport gymId={gymId} />}
+          {tab === 'settings'   && <GymSettingsTab gymId={gymId} gymName={gymName} ownerUid={user?.uid} />}
+        </div>
       </div>
 
       {/* Bottom Nav */}
@@ -172,11 +200,16 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout }) {
         background: C.s1, flexShrink: 0, paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}>
         {NAV.map(n => (
-          <button key={n.key} onClick={() => setTab(n.key)} style={{
+          <button key={n.key} onClick={() => handleTabChange(n.key)} style={{
             flex: 1, padding: '10px 4px 8px', background: 'none', border: 'none',
             cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
           }}>
-            <span style={{ fontSize: 16 }}>{n.icon}</span>
+            <span style={{
+              fontSize: tab === n.key ? 18 : 16,
+              transition: 'font-size 0.2s, transform 0.2s',
+              display: 'inline-block',
+              transform: tab === n.key ? 'scale(1.1)' : 'scale(1)',
+            }}>{n.icon}</span>
             <span style={{
               fontSize: 8, fontFamily: fb, fontWeight: 700,
               color: tab === n.key ? C.accent : C.muted,
@@ -185,7 +218,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout }) {
               {n.label}
             </span>
             {tab === n.key && (
-              <div style={{ width: 18, height: 2, borderRadius: 1, background: C.accent }} />
+              <div className="msg-nav-dot" style={{ width: 18, height: 2, borderRadius: 1, background: C.accent }} />
             )}
           </button>
         ))}
@@ -251,15 +284,15 @@ function OverviewTab({ gymId, user }) {
         </div>
       </div>
 
-      {/* Stat Grid */}
+      {/* Stat Grid — staggered animation */}
       <div style={{ padding: '0 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
         {[
           { label: 'Total Members', val: stats?.total ?? '—', color: C.accent, icon: '👥' },
           { label: 'Active',        val: stats?.active ?? '—', color: C.green,  icon: '✅' },
           { label: 'At Risk',       val: stats?.atRisk ?? '—', color: C.orange, icon: '⚠️' },
           { label: 'New This Week', val: stats?.newMembers ?? '—', color: C.blue, icon: '🆕' },
-        ].map(s => (
-          <Card key={s.label} style={{ padding: '14px 16px' }}>
+        ].map((s, i) => (
+          <Card key={s.label} className={`msg-anim-fadeup msg-d${i + 1} msg-card-hover`} style={{ padding: '14px 16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
               <Lbl text={s.label} />
               <span style={{ fontSize: 18 }}>{s.icon}</span>
@@ -295,10 +328,11 @@ function OverviewTab({ gymId, user }) {
             No activity yet — members' actions will appear here.
           </div>
         ) : feed.map((item, i) => (
-          <div key={i} style={{
+          <div key={i} className={`msg-anim-fadeup`} style={{
+            animationDelay: `${i * 0.04}s`,
             display: 'flex', gap: 12, alignItems: 'center',
             padding: '10px 14px', background: C.s2, border: `1px solid ${C.border}`,
-            borderRadius: 12, marginBottom: 8,
+            borderRadius: 12, marginBottom: 8, transition: 'background 0.2s',
           }}>
             <span style={{ fontSize: 20, flexShrink: 0 }}>{TYPE_ICONS[item.type] || '📌'}</span>
             <div style={{ flex: 1, minWidth: 0 }}>

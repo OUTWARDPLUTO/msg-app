@@ -115,6 +115,23 @@ export async function updateUserDoc(uid, data) {
   await db.doc(`users/${uid}`).update({ ...data, updatedAt: serverTimestamp() });
 }
 
+// ─── Subscription Helpers ─────────────────────────────────────────────────────
+export async function saveSubscription(uid, subData) {
+  const db = await getFBFirestore();
+  await db.doc(`users/${uid}`).set({ subscription: subData }, { merge: true });
+}
+
+export async function checkSubscription(uid) {
+  try {
+    const doc = await getUserDoc(uid);
+    const sub = doc?.subscription;
+    if (!sub) return { active: false };
+    if (sub.status !== 'active') return { active: false };
+    if (sub.expiresAt && sub.expiresAt < Date.now()) return { active: false, expired: true };
+    return { active: true, plan: sub.plan, expiresAt: sub.expiresAt };
+  } catch { return { active: false }; }
+}
+
 // ─── Gym Document Helpers ─────────────────────────────────────────────────────
 export async function getGymByCode(gymCode) {
   const db = await getFBFirestore();
