@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
-import { Card, Lbl, ScoreRing, Spinner } from '../shared/primitives.jsx';
+import { Card, Lbl, ScoreRing, Spinner, UserAvatar } from '../shared/primitives.jsx';
 import { getFBFirestore } from '../shared/firebase.js';
 import MemberListTab from './MemberListTab.jsx';
 import AlertsTab from './AlertsTab.jsx';
@@ -51,14 +51,8 @@ function OwnerProfileDropdown({ user, gymName, gymCode, onLogout, onClose, onSet
     }}>
       {/* Header */}
       <div style={{ padding: '16px', borderBottom: `1px solid ${C.border}`, display: 'flex', gap: 12, alignItems: 'center' }}>
-        <div style={{
-          width: 44, height: 44, borderRadius: '50%', background: C.accent,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: fn, fontSize: 15, fontWeight: 800, color: '#111', flexShrink: 0,
-          overflow: 'hidden',
-        }}>
-          {user?.photo ? <img src={user.photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
-        </div>
+        <UserAvatar user={user} size={44} fontSize={15} />
+
         <div style={{ overflow: 'hidden' }}>
           <div style={{ fontFamily: fn, fontSize: 14, fontWeight: 800, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {user?.name || 'Gym Owner'}
@@ -165,9 +159,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout }) {
           transition: 'all 0.2s', boxShadow: C.accentShadow, overflow: 'hidden', padding: 0,
           display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
         }}>
-          {user?.photo
-            ? <img src={user.photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            : initials}
+          <UserAvatar user={user} size={38} fontSize={12} />
         </button>
       </div>
 

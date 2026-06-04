@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { getFBAuth } from '../shared/firebase.js';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 export default function LoginScreen({ onLogin }) {
   const [mode, setMode]       = useState('login');
@@ -57,10 +58,22 @@ export default function LoginScreen({ onLogin }) {
     if (fbStatus !== 'ready') { setError('Firebase not loaded yet.'); return; }
     setLoading(true); setError('');
     try {
+      // Initialize the native Google Auth plugin before attempting sign-in.
+      // Required by capacitor-google-auth v3+ — without this call the Android
+      // native bridge is null and crashes with a NullPointerException.
+      await GoogleAuth.initialize({
+        // Must be the Web (server) client ID — not the Android client ID.
+        // Google uses this as the token audience to produce an idToken for Firebase.
+        clientId: '924373588150-g5hhp1hiu6db6tduir3fr9ekfqkavhir.apps.googleusercontent.com',
+        scopes: ['profile', 'email'],
+        grantOfflineAccess: true,
+      });
+      const googleUser = await GoogleAuth.signIn();
+      const idToken = googleUser.authentication.idToken;
+      if (!idToken) throw new Error('Google sign-in did not return an ID token.');
       const auth = await getFBAuth();
-      const provider = new window.firebase.auth.GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: 'select_account' });
-      const cred = await auth.signInWithPopup(provider);
+      const credential = window.firebase.auth.GoogleAuthProvider.credential(idToken);
+      const cred = await auth.signInWithCredential(credential);
       onLogin({
         uid: cred.user.uid,
         name: cred.user.displayName,
@@ -68,10 +81,13 @@ export default function LoginScreen({ onLogin }) {
         photo: cred.user.photoURL,
       }, cred.additionalUserInfo?.isNewUser);
     } catch (e) {
-      if (e.code === 'auth/popup-blocked') {
-        setError('Popup was blocked. Please allow popups for this site.');
-      } else if (e.code !== 'auth/popup-closed-by-user') {
-        setError(e.message);
+      // Ignore user-cancelled flows silently
+      const cancelled = e.code === 'auth/popup-closed-by-user'
+        || e.message === 'The user canceled the sign-in flow.'
+        || e.message === 'The user canceled the Google sign-in flow.';
+      if (!cancelled) {
+        console.error('[MSG] Google sign-in error:', e);
+        setError(e.message || 'Google sign-in failed. Please try again.');
       }
     }
     setLoading(false);

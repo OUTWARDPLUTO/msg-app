@@ -1,4 +1,38 @@
+import { useState } from 'react';
 import { C, fn, fb } from './theme.js';
+
+// ─── UserAvatar ───────────────────────────────────────────────────────────────
+// Renders a circular avatar with the user's profile photo.
+// Falls back to initials if photo is missing or fails to load.
+// referrerPolicy="no-referrer" is required for Google profile photos in Android
+// WebView — Capacitor runs at https://localhost and the Referer header causes
+// lh3.googleusercontent.com to block the request.
+export function UserAvatar({ user, size = 36, fontSize = 12 }) {
+  const [imgFailed, setImgFailed] = useState(false);
+  const initials = (user?.name || user?.email || '?')
+    .split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const showImg = user?.photo && !imgFailed;
+
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: '50%',
+      background: C.accent, overflow: 'hidden', flexShrink: 0,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontFamily: fn, fontSize, fontWeight: 800, color: '#111',
+    }}>
+      {showImg ? (
+        <img
+          src={user.photo}
+          alt=""
+          referrerPolicy="no-referrer"
+          crossOrigin="anonymous"
+          onError={() => setImgFailed(true)}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      ) : initials}
+    </div>
+  );
+}
 
 // ─── Card ─────────────────────────────────────────────────────────────────────
 export const Card = ({ children, style: s = {}, onClick }) => (

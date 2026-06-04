@@ -1,6 +1,40 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
-import { THEMES, C } from './shared/theme.js';
-import { getFBAuth, getFBFirestore, getUserDoc, checkSubscription } from './shared/firebase.js';
+import { useState, useEffect, useRef, lazy, Suspense, Component } from 'react';
+import { THEMES, C, fn } from './shared/theme.js';
+import { getFBAuth, getFBFirestore, getUserDoc } from './shared/firebase.js';
+import { App as CapApp } from '@capacitor/app';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+
+// ────────────────────────────────────────────────────────────────────────────
+// Error Boundary — catches MemberApp crashes, shows recovery UI (no blank screen)
+// ────────────────────────────────────────────────────────────────────────────
+class ErrorBoundary extends Component {
+  constructor(props) { super(props); this.state = { hasError: false, error: null }; }
+  static getDerivedStateFromError(error) { return { hasError: true, error }; }
+  componentDidCatch(err, info) { console.error('[MSG] ErrorBoundary caught:', err, info); }
+  render() {
+    if (!this.state.hasError) return this.props.children;
+    const { C: colors, fn: fontName, onRetry } = this.props;
+    return (
+      <div style={{
+        background: colors?.bg || '#111', color: colors?.text || '#fff',
+        height: '100dvh', display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center', padding: '32px 24px',
+        fontFamily: fontName || 'sans-serif', textAlign: 'center',
+      }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
+        <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>Something went wrong</div>
+        <div style={{ fontSize: 13, color: colors?.sub || '#aaa', marginBottom: 28, lineHeight: 1.6 }}>
+          {this.state.error?.message || 'An unexpected error occurred.'}
+        </div>
+        <button onClick={() => { this.setState({ hasError: false, error: null }); onRetry?.(); }}
+          style={{ background: colors?.accent || '#D99A2B', border: 'none', borderRadius: 14,
+            padding: '14px 32px', color: '#111', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>
+          Try Again
+        </button>
+      </div>
+    );
+  }
+}
 
 // ── Auth screens
 import LoginScreen      from './auth/LoginScreen.jsx';
@@ -37,6 +71,7 @@ export default function MSG() {
   const [role, setRole]         = useState(() => load('msg_role', 'member'));
   const [gymLoading, setGymLoading] = useState(false);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
+  const gymResolvedRef = useRef(false); // prevents double-resolveGym from onAuthStateChanged race
 
   // ── Member state (persisted) ────────────────────────────────────────────────
   const [dietGoal, setDietGoalRaw]       = useState(() => load('msg_diet_goal', null));
@@ -150,14 +185,32 @@ export default function MSG() {
     }
   }, []);
 
-  // ── Firebase Auth state sync ───────────────────────────────────────────────
+  // ── Android back button handler ────────────────────────────────────────────
+  // MemberApp registers window.__msgGoBack() which pops its own nav stack.
+  // We only call exitApp() when there's nothing left to navigate back through.
+  useEffect(() => {
+    let handler;
+    CapApp.addListener('backButton', () => {
+      const handled = typeof window.__msgGoBack === 'function' && window.__msgGoBack();
+      if (!handled) {
+        // Nothing left in the in-app stack — exit
+        CapApp.exitApp();
+      }
+    }).then(h => { handler = h; });
+    return () => { handler?.remove(); };
+  }, []);
+
+  // ── Firebase Auth state sync (session restore on cold launch only) ─────────
   useEffect(() => {
     getFBAuth().then(auth => {
       auth.onAuthStateChanged(fbUser => {
-        if (fbUser && !user) {
+        // gymResolvedRef.current is false only on cold app launch (never after handleLogin)
+        // This block only handles the case where the app restarts with an existing session.
+        if (fbUser && !gymResolvedRef.current) {
+          gymResolvedRef.current = true; // claim it immediately to prevent any race
           const u = {
             uid: fbUser.uid,
-            name: fbUser.displayName || fbUser.email.split('@')[0],
+            name: fbUser.displayName || fbUser.email?.split('@')[0] || 'User',
             email: fbUser.email,
             photo: fbUser.photoURL,
           };
@@ -171,7 +224,11 @@ export default function MSG() {
   // ── Resolve gymId + role from Firestore ────────────────────────────────────
   async function resolveGym(uid) {
     if (!uid) return;
+    // Guard: don't double-run. gymResolvedRef.current must be set to true
+    // by the CALLER before invoking resolveGym (handleLogin / onAuthStateChanged).
     setGymLoading(true);
+    // Safety timeout: never hang the spinner longer than 10 seconds
+    const timeout = setTimeout(() => setGymLoading(false), 10000);
     try {
       const doc = await getUserDoc(uid);
       if (doc?.gymId) {
@@ -184,6 +241,7 @@ export default function MSG() {
         } catch(_) {}
       }
     } catch (e) { console.warn('resolveGym:', e.message); }
+    clearTimeout(timeout);
     setGymLoading(false);
   }
 
@@ -195,18 +253,30 @@ export default function MSG() {
       setGymId(null); setRole('member');
       save('msg_gym_id', null); save('msg_role', 'member');
     }
-    setUser(u); save('msg_user', u);
+    // Normalise name — Google displayName can be null
+    const safeUser = { ...u, name: u.name || u.email?.split('@')[0] || 'User' };
+    setUser(safeUser); save('msg_user', safeUser);
+    // Claim gymResolvedRef BEFORE resolveGym so onAuthStateChanged (which fires
+    // after signInWithCredential resolves) sees it as already handled and skips.
+    gymResolvedRef.current = true;
     if (isNew) setShowProfileSetup(true);
-    else resolveGym(u.uid);
+    else resolveGym(safeUser.uid);
   };
 
   // ── Logout handler ─────────────────────────────────────────────────────────
-  const handleLogout = async () => {
-    try { const auth = await getFBAuth(); await auth.signOut(); } catch {}
-    setUser(null); save('msg_user', null);
-    setGymId(null); save('msg_gym_id', null);
-    setRole('member'); save('msg_role', 'member');
-    setMealLog([]); setProgressLogs([]); setDietGoal(null); setWeekPlan(null);
+  const handleLogout = () => {
+    // Clear React state FIRST so the UI returns to LoginScreen immediately.
+    // Auth cleanup runs in the background — a hanging Firebase/network call
+    // must never block the UI from updating.
+    setUser(null);          save('msg_user', null);
+    setGymId(null);         save('msg_gym_id', null);
+    setRole('member');      save('msg_role', 'member');
+    setGymName('');         save('msg_gym_name', '');
+    setMealLog([]);         setProgressLogs([]);  setDietGoal(null);  setWeekPlan(null);
+    gymResolvedRef.current = false;
+    // Background cleanup (fire-and-forget — errors are swallowed intentionally)
+    getFBAuth().then(auth => auth.signOut()).catch(() => {});
+    GoogleAuth.signOut().catch(() => {});
   };
 
   // ── Gym joined callback ────────────────────────────────────────────────────
@@ -279,19 +349,21 @@ export default function MSG() {
 
   // 6. Default: member app
   return (
-    <Suspense fallback={fullPageLoader}>
-      <MemberApp
-        user={user}
-        gymId={gymId}
-        gymName={gymName}
-        darkMode={darkMode}
-        onToggleTheme={toggleTheme}
-        onLogout={handleLogout}
-        dietGoal={dietGoal}       setDietGoal={setDietGoal}
-        mealLog={mealLog}         setMealLog={setMealLog}
-        weekPlan={weekPlan}       setWeekPlan={setWeekPlan}
-        progressLogs={progressLogs} setProgressLogs={setProgressLogs}
-      />
-    </Suspense>
+    <ErrorBoundary C={C} fn={fn} onRetry={() => { setGymId(null); save('msg_gym_id', null); }}>
+      <Suspense fallback={fullPageLoader}>
+        <MemberApp
+          user={user}
+          gymId={gymId}
+          gymName={gymName}
+          darkMode={darkMode}
+          onToggleTheme={toggleTheme}
+          onLogout={handleLogout}
+          dietGoal={dietGoal}       setDietGoal={setDietGoal}
+          mealLog={mealLog}         setMealLog={setMealLog}
+          weekPlan={weekPlan}       setWeekPlan={setWeekPlan}
+          progressLogs={progressLogs} setProgressLogs={setProgressLogs}
+        />
+      </Suspense>
+    </ErrorBoundary>
   );
 }

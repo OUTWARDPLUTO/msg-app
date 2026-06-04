@@ -76,8 +76,12 @@ export async function getFBFirestore() {
     await pollFor(() => window.firebase?.firestore);
     ensureApp();
     _db = window.firebase.firestore();
-    // Enable offline persistence (best-effort, Capacitor-compatible)
-    try { await _db.enablePersistence(); } catch (_) {}
+    // Enable offline persistence — MUST assign _db first before this attempt
+    // failed-precondition = multiple tabs, unimplemented = WebView doesn't support it
+    // Either way we swallow the error and continue — app works online-only
+    try { await _db.enablePersistence({ synchronizeTabs: false }); } catch (persistErr) {
+      console.warn('[MSG] Persistence unavailable:', persistErr.code);
+    }
 
     _dbCallbacks.forEach(cb => cb.res(_db));
     return _db;

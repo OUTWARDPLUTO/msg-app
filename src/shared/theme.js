@@ -28,4 +28,5 @@ export const fb = "'Plus Jakarta Sans', sans-serif";
 export const MC = {
   chest: '#4E9FFF', back: '#2DD4BF', shoulders: '#A78BFA',
   arms: '#FF6240', core: '#D99A2B', legs: '#FF6B6B',
+  general: '#94A3B8', cardio: '#F472B6', full: '#4ADE80',
 };

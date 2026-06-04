@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { Spinner } from '../shared/primitives.jsx';
 import {
   getGymByCode, createGym, createMemberDoc,
-  setUserDoc, serverTimestamp, saveSubscription,
+  setUserDoc, serverTimestamp, saveSubscription, getFBFirestore,
 } from '../shared/firebase.js';
 
 // ─── Keyframe injector ───────────────────────────────────────────────────────
@@ -38,6 +38,9 @@ export default function GymOnboarding({ user, onGymJoined }) {
   const [createdGym, setCreatedGym] = useState(null);
   const [copied, setCopied]     = useState(false);
   const [subPlan, setSubPlan]   = useState(null); // 'monthly'|'yearly'
+
+  // Pre-warm Firestore so scripts are loaded before user submits gym code
+  useEffect(() => { getFBFirestore().catch(() => {}); }, []);
 
   // ── Join gym by code (members) ─────────────────────────────────────────────
   const handleJoin = async () => {
