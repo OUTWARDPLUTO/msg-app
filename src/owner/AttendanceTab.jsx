@@ -1,12 +1,18 @@
 import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { Card, Lbl, Spinner } from '../shared/primitives.jsx';
-import { getFBFirestore } from '../shared/firebase.js';
+import { getFBFirestore, serverTimestamp } from '../shared/firebase.js';
 
 export default function AttendanceTab({ gymId }) {
-  const [logs, setLogs]     = useState([]);
-  const [members, setMembers] = useState({});
-  const [loading, setLoading] = useState(true);
+  const [logs, setLogs]         = useState([]);
+  const [members, setMembers]   = useState({});
+  const [allMembers, setAllMembers] = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [search, setSearch]     = useState('');
+  const [manualModal, setManualModal] = useState(false);
+  const [manualMember, setManualMember] = useState(null);
+  const [manualLoading, setManualLoading] = useState(false);
+  const [manualDone, setManualDone] = useState(false);
 
   useEffect(() => { if (gymId) load(); }, [gymId]);
 
@@ -23,10 +29,51 @@ export default function AttendanceTab({ gymId }) {
       ]);
       setLogs(attendSnap.docs.map(d => d.data()));
       const map = {};
-      memberSnap.docs.forEach(d => { map[d.data().uid] = d.data().name; });
+      const all = [];
+      memberSnap.docs.forEach(d => {
+        const data = d.data();
+        map[data.uid] = data.name;
+        all.push({ uid: data.uid, name: data.name });
+      });
       setMembers(map);
+      setAllMembers(all.sort((a, b) => a.name.localeCompare(b.name)));
     } catch (e) { console.warn(e); }
     setLoading(false);
+  }
+
+  // Manual check-in by owner
+  async function handleManualCheckIn() {
+    if (!manualMember) return;
+    setManualLoading(true);
+    try {
+      const db = await getFBFirestore();
+      const today = new Date().toISOString().split('T')[0];
+      const existing = await db.collection(`attendance/${gymId}/logs`)
+        .where('uid', '==', manualMember.uid).where('date', '==', today).get();
+      if (!existing.empty) {
+        setManualDone('already');
+      } else {
+        await db.collection(`attendance/${gymId}/logs`).add({
+          uid: manualMember.uid,
+          gymId,
+          date: today,
+          checkedInAt: serverTimestamp(),
+          manual: true,
+        });
+        setManualDone('success');
+        // Refresh logs
+        const snap = await db.collection(`attendance/${gymId}/logs`)
+          .where('date', '>=', new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0])
+          .orderBy('date', 'desc').get();
+        setLogs(snap.docs.map(d => d.data()));
+      }
+    } catch (e) { console.warn(e); }
+    setManualLoading(false);
+    setTimeout(() => {
+      setManualDone(false);
+      setManualMember(null);
+      setManualModal(false);
+    }, 1500);
   }
 
   // Daily check-in counts (last 30 days)
@@ -60,11 +107,36 @@ export default function AttendanceTab({ gymId }) {
   const todayKey = new Date().toISOString().split('T')[0];
   const todayCount = daily.find(d => d.date === todayKey)?.count || 0;
 
+  // Filter check-in log by search
+  const filteredGrouped = search.trim()
+    ? grouped.map(([date, entries]) => [
+        date,
+        entries.filter(e => (members[e.uid] || '').toLowerCase().includes(search.toLowerCase()))
+      ]).filter(([, entries]) => entries.length > 0)
+    : grouped;
+
+  const memberSearchResults = manualModal && manualMember === null
+    ? allMembers.filter(m => {
+        const q = search.toLowerCase();
+        return (m.name || '').toLowerCase().includes(q);
+      })
+    : [];
+
   return (
     <div style={{ paddingBottom: 24 }}>
-      <div style={{ padding: '20px 20px 12px' }}>
-        <div style={{ fontFamily: fn, fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: '-0.02em' }}>Attendance</div>
-        <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>Gym check-in history</div>
+      {/* Header */}
+      <div style={{ padding: '20px 20px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <div style={{ fontFamily: fn, fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: '-0.02em' }}>Attendance</div>
+          <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>Gym check-in history</div>
+        </div>
+        <button onClick={() => { setManualModal(true); setManualMember(null); setManualDone(false); setSearch(''); }} style={{
+          background: C.accent, border: 'none', borderRadius: 12,
+          padding: '9px 14px', color: '#111', fontFamily: fn, fontWeight: 800,
+          fontSize: 11, cursor: 'pointer', boxShadow: C.accentShadow,
+        }}>
+          ✋ Manual
+        </button>
       </div>
 
       {/* Today's quick stat */}
@@ -86,13 +158,13 @@ export default function AttendanceTab({ gymId }) {
         <Card style={{ padding: '12px 12px 8px' }}>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height: 80, overflowX: 'auto' }}>
             {daily.map(d => (
-              <div key={d.date} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, minWidth: 14 }}>
+              <div key={d.date} title={`${d.label}: ${d.count} check-in${d.count !== 1 ? 's' : ''}`}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, minWidth: 14 }}>
                 <div style={{
                   width: 10, borderRadius: '3px 3px 0 0',
                   height: `${Math.max((d.count / maxCount) * 64, d.count > 0 ? 6 : 0)}px`,
                   background: d.date === todayKey ? C.accent : C.accent + '55',
                   transition: 'height 0.4s ease',
-                  title: `${d.count} check-ins`,
                 }} />
               </div>
             ))}
@@ -104,17 +176,33 @@ export default function AttendanceTab({ gymId }) {
         </Card>
       </div>
 
+      {/* Search */}
+      <div style={{ padding: '0 16px', marginBottom: 14 }}>
+        <input
+          value={search} onChange={e => setSearch(e.target.value)}
+          placeholder="Search member name…"
+          style={{
+            width: '100%', boxSizing: 'border-box', background: C.s2,
+            border: `1px solid ${search ? C.accent : C.border}`, borderRadius: 12, padding: '10px 14px',
+            color: C.text, fontSize: 13, fontFamily: fn, outline: 'none',
+          }}
+        />
+      </div>
+
       {/* Check-in Log */}
       <div style={{ padding: '0 16px' }}>
-        <div style={{ fontFamily: fn, fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 12 }}>Check-in Log</div>
-        {grouped.length === 0 ? (
+        <div style={{ fontFamily: fn, fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 12 }}>
+          Check-in Log
+          {search && <span style={{ fontSize: 12, color: C.muted, fontWeight: 500, marginLeft: 8 }}>— filtering by "{search}"</span>}
+        </div>
+        {filteredGrouped.length === 0 ? (
           <div style={{ color: C.muted, fontSize: 13, textAlign: 'center', padding: '24px 0' }}>
-            No check-ins recorded yet. Members check in from their Home screen.
+            {search ? 'No check-ins match your search.' : 'No check-ins recorded yet. Members check in from their Home screen.'}
           </div>
-        ) : grouped.map(([date, entries]) => (
+        ) : filteredGrouped.map(([date, entries]) => (
           <div key={date} style={{ marginBottom: 14 }}>
             <div style={{ fontSize: 10, color: C.muted, fontFamily: fb, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>
-              {new Date(date).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
+              {new Date(date + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
               <span style={{ color: C.accent, marginLeft: 8 }}>{entries.length} check-in{entries.length !== 1 ? 's' : ''}</span>
             </div>
             {entries.map((e, i) => (
@@ -122,18 +210,97 @@ export default function AttendanceTab({ gymId }) {
                 display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px',
                 background: C.s2, border: `1px solid ${C.border}`, borderRadius: 10, marginBottom: 6,
               }}>
-                <span style={{ fontSize: 18 }}>✅</span>
+                {/* Avatar */}
+                <div style={{
+                  width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
+                  background: C.accent + '20', border: `1px solid ${C.accent}33`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontFamily: fn, fontSize: 12, fontWeight: 800, color: C.accent,
+                }}>
+                  {(members[e.uid] || '?').charAt(0).toUpperCase()}
+                </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{members[e.uid] || 'Member'}</div>
-                  <div style={{ fontSize: 10, color: C.muted }}>
-                    {e.checkedInAt?.toDate ? e.checkedInAt.toDate().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '—'}
+                  <div style={{ fontSize: 10, color: C.muted, display: 'flex', alignItems: 'center', gap: 6, marginTop: 1 }}>
+                    {e.checkedInAt?.toDate
+                      ? e.checkedInAt.toDate().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+                      : '—'
+                    }
+                    {e.manual && <span style={{ background: C.blue + '20', color: C.blue, fontSize: 8, padding: '1px 5px', borderRadius: 4, fontFamily: fb, fontWeight: 700 }}>MANUAL</span>}
                   </div>
                 </div>
+                <span style={{ fontSize: 18 }}>✅</span>
               </div>
             ))}
           </div>
         ))}
       </div>
+
+      {/* Manual Check-in Modal */}
+      {manualModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'flex-end' }}
+          onClick={e => { if (e.target === e.currentTarget) setManualModal(false); }}>
+          <div style={{ background: C.s1, borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '80dvh', overflowY: 'auto', padding: '20px 20px calc(env(safe-area-inset-bottom,0) + 20px)' }}>
+            <div style={{ fontFamily: fn, fontSize: 17, fontWeight: 800, color: C.text, marginBottom: 4 }}>Manual Check-in</div>
+            <div style={{ fontSize: 12, color: C.muted, marginBottom: 16 }}>Log a walk-in for today.</div>
+
+            {manualDone ? (
+              <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                <div style={{ fontSize: 40, marginBottom: 8 }}>{manualDone === 'already' ? '⚠️' : '✅'}</div>
+                <div style={{ fontFamily: fn, fontSize: 15, fontWeight: 700, color: C.text }}>
+                  {manualDone === 'already' ? 'Already checked in today' : `${manualMember?.name} checked in!`}
+                </div>
+              </div>
+            ) : manualMember ? (
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: C.s2, border: `1px solid ${C.accent}44`, borderRadius: 12, marginBottom: 16 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: C.accent + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: fn, fontSize: 14, fontWeight: 800, color: C.accent }}>
+                    {manualMember.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{manualMember.name}</div>
+                    <div style={{ fontSize: 11, color: C.muted }}>Today, {new Date().toLocaleDateString('en-IN')}</div>
+                  </div>
+                  <button onClick={() => setManualMember(null)} style={{ background: C.s3, border: 'none', borderRadius: 8, padding: '5px 10px', fontSize: 11, color: C.sub, cursor: 'pointer' }}>Change</button>
+                </div>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button onClick={() => setManualModal(false)} style={{ flex: 1, padding: 12, background: C.s3, border: `1px solid ${C.border}`, borderRadius: 12, color: C.sub, fontFamily: fn, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+                  <button onClick={handleManualCheckIn} disabled={manualLoading} style={{ flex: 2, padding: 12, background: C.accent, border: 'none', borderRadius: 12, color: '#111', fontFamily: fn, fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>
+                    {manualLoading ? 'Logging…' : '✅ Check In Now'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <input
+                  value={search} onChange={e => setSearch(e.target.value)}
+                  placeholder="Search member by name…"
+                  autoFocus
+                  style={{ width: '100%', boxSizing: 'border-box', background: C.s2, border: `1px solid ${C.accent}`, borderRadius: 12, padding: '11px 14px', color: C.text, fontSize: 13, fontFamily: fn, outline: 'none', marginBottom: 12 }}
+                />
+                {search.trim().length > 0 && (
+                  <div style={{ maxHeight: 280, overflowY: 'auto' }}>
+                    {memberSearchResults.length === 0 ? (
+                      <div style={{ fontSize: 13, color: C.muted, textAlign: 'center', padding: '16px 0' }}>No members found</div>
+                    ) : memberSearchResults.map(m => (
+                      <button key={m.uid} onClick={() => { setManualMember(m); setSearch(''); }} style={{
+                        width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+                        padding: '10px 12px', background: C.s2, border: `1px solid ${C.border}`,
+                        borderRadius: 10, marginBottom: 7, cursor: 'pointer', textAlign: 'left',
+                      }}>
+                        <div style={{ width: 36, height: 36, borderRadius: '50%', background: C.accent + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: fn, fontSize: 13, fontWeight: 800, color: C.accent }}>
+                          {m.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{m.name}</div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

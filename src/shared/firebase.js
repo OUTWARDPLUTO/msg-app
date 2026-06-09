@@ -61,6 +61,17 @@ export async function getFBAuth() {
 }
 
 // ─── Firestore ────────────────────────────────────────────────────────────────
+// Schema / Collections Reference:
+//
+// gyms/{gymId}/store_products/{productId}
+//   → name (string), description (string), price (number), category (string), imageUrl (string), inStock (boolean), createdAt (timestamp), updatedAt (timestamp)
+//
+// gyms/{gymId}/membership_plans/{planId}
+//   → name (string), description (string), price (number), durationDays (number), features (string[]), isActive (boolean), createdAt (timestamp), updatedAt (timestamp)
+//
+// members/{gymId_uid} (new fields added)
+//   → membershipPlanId (string), membershipPlanName (string), membershipStartDate (timestamp), membershipEndDate (timestamp), membershipStatus (string), updatedAt (timestamp)
+//
 let _db = null;
 let _dbLoading = false;
 let _dbCallbacks = [];
@@ -288,3 +299,35 @@ export async function importMembersFromCSV(gymId, mappedRows) {
     await batch.commit();
   }
 }
+
+// ─── Firebase Storage ─────────────────────────────────────────────────────────
+let _storage = null;
+let _storageLoading = false;
+let _storageCallbacks = [];
+
+export async function getFBStorage() {
+  if (_storage) return _storage;
+  if (_storageLoading) return new Promise((res, rej) => _storageCallbacks.push({ res, rej }));
+  _storageLoading = true;
+  try {
+    await getFBAuth();
+    await loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js');
+    await pollFor(() => window.firebase?.storage);
+    ensureApp();
+    _storage = window.firebase.storage();
+    _storageCallbacks.forEach(cb => cb.res(_storage));
+    return _storage;
+  } catch (err) {
+    _storageCallbacks.forEach(cb => cb.rej(err));
+    _storageLoading = false; _storage = null;
+    throw err;
+  }
+}
+
+export async function uploadFile(path, file) {
+  const storage = await getFBStorage();
+  const ref = storage.ref(path);
+  const snap = await ref.put(file);
+  return await snap.ref.getDownloadURL();
+}
+

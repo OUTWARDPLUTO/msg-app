@@ -7,15 +7,61 @@ import AlertsTab from './AlertsTab.jsx';
 import AttendanceTab from './AttendanceTab.jsx';
 import CSVImport from './CSVImport.jsx';
 import GymSettingsTab from './GymSettingsTab.jsx';
+import StoreTab from './StoreTab.jsx';
+import MembershipsTab from './MembershipsTab.jsx';
 
 const NAV = [
-  { key: 'overview',   label: 'Overview',  icon: '📊' },
-  { key: 'members',    label: 'Members',   icon: '👥' },
-  { key: 'alerts',     label: 'Alerts',    icon: '⚠️' },
-  { key: 'attendance', label: 'Attend.',   icon: '📅' },
-  { key: 'import',     label: 'Import',    icon: '📤' },
-  { key: 'settings',   label: 'Settings',  icon: '⚙️' },
+  { key: 'overview',      label: 'Home',       icon: '🏠' },
+  { key: 'members',       label: 'Members',    icon: '👥' },
+  { key: 'attendance',    label: 'Attend.',    icon: '📅' },
+  { key: 'store',         label: 'Store',      icon: '🛒' },
+  { key: 'more',          label: 'More',       icon: '⚙️' },
 ];
+
+// ─── SVG Nav Icons ─────────────────────────────────────────────────────────────
+function OwnerNavIcon({ id, active }) {
+  const s = active ? C.accent : C.muted;
+  const p = { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: s, strokeWidth: '1.8', strokeLinecap: 'round', strokeLinejoin: 'round', style: { transition: 'stroke 0.2s' } };
+  if (id === 'overview') return <svg {...p}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>;
+  if (id === 'members') return <svg {...p}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>;
+  if (id === 'attendance') return <svg {...p}><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>;
+  if (id === 'store') return <svg {...p}><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>;
+  if (id === 'more') return <svg {...p}><circle cx="12" cy="5" r="1" fill={s} /><circle cx="12" cy="12" r="1" fill={s} /><circle cx="12" cy="19" r="1" fill={s} /></svg>;
+  return null;
+}
+
+// ─── More Tab ─────────────────────────────────────────────────────────────────
+function MoreTab({ gymId, gymName, ownerUid, onNavigate }) {
+  const items = [
+    { key: 'memberships', icon: '💳', label: 'Memberships', sub: 'Manage plans and member subscriptions' },
+    { key: 'alerts',      icon: '⚠️', label: 'Alerts',      sub: 'Members at risk of going inactive' },
+    { key: 'import',      icon: '📤', label: 'CSV Import',  sub: 'Bulk import members from CSV' },
+    { key: 'settings',    icon: '⚙️', label: 'Gym Settings', sub: 'Gym code, name & notifications' },
+  ];
+  return (
+    <div style={{ padding: '20px 16px 32px' }}>
+      <div style={{ fontFamily: fn, fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: '-0.02em', marginBottom: 20 }}>More</div>
+      {items.map(item => (
+        <button key={item.key} onClick={() => onNavigate(item.key)} style={{
+          width: '100%', display: 'flex', alignItems: 'center', gap: 14,
+          padding: '14px 16px', background: C.s2, border: `1px solid ${C.border}`,
+          borderRadius: 14, marginBottom: 10, cursor: 'pointer', textAlign: 'left',
+          transition: 'border-color 0.2s',
+        }}
+          onMouseEnter={e => e.currentTarget.style.borderColor = C.accent + '55'}
+          onMouseLeave={e => e.currentTarget.style.borderColor = C.border}
+        >
+          <span style={{ fontSize: 22, width: 30, textAlign: 'center', flexShrink: 0 }}>{item.icon}</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{item.label}</div>
+            <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{item.sub}</div>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6" /></svg>
+        </button>
+      ))}
+    </div>
+  );
+}
 
 // ─── Owner Profile Dropdown ────────────────────────────────────────────────────
 function OwnerProfileDropdown({ user, gymName, gymCode, onLogout, onClose, onSettings }) {
@@ -26,8 +72,6 @@ function OwnerProfileDropdown({ user, gymName, gymCode, onLogout, onClose, onSet
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [onClose]);
-
-  const initials = (user?.name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
   const row = (icon, label, sub, onClick, danger) => (
     <button key={label} onClick={() => { onClick?.(); onClose(); }} style={{
@@ -52,7 +96,6 @@ function OwnerProfileDropdown({ user, gymName, gymCode, onLogout, onClose, onSet
       {/* Header */}
       <div style={{ padding: '16px', borderBottom: `1px solid ${C.border}`, display: 'flex', gap: 12, alignItems: 'center' }}>
         <UserAvatar user={user} size={44} fontSize={15} />
-
         <div style={{ overflow: 'hidden' }}>
           <div style={{ fontFamily: fn, fontSize: 14, fontWeight: 800, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {user?.name || 'Gym Owner'}
@@ -98,6 +141,8 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout }) {
   const [tabHistory, setTabHistory] = useState(['overview']);
   const [showProfile, setShowProfile] = useState(false);
   const [gymCode, setGymCode]   = useState('');
+  // Sub-screen from "More" tab
+  const [moreScreen, setMoreScreen] = useState(null);
 
   // Load gym code once
   useEffect(() => {
@@ -111,14 +156,22 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout }) {
   const handleTabChange = useCallback((newTab) => {
     setPrevTab(tab);
     setTab(newTab);
+    setMoreScreen(null);
     setTabHistory(h => [...h, newTab]);
     window.history.pushState({ ownerTab: newTab }, '');
   }, [tab]);
+
+  // Navigate to a sub-screen inside More
+  const handleMoreNavigate = (screen) => {
+    setMoreScreen(screen);
+    window.history.pushState({ ownerTab: 'more', moreScreen: screen }, '');
+  };
 
   // ── Back button (browser + Android) ───────────────────────────────────────
   useEffect(() => {
     window.history.pushState({ ownerTab: 'overview' }, '');
     const onPop = () => {
+      if (moreScreen) { setMoreScreen(null); return; }
       setTabHistory(h => {
         if (h.length <= 1) { onLogout(); return h; }
         const next = h[h.length - 2];
@@ -129,9 +182,16 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout }) {
     };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
-  }, []); // eslint-disable-line
+  }, [moreScreen]); // eslint-disable-line
 
-  const initials = (user?.name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  // Render sub-screen from More
+  function renderMoreScreen() {
+    if (moreScreen === 'memberships') return <MembershipsTab gymId={gymId} />;
+    if (moreScreen === 'alerts') return <AlertsTab gymId={gymId} />;
+    if (moreScreen === 'import') return <CSVImport gymId={gymId} />;
+    if (moreScreen === 'settings') return <GymSettingsTab gymId={gymId} gymName={gymName} ownerUid={user?.uid} />;
+    return null;
+  }
 
   return (
     <div className="msg-root" style={{
@@ -145,10 +205,22 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout }) {
         padding: '14px 20px 0', flexShrink: 0,
       }}>
         <div>
-          <div style={{ fontFamily: fn, fontSize: 18, fontWeight: 800, color: C.accent, letterSpacing: '-0.01em' }}>
-            MSG Owner
-          </div>
-          <div style={{ fontSize: 11, color: C.muted, marginTop: 1 }}>{gymName || 'Your Gym'}</div>
+          {moreScreen ? (
+            <button onClick={() => setMoreScreen(null)} style={{
+              background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+              color: C.accent, fontFamily: fn, fontSize: 14, fontWeight: 700, padding: 0,
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
+              Back
+            </button>
+          ) : (
+            <>
+              <div style={{ fontFamily: fn, fontSize: 18, fontWeight: 800, color: C.accent, letterSpacing: '-0.01em' }}>
+                MSG Owner
+              </div>
+              <div style={{ fontSize: 11, color: C.muted, marginTop: 1 }}>{gymName || 'Your Gym'}</div>
+            </>
+          )}
         </div>
 
         {/* Profile avatar */}
@@ -171,51 +243,59 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout }) {
           gymCode={gymCode}
           onLogout={onLogout}
           onClose={() => setShowProfile(false)}
-          onSettings={() => { handleTabChange('settings'); setShowProfile(false); }}
+          onSettings={() => { handleMoreNavigate('settings'); setShowProfile(false); }}
         />
       )}
 
-
-      {/* Content — animated tab transitions */}
+      {/* Content */}
       <div className="msg-scroll" style={{ flex: 1, overflowY: 'auto' }}>
-        <div key={tab} className="msg-anim-slide-l">
+        <div key={moreScreen || tab} className="msg-anim-slide-l">
+          {/* More sub-screens */}
+          {tab === 'more' && moreScreen && renderMoreScreen()}
+          {tab === 'more' && !moreScreen && (
+            <MoreTab gymId={gymId} gymName={gymName} ownerUid={user?.uid} onNavigate={handleMoreNavigate} />
+          )}
+          {/* Main tabs */}
           {tab === 'overview'   && <OverviewTab gymId={gymId} user={user} />}
           {tab === 'members'    && <MemberListTab gymId={gymId} />}
-          {tab === 'alerts'     && <AlertsTab gymId={gymId} />}
           {tab === 'attendance' && <AttendanceTab gymId={gymId} />}
-          {tab === 'import'     && <CSVImport gymId={gymId} />}
-          {tab === 'settings'   && <GymSettingsTab gymId={gymId} gymName={gymName} ownerUid={user?.uid} />}
+          {tab === 'store'      && <StoreTab gymId={gymId} />}
         </div>
       </div>
 
-      {/* Bottom Nav */}
+      {/* Bottom Nav — 5 tabs */}
       <div className="msg-bottom-nav" style={{
         display: 'flex', borderTop: `1px solid ${C.border}`,
         background: C.s1, flexShrink: 0, paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}>
-        {NAV.map(n => (
-          <button key={n.key} onClick={() => handleTabChange(n.key)} style={{
-            flex: 1, padding: '10px 4px 8px', background: 'none', border: 'none',
-            cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
-          }}>
-            <span style={{
-              fontSize: tab === n.key ? 18 : 16,
-              transition: 'font-size 0.2s, transform 0.2s',
-              display: 'inline-block',
-              transform: tab === n.key ? 'scale(1.1)' : 'scale(1)',
-            }}>{n.icon}</span>
-            <span style={{
-              fontSize: 8, fontFamily: fb, fontWeight: 700,
-              color: tab === n.key ? C.accent : C.muted,
-              letterSpacing: '0.04em', textTransform: 'uppercase',
+        {NAV.map(n => {
+          const active = tab === n.key;
+          return (
+            <button key={n.key} onClick={() => handleTabChange(n.key)} style={{
+              flex: 1, padding: '10px 4px 8px', background: 'none', border: 'none',
+              cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
             }}>
-              {n.label}
-            </span>
-            {tab === n.key && (
-              <div className="msg-nav-dot" style={{ width: 18, height: 2, borderRadius: 1, background: C.accent }} />
-            )}
-          </button>
-        ))}
+              <div style={{
+                transform: active ? 'scale(1.15) translateY(-2px)' : 'scale(1) translateY(0)',
+                transition: 'transform 0.25s cubic-bezier(.22,.68,0,1.4)',
+              }}>
+                <OwnerNavIcon id={n.key} active={active} />
+              </div>
+              <span style={{
+                fontSize: 8, fontFamily: fb, fontWeight: active ? 700 : 500,
+                color: active ? C.accent : C.muted,
+                letterSpacing: '0.04em', textTransform: 'uppercase',
+                transition: 'color 0.2s',
+              }}>
+                {n.label}
+              </span>
+              <div style={{
+                width: active ? 18 : 0, height: 2, borderRadius: 1, background: C.accent,
+                transition: 'width 0.3s cubic-bezier(.22,.68,0,1.4)',
+              }} />
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -244,7 +324,19 @@ function OverviewTab({ gymId, user }) {
       const avgScore = total > 0 ? Math.round(members.reduce((s, m) => s + (m.engagementScore || 0), 0) / total) : 0;
       const weekAgo = new Date(now - 7 * 86400000);
       const newMembers = members.filter(m => { const j = m.joinedAt?.toDate?.(); return j && j > weekAgo; }).length;
-      setStats({ total, active, atRisk, inactive: total - active - atRisk, avgScore, newMembers });
+
+      // Membership stats
+      const nowDate = new Date();
+      let liveCount = 0, expiringCount = 0;
+      members.forEach(m => {
+        if (!m.membershipEndDate) return;
+        const end = m.membershipEndDate?.toDate ? m.membershipEndDate.toDate() : new Date(m.membershipEndDate);
+        const daysLeft = Math.ceil((end - nowDate) / 86400000);
+        if (daysLeft >= 0) liveCount++;
+        if (daysLeft >= 0 && daysLeft <= 7) expiringCount++;
+      });
+
+      setStats({ total, active, atRisk, inactive: total - active - atRisk, avgScore, newMembers, liveCount, expiringCount });
 
       const feedSnap = await db.collection(`activityLogs/${gymId}/events`).orderBy('timestamp', 'desc').limit(20).get();
       const memberMap = Object.fromEntries(members.map(m => [m.uid, m.name]));
@@ -278,13 +370,13 @@ function OverviewTab({ gymId, user }) {
         </div>
       </div>
 
-      {/* Stat Grid — staggered animation */}
+      {/* Stat Grid */}
       <div style={{ padding: '0 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
         {[
           { label: 'Total Members', val: stats?.total ?? '—', color: C.accent, icon: '👥' },
-          { label: 'Active',        val: stats?.active ?? '—', color: C.green,  icon: '✅' },
-          { label: 'At Risk',       val: stats?.atRisk ?? '—', color: C.orange, icon: '⚠️' },
-          { label: 'New This Week', val: stats?.newMembers ?? '—', color: C.blue, icon: '🆕' },
+          { label: 'Active (5d)',    val: stats?.active ?? '—', color: C.green,  icon: '✅' },
+          { label: 'At Risk',        val: stats?.atRisk ?? '—', color: C.orange, icon: '⚠️' },
+          { label: 'New This Week',  val: stats?.newMembers ?? '—', color: C.blue, icon: '🆕' },
         ].map((s, i) => (
           <Card key={s.label} className={`msg-anim-fadeup msg-d${i + 1} msg-card-hover`} style={{ padding: '14px 16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
@@ -297,6 +389,26 @@ function OverviewTab({ gymId, user }) {
           </Card>
         ))}
       </div>
+
+      {/* Membership quick stats */}
+      {(stats?.liveCount > 0 || stats?.expiringCount > 0) && (
+        <div style={{ padding: '0 16px', marginBottom: 16 }}>
+          <Card style={{ padding: '12px 16px', background: stats?.expiringCount > 0 ? C.orange + '0D' : C.s2, border: `1px solid ${stats?.expiringCount > 0 ? C.orange + '33' : C.border}` }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <Lbl text="Active Memberships" style={{ marginBottom: 4 }} />
+                <div style={{ fontFamily: fn, fontSize: 22, fontWeight: 800, color: C.accent }}>{stats?.liveCount} live</div>
+              </div>
+              {stats?.expiringCount > 0 && (
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: 10, color: C.orange, fontFamily: fb, fontWeight: 700, letterSpacing: '0.04em' }}>⚠️ EXPIRING SOON</div>
+                  <div style={{ fontFamily: fn, fontSize: 22, fontWeight: 800, color: C.orange }}>{stats.expiringCount}</div>
+                </div>
+              )}
+            </div>
+          </Card>
+        </div>
+      )}
 
       {/* Engagement Score */}
       <div style={{ padding: '0 16px', marginBottom: 16 }}>
@@ -322,7 +434,7 @@ function OverviewTab({ gymId, user }) {
             No activity yet — members' actions will appear here.
           </div>
         ) : feed.map((item, i) => (
-          <div key={i} className={`msg-anim-fadeup`} style={{
+          <div key={i} className="msg-anim-fadeup" style={{
             animationDelay: `${i * 0.04}s`,
             display: 'flex', gap: 12, alignItems: 'center',
             padding: '10px 14px', background: C.s2, border: `1px solid ${C.border}`,

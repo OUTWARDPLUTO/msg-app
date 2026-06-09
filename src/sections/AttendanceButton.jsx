@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { checkIn, getTodayCheckIn } from '../shared/firebase.js';
 
-export default function AttendanceButton({ uid, gymId }) {
+export default function AttendanceButton({ uid, gymId, onCheckIn }) {
   const [checked, setChecked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [animating, setAnimating] = useState(false);
@@ -29,6 +29,7 @@ export default function AttendanceButton({ uid, gymId }) {
       setChecked(true); setAnimating(true);
       setTimeout(() => setAnimating(false), 600);
       setLoading(false);
+      if (onCheckIn) onCheckIn();
       return;
     }
     const result = await checkIn(uid, gymId);
@@ -36,6 +37,7 @@ export default function AttendanceButton({ uid, gymId }) {
       setChecked(true);
       setAnimating(true);
       setTimeout(() => setAnimating(false), 600);
+      if (onCheckIn) onCheckIn();
     }
     setLoading(false);
   };

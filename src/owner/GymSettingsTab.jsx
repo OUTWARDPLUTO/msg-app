@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { Card, Lbl } from '../shared/primitives.jsx';
 import { getFBFirestore, createGym, serverTimestamp } from '../shared/firebase.js';
@@ -30,7 +30,7 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
     if (doc.exists) setCode(doc.data().gymCode || '—');
   };
 
-  useState(() => { if (gymId) loadCode(); });
+  useEffect(() => { if (gymId) loadCode(); }, [gymId]);
 
   return (
     <div style={{ padding: '20px 16px 32px' }}>
