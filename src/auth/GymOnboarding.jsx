@@ -5,6 +5,8 @@ import {
   getGymByCode, createGym, createMemberDoc,
   setUserDoc, serverTimestamp, saveSubscription, getFBFirestore,
 } from '../shared/firebase.js';
+import logoLight from '../assets/logo-light.png';
+import logoDark from '../assets/logo-dark.png';
 
 // ─── Keyframe injector ───────────────────────────────────────────────────────
 function injectOnboardingCSS() {
@@ -28,7 +30,7 @@ function injectOnboardingCSS() {
   document.head.appendChild(s);
 }
 
-export default function GymOnboarding({ user, onGymJoined }) {
+export default function GymOnboarding({ user, onGymJoined, darkMode }) {
   injectOnboardingCSS();
 
   const [screen, setScreen]     = useState('choice');
@@ -136,9 +138,12 @@ export default function GymOnboarding({ user, onGymJoined }) {
   );
 
   const logoBlock = (
-    <div style={{ textAlign: 'center', marginBottom: 32 }}>
-      <div className="ob-pulse" style={{ fontSize: 52, fontWeight: 800, color: C.accent, letterSpacing: '-0.03em', lineHeight: 1, display:'inline-block' }}>MSG</div>
-      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', color: C.muted, textTransform: 'uppercase', marginTop: 5, fontFamily: fb }}>Gym Platform</div>
+    <div style={{ textAlign: 'center', marginBottom: 24 }}>
+      <img
+        src={darkMode ? logoDark : logoLight}
+        alt="MSG"
+        style={{ height: 40, objectFit: 'contain', display: 'block', margin: '0 auto' }}
+      />
     </div>
   );
 

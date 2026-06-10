@@ -237,11 +237,48 @@ export function calcEngagementScore(events) {
   return Math.min(cappedBase + consistencyBonus, 100);
 }
 
+export function getDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371e3; // metres
+  const phi1 = lat1 * Math.PI/180;
+  const phi2 = lat2 * Math.PI/180;
+  const deltaPhi = (lat2-lat1) * Math.PI/180;
+  const deltaLambda = (lon2-lon1) * Math.PI/180;
+
+  const a = Math.sin(deltaPhi/2) * Math.sin(deltaPhi/2) +
+            Math.cos(phi1) * Math.cos(phi2) *
+            Math.sin(deltaLambda/2) * Math.sin(deltaLambda/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+  return R * c; // in metres
+}
+
 // ─── Attendance ───────────────────────────────────────────────────────────────
-export async function checkIn(uid, gymId) {
+export async function checkIn(uid, gymId, qrToken = null) {
   if (!uid || !gymId) return { error: 'Missing uid or gymId' };
   try {
     const db = await getFBFirestore();
+    
+    // Load gym settings first to check validation rules
+    const gymSnap = await db.doc(`gyms/${gymId}`).get();
+    if (!gymSnap.exists) return { error: 'Gym not found' };
+    const gymData = gymSnap.data();
+    const settings = gymData.settings || {};
+    
+    // Validate QR code if enabled
+    if (settings.useQr) {
+      if (!qrToken) {
+        return { error: 'QR Code verification is required for this gym.' };
+      }
+      const activeQr = gymData.activeQrToken;
+      if (!activeQr || !activeQr.token || activeQr.token !== qrToken) {
+        return { error: 'Invalid QR Code. Please scan the current code displayed at reception.' };
+      }
+      const expiresAt = activeQr.expiresAt?.toDate ? activeQr.expiresAt.toDate().getTime() : new Date(activeQr.expiresAt).getTime();
+      if (Date.now() > expiresAt) {
+        return { error: 'QR Code has expired. Please scan the new code displayed at reception.' };
+      }
+    }
+
     const today = new Date().toISOString().split('T')[0];
     const existing = await db.collection(`attendance/${gymId}/logs`)
       .where('uid', '==', uid).where('date', '==', today).get();

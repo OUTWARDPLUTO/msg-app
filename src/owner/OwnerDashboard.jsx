@@ -9,6 +9,8 @@ import CSVImport from './CSVImport.jsx';
 import GymSettingsTab from './GymSettingsTab.jsx';
 import StoreTab from './StoreTab.jsx';
 import MembershipsTab from './MembershipsTab.jsx';
+import logoLight from '../assets/logo-light.png';
+import logoDark from '../assets/logo-dark.png';
 
 const NAV = [
   { key: 'overview',      label: 'Home',       icon: '🏠' },
@@ -90,8 +92,12 @@ function OwnerProfileDropdown({ user, gymName, gymCode, onLogout, onClose, onSet
   return (
     <div ref={ref} style={{
       position: 'absolute', top: 64, right: 16, zIndex: 200, width: 280,
-      background: C.s1, border: `1px solid ${C.border}`, borderRadius: 20,
-      boxShadow: C.elevShadow, overflow: 'hidden',
+      background: darkMode ? 'rgba(18, 18, 18, 0.85)' : 'rgba(255, 255, 255, 0.9)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      border: `1px solid ${darkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)'}`,
+      borderRadius: 20,
+      boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.25)', overflow: 'hidden',
     }}>
       {/* Header */}
       <div style={{ padding: '16px', borderBottom: `1px solid ${C.border}`, display: 'flex', gap: 12, alignItems: 'center' }}>
@@ -135,7 +141,7 @@ function OwnerProfileDropdown({ user, gymName, gymCode, onLogout, onClose, onSet
 }
 
 // ─── Owner Dashboard ──────────────────────────────────────────────────────────
-export default function OwnerDashboard({ gymId, gymName, user, onLogout }) {
+export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMode }) {
   const [tab, setTab]           = useState('overview');
   const [prevTab, setPrevTab]   = useState(null);
   const [tabHistory, setTabHistory] = useState(['overview']);
@@ -214,12 +220,14 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout }) {
               Back
             </button>
           ) : (
-            <>
-              <div style={{ fontFamily: fn, fontSize: 18, fontWeight: 800, color: C.accent, letterSpacing: '-0.01em' }}>
-                MSG Owner
-              </div>
-              <div style={{ fontSize: 11, color: C.muted, marginTop: 1 }}>{gymName || 'Your Gym'}</div>
-            </>
+            <div style={{ height: 26, display: 'flex', alignItems: 'center' }}>
+              <img
+                src={darkMode ? logoDark : logoLight}
+                alt="MSG"
+                style={{ height: '100%', objectFit: 'contain' }}
+              />
+              <span style={{ fontSize: 9, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', marginLeft: 8, padding: '2px 6px', background: C.s2, borderRadius: 6, fontFamily: fb }}>Owner</span>
+            </div>
           )}
         </div>
 
@@ -248,7 +256,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout }) {
       )}
 
       {/* Content */}
-      <div className="msg-scroll" style={{ flex: 1, overflowY: 'auto' }}>
+      <div className="msg-scroll" style={{ flex: 1, overflowY: 'auto', paddingBottom: 100 }}>
         <div key={moreScreen || tab} className="msg-anim-slide-l">
           {/* More sub-screens */}
           {tab === 'more' && moreScreen && renderMoreScreen()}
@@ -265,8 +273,19 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout }) {
 
       {/* Bottom Nav — 5 tabs */}
       <div className="msg-bottom-nav" style={{
-        display: 'flex', borderTop: `1px solid ${C.border}`,
-        background: C.s1, flexShrink: 0, paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        position: 'absolute',
+        bottom: 'max(16px, env(safe-area-inset-bottom, 16px))',
+        left: 16,
+        right: 16,
+        zIndex: 100,
+        borderRadius: 24,
+        background: darkMode ? 'rgba(18, 18, 18, 0.75)' : 'rgba(255, 255, 255, 0.8)',
+        border: `1px solid ${darkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)'}`,
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.25)',
+        display: 'flex',
+        padding: '6px 0 4px',
       }}>
         {NAV.map(n => {
           const active = tab === n.key;

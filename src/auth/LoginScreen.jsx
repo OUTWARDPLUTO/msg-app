@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { getFBAuth } from '../shared/firebase.js';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import logoLight from '../assets/logo-light.png';
+import logoDark from '../assets/logo-dark.png';
 
-export default function LoginScreen({ onLogin }) {
+export default function LoginScreen({ onLogin, darkMode }) {
   const [mode, setMode]       = useState('login');
   const [email, setEmail]     = useState('');
   const [pass, setPass]       = useState('');
@@ -117,9 +119,12 @@ export default function LoginScreen({ onLogin }) {
     }}>
       {/* Logo */}
       <div style={{ textAlign: 'center', marginBottom: 32 }}>
-        <div style={{ fontSize: 58, fontWeight: 800, color: C.accent, letterSpacing: '-0.03em', lineHeight: 1 }}>MSG</div>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', color: C.muted, textTransform: 'uppercase', marginTop: 6 }}>My Smart Gains</div>
-        <div style={{ color: C.sub, fontSize: 13, marginTop: 8, lineHeight: 1.6 }}>Train smart. Eat right. Track everything.</div>
+        <img
+          src={darkMode ? logoDark : logoLight}
+          alt="MSG"
+          style={{ height: 48, objectFit: 'contain', display: 'block', margin: '0 auto' }}
+        />
+        <div style={{ color: C.sub, fontSize: 13, marginTop: 14, lineHeight: 1.6 }}>Train smart. Eat right. Track everything.</div>
       </div>
 
       {/* Card */}

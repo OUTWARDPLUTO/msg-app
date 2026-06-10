@@ -14,6 +14,54 @@ export default function AttendanceTab({ gymId }) {
   const [manualLoading, setManualLoading] = useState(false);
   const [manualDone, setManualDone] = useState(false);
 
+  // Reception QR States
+  const [qrModal, setQrModal] = useState(false);
+  const [qrToken, setQrToken] = useState('');
+  const [expiresIn, setExpiresIn] = useState(0);
+  const [useQrSetting, setUseQrSetting] = useState(false);
+
+  // Fetch active settings when QR code is toggled/loaded
+  useEffect(() => {
+    if (!gymId) return;
+    getFBFirestore().then(db => db.doc(`gyms/${gymId}`).get()).then(snap => {
+      if (snap.exists) {
+        setUseQrSetting(snap.data().settings?.useQr || false);
+      }
+    }).catch(() => {});
+  }, [gymId, qrModal]);
+
+  const generateNewToken = async () => {
+    const token = String(Math.floor(100000 + Math.random() * 900000));
+    setQrToken(token);
+    setExpiresIn(120);
+    try {
+      const db = await getFBFirestore();
+      await db.doc(`gyms/${gymId}`).update({
+        activeQrToken: {
+          token,
+          expiresAt: new Date(Date.now() + 120000)
+        }
+      });
+    } catch (e) {
+      console.warn("Failed to save QR token to Firestore:", e);
+    }
+  };
+
+  useEffect(() => {
+    if (!qrModal || !gymId) return;
+    generateNewToken();
+    const interval = setInterval(() => {
+      setExpiresIn(prev => {
+        if (prev <= 1) {
+          generateNewToken();
+          return 120;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [qrModal, gymId]);
+
   useEffect(() => { if (gymId) load(); }, [gymId]);
 
   async function load() {
@@ -124,12 +172,20 @@ export default function AttendanceTab({ gymId }) {
 
   return (
     <div style={{ paddingBottom: 24 }}>
-      {/* Header */}
-      <div style={{ padding: '20px 20px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div>
-          <div style={{ fontFamily: fn, fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: '-0.02em' }}>Attendance</div>
-          <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>Gym check-in history</div>
-        </div>
+    {/* Header */}
+    <div style={{ padding: '20px 20px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div>
+        <div style={{ fontFamily: fn, fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: '-0.02em' }}>Attendance</div>
+        <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>Gym check-in history</div>
+      </div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button onClick={() => setQrModal(true)} style={{
+          background: C.s2, border: `1px solid ${C.border}`, borderRadius: 12,
+          padding: '9px 14px', color: C.text, fontFamily: fn, fontWeight: 800,
+          fontSize: 11, cursor: 'pointer',
+        }}>
+          📱 Reception QR
+        </button>
         <button onClick={() => { setManualModal(true); setManualMember(null); setManualDone(false); setSearch(''); }} style={{
           background: C.accent, border: 'none', borderRadius: 12,
           padding: '9px 14px', color: '#111', fontFamily: fn, fontWeight: 800,
@@ -138,6 +194,7 @@ export default function AttendanceTab({ gymId }) {
           ✋ Manual
         </button>
       </div>
+    </div>
 
       {/* Today's quick stat */}
       <div style={{ padding: '0 16px', marginBottom: 16 }}>
@@ -297,6 +354,47 @@ export default function AttendanceTab({ gymId }) {
                   </div>
                 )}
               </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Reception QR Modal overlay */}
+      {qrModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 500, background: '#111', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, boxSizing: 'border-box', fontFamily: fn }} className="msg-anim-fadein">
+          <button onClick={() => setQrModal(false)} style={{ position: 'absolute', top: 24, right: 24, background: 'rgba(255,255,255,0.1)', border: 'none', width: 40, height: 40, borderRadius: '50%', color: '#fff', fontSize: 24, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+          
+          <div style={{ textAlign: 'center', marginBottom: 24 }}>
+            <div style={{ fontSize: 24, fontWeight: 800, color: C.accent, marginBottom: 8 }}>Reception Check-in QR</div>
+            <div style={{ fontSize: 13, color: '#aaa', maxWidth: 320, lineHeight: 1.5 }}>
+              Display this screen at the entrance. Members scan this code using their phone camera to check in.
+            </div>
+          </div>
+          
+          {/* QR Code Container */}
+          <div style={{ background: '#fff', padding: 18, borderRadius: 20, boxShadow: '0 10px 40px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 20 }}>
+            {qrToken ? (
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&color=000000&bgcolor=ffffff&qzone=1&data=${encodeURIComponent(`msg-checkin:${gymId}:${qrToken}`)}`}
+                alt="Check-in QR Code"
+                style={{ width: 220, height: 220 }}
+              />
+            ) : (
+              <div style={{ width: 220, height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#111', fontWeight: 600 }}>Generating...</div>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+            <div style={{ background: 'rgba(217,154,43,0.15)', color: C.accent, borderRadius: 20, padding: '6px 16px', fontSize: 13, fontWeight: 700, fontFamily: fb, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span>🔄 Rotates in:</span>
+              <span style={{ fontSize: 14, minWidth: 32, textAlign: 'left' }}>{expiresIn}s</span>
+            </div>
+            
+            {/* Helper warning if QR Verification is not turned on in Gym Settings */}
+            {!useQrSetting && (
+              <div style={{ background: 'rgba(217,83,79,0.15)', color: C.red, borderRadius: 10, padding: '8px 14px', fontSize: 11, maxWidth: 280, textAlign: 'center', marginTop: 16, border: `1px solid ${C.red}33` }}>
+                ⚠️ <strong>QR Check-in is Disabled:</strong> Please turn on "QR Code Scan Verification" in settings to enforce this QR scan.
+              </div>
             )}
           </div>
         </div>

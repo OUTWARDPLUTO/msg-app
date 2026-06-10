@@ -4,7 +4,9 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, 
 // ─── Theme (shared — imported from shared/theme.js) ──────────────────────────
 import { THEMES, C, fn, fb, MC } from './shared/theme.js';
 import { AnatomicalFigure } from './AnatomicalFigure';
-import homeLogo from './assets/home-logo.png';
+import logoLight from './assets/logo-light.png';
+import logoDark from './assets/logo-dark.png';
+import { UserAvatar } from './shared/primitives.jsx';
 import AttendanceButton from './sections/AttendanceButton.jsx';
 
 
@@ -2929,7 +2931,7 @@ function AttendanceHeatMap({ uid, gymId }) {
 
   return (
     <div style={{ padding: '14px 16px 0' }}>
-      <Card style={{ padding: '14px 14px 12px' }}>
+      <Card style={{ padding: '14px 14px 12px', overflow: 'hidden' }}>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <div>
@@ -3929,10 +3931,17 @@ function ProfileScreen({ onClose, progressLogs, dietGoal, mealLog = [], weekPlan
         {/* Avatar with camera upload button */}
         <div style={{ position: 'relative', marginBottom: 14 }}>
           <div style={{ width: 86, height: 86, borderRadius: '50%', background: C.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: fn, fontSize: 28, fontWeight: 800, color: '#000', border: `3px solid ${C.accent}55`, overflow: 'hidden' }}>
-            {photo
-              ? <img src={photo} alt="profile" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
-              : <span>{profile.initials}</span>
-            }
+            {photo ? (
+              <img
+                src={photo}
+                alt="profile"
+                referrerPolicy="no-referrer"
+                crossOrigin="anonymous"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+              />
+            ) : (
+              <span>{profile.initials}</span>
+            )}
           </div>
           {/* Camera button overlay */}
           <button
@@ -4459,7 +4468,7 @@ function LanguageScreen({ onClose }) {
 }
 
 // ─── Profile Dropdown ────────────────────────────────────────────────────────
-function ProfileDropdown({ onClose, onNavigate, onLogout, user }) {
+function ProfileDropdown({ onClose, onNavigate, onLogout, user, darkMode }) {
   const items = [
     { icon: '👤', label: 'View Profile', sub: 'Stats, achievements & goals', action: 'profile' },
     { icon: '⚙️', label: 'Settings', sub: 'Units, notifications, preferences', action: 'settings' },
@@ -4469,10 +4478,18 @@ function ProfileDropdown({ onClose, onNavigate, onLogout, user }) {
   return (
     <>
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, zIndex: 49 }} />
-      <div style={{ position: 'absolute', top: 56, right: 16, zIndex: 50, background: C.s2, border: `1px solid ${C.border}`, borderRadius: 14, minWidth: 228, overflow: 'hidden', boxShadow: '0 16px 48px rgba(0,0,0,0.8)' }}>
-        <div style={{ padding: '14px 16px 12px', borderBottom: `1px solid ${C.border}`, background: C.s3 }}>
+      <div style={{
+        position: 'absolute', top: 56, right: 16, zIndex: 50,
+        background: darkMode ? 'rgba(18, 18, 18, 0.85)' : 'rgba(255, 255, 255, 0.9)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: `1px solid ${darkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)'}`,
+        borderRadius: 14, minWidth: 228, overflow: 'hidden',
+        boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.25)'
+      }}>
+        <div style={{ padding: '14px 16px 12px', borderBottom: `1px solid ${darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`, background: darkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 38, height: 38, borderRadius: '50%', background: C.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: fn, fontSize: 15, color: '#000', letterSpacing: '0.04em', flexShrink: 0 }}>BS</div>
+            <UserAvatar user={{ ...user, photo: localStorage.getItem('msg_profile_photo') || user?.photo }} size={38} fontSize={13} />
             <div>
               <div style={{ fontFamily: fn, fontSize: 16, fontWeight: 800, color: C.text, lineHeight: 1 }}>{(user?.name || 'User').toUpperCase()}</div>
               <div style={{ color: C.sub, fontSize: 11, marginTop: 3 }}>{user?.email || ''}</div>
@@ -4501,7 +4518,7 @@ function ProfileDropdown({ onClose, onNavigate, onLogout, user }) {
 }
 
 // ─── Log Progress Modal ──────────────────────────────────────────────────────
-function LogProgressModal({ onSave, onClose }) {
+function LogProgressModal({ onSave, onClose, darkMode }) {
   const [form, setForm] = useState({ weight: '', height: '', bodyFat: '', chest: '', waist: '', arms: '', legs: '', notes: '' });
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -4522,8 +4539,15 @@ function LogProgressModal({ onSave, onClose }) {
   };
 
   return (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.88)', display: 'flex', alignItems: 'flex-end' }}>
-      <div style={{ width: '100%', background: C.s1, borderRadius: '20px 20px 0 0', padding: '20px 20px 30px', maxHeight: '88%', overflowY: 'auto', boxSizing: 'border-box' }}>
+    <div style={{ position: 'absolute', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-end' }}>
+      <div style={{
+        width: '100%',
+        background: darkMode ? 'rgba(18, 18, 18, 0.88)' : 'rgba(255, 255, 255, 0.92)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderTop: `1px solid ${darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+        borderRadius: '20px 20px 0 0', padding: '20px 20px 30px', maxHeight: '88%', overflowY: 'auto', boxSizing: 'border-box'
+      }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div style={{ fontFamily: fn, fontSize: 22, fontWeight: 800, color: C.text, letterSpacing: '-0.02em' }}>Log Progress</div>
           <button onClick={onClose} style={{ background: C.s3, border: 'none', width: 32, height: 32, borderRadius: '50%', color: C.sub, fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
@@ -4579,7 +4603,21 @@ function NavIcon({ id, active }) {
 function BottomNavAnimated({ tab, setTab, darkMode }) {
   const tabs = ['home', 'workout', 'diet', 'store', 'progress'];
   return (
-    <div style={{ background: C.s1, borderTop: `1px solid ${C.border}`, display: 'flex', padding: '8px 0', flexShrink: 0, paddingBottom: 'max(16px, env(safe-area-inset-bottom))', boxShadow: `0 -4px 24px rgba(0,0,0,${darkMode ? '0.35' : '0.1'})` }}>
+    <div style={{
+      position: 'absolute',
+      bottom: 'max(16px, env(safe-area-inset-bottom, 16px))',
+      left: 16,
+      right: 16,
+      zIndex: 100,
+      borderRadius: 24,
+      background: darkMode ? 'rgba(18, 18, 18, 0.75)' : 'rgba(255, 255, 255, 0.8)',
+      border: `1px solid ${darkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)'}`,
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.25)',
+      display: 'flex',
+      padding: '6px 0 4px',
+    }}>
       {tabs.map(id => {
         const active = tab === id;
         return (
@@ -5014,33 +5052,16 @@ export default function MemberApp({
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 'env(safe-area-inset-top)', background: C.bg, zIndex: 999, flexShrink: 0 }} />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 'calc(env(safe-area-inset-top) + 12px)', paddingLeft: 20, paddingRight: 20, paddingBottom: 0, flexShrink: 0, zIndex: 10, background: C.bg }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div style={{
-              width: 44, height: 44,
-              borderRadius: 14,
-              overflow: 'hidden',
-              boxShadow: '0 0 0 1px rgba(196,160,60,0.25), 0 0 16px rgba(196,160,60,0.35)',
-              flexShrink: 0,
-              transition: 'box-shadow 0.2s',
-            }}>
+          <div style={{ height: 32, display: 'flex', alignItems: 'center' }}>
             <img
-              src={homeLogo}
+              src={darkMode ? logoDark : logoLight}
               alt="MSG"
-              style={{ width: 44, height: 44, objectFit: 'cover', display: 'block' }}
+              style={{ height: '100%', objectFit: 'contain', display: 'block' }}
             />
           </div>
         </div>
-        <button id="tut-profile-btn" onClick={() => setShowProfile(p => !p)} style={{ width: 36, height: 36, borderRadius: '50%', background: C.accent, border: `2px solid ${showProfile ? C.text : 'transparent'}`, cursor: 'pointer', fontFamily: fn, fontSize: 11, fontWeight: 800, color: '#111', transition: 'all 0.2s', boxShadow: C.accentShadow, overflow: 'hidden', padding: 0 }}>
-        {(() => {
-          const savedPhoto = (() => { try { return localStorage.getItem('msg_profile_photo'); } catch { return null; } })();
-          const photoSrc = savedPhoto || user?.photo;
-          return photoSrc
-            ? <img
-                src={photoSrc} alt=''
-                style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }}
-                onError={e => { e.currentTarget.style.display = 'none'; }}
-              />
-            : <span style={{ fontSize: 11, fontWeight: 800, color: '#111' }}>{(user?.name || 'U').slice(0,2).toUpperCase()}</span>;
-        })()}
+        <button id="tut-profile-btn" onClick={() => setShowProfile(p => !p)} style={{ width: 36, height: 36, borderRadius: '50%', background: C.accent, border: `2px solid ${showProfile ? C.text : 'transparent'}`, cursor: 'pointer', fontFamily: fn, fontSize: 11, fontWeight: 800, color: '#111', transition: 'all 0.2s', boxShadow: C.accentShadow, overflow: 'hidden', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <UserAvatar user={{ ...user, photo: localStorage.getItem('msg_profile_photo') || user?.photo }} size={36} fontSize={11} />
         </button>
       </div>
 
@@ -5050,15 +5071,16 @@ export default function MemberApp({
           onNavigate={screen => setProfileScreen(screen)}
           onLogout={onLogout}
           user={user}
+          darkMode={darkMode}
         />
       )}
 
-      {showLogModal && <LogProgressModal onSave={handleSaveProgress} onClose={() => setShowLogModal(false)} />}
+      {showLogModal && <LogProgressModal onSave={handleSaveProgress} onClose={() => setShowLogModal(false)} darkMode={darkMode} />}
       {profileScreen === 'profile'  && <ProfileScreen  onClose={() => setProfileScreen(null)} progressLogs={progressLogs} dietGoal={dietGoal} mealLog={mealLog} weekPlan={weekPlan} user={user} />}
       {profileScreen === 'settings' && <SettingsScreen onClose={() => setProfileScreen(null)} onResetDiet={() => setDietGoal(null)} onResetWorkout={() => setWeekPlan(null)} darkMode={darkMode} onToggleTheme={onToggleTheme} />}
       {profileScreen === 'language' && <LanguageScreen onClose={() => setProfileScreen(null)} />}
 
-      <div className="msg-scroll" style={{ flex: 1, overflowY: 'auto' }}>
+      <div className="msg-scroll" style={{ flex: 1, overflowY: 'auto', paddingBottom: 100 }}>
         {views[tab]}
       </div>
       <BottomNavAnimated tab={tab} setTab={navigate} darkMode={darkMode} />

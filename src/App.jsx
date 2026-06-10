@@ -305,7 +305,7 @@ export default function MSG() {
   );
 
   // 1. Not logged in
-  if (!user) return <LoginScreen onLogin={handleLogin} />;
+  if (!user) return <LoginScreen onLogin={handleLogin} darkMode={darkMode} />;
 
   // 2. Profile setup for new signups
   if (showProfileSetup) return (
@@ -326,6 +326,7 @@ export default function MSG() {
     <GymOnboarding
       user={user}
       onGymJoined={handleGymJoined}
+      darkMode={darkMode}
     />
   );
 
@@ -336,6 +337,7 @@ export default function MSG() {
       gymName={gymName}
       user={user}
       onLogout={handleLogout}
+      darkMode={darkMode}
     />
   );
 
