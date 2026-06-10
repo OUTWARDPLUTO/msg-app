@@ -9,8 +9,8 @@ import CSVImport from './CSVImport.jsx';
 import GymSettingsTab from './GymSettingsTab.jsx';
 import StoreTab from './StoreTab.jsx';
 import MembershipsTab from './MembershipsTab.jsx';
-import logoLight from '../assets/logo-light.png';
-import logoDark from '../assets/logo-dark.png';
+import appIconLight from '../assets/app-icon-light.png';
+import appIconDark from '../assets/app-icon-dark.png';
 
 const NAV = [
   { key: 'overview',      label: 'Home',       icon: '🏠' },
@@ -66,7 +66,7 @@ function MoreTab({ gymId, gymName, ownerUid, onNavigate }) {
 }
 
 // ─── Owner Profile Dropdown ────────────────────────────────────────────────────
-function OwnerProfileDropdown({ user, gymName, gymCode, onLogout, onClose, onSettings }) {
+function OwnerProfileDropdown({ user, gymName, gymCode, onLogout, onClose, onSettings, darkMode }) {
   const ref = useRef(null);
 
   useEffect(() => {
@@ -205,10 +205,10 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
       display: 'flex', flexDirection: 'column', height: '100dvh',
       maxWidth: 430, margin: '0 auto', overflow: 'hidden', position: 'relative',
     }}>
-      {/* Top Bar */}
+      {/* Header top bar */}
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '14px 20px 0', flexShrink: 0,
+        padding: 'calc(env(safe-area-inset-top, 0px) + 14px) 20px 0', flexShrink: 0,
       }}>
         <div>
           {moreScreen ? (
@@ -222,9 +222,9 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
           ) : (
             <div style={{ height: 26, display: 'flex', alignItems: 'center' }}>
               <img
-                src={darkMode ? logoDark : logoLight}
+                src={darkMode ? appIconDark : appIconLight}
                 alt="MSG"
-                style={{ height: '100%', objectFit: 'contain' }}
+                style={{ height: '100%', width: 26, objectFit: 'contain', borderRadius: 6 }}
               />
               <span style={{ fontSize: 9, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', marginLeft: 8, padding: '2px 6px', background: C.s2, borderRadius: 6, fontFamily: fb }}>Owner</span>
             </div>
@@ -252,6 +252,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
           onLogout={onLogout}
           onClose={() => setShowProfile(false)}
           onSettings={() => { handleMoreNavigate('settings'); setShowProfile(false); }}
+          darkMode={darkMode}
         />
       )}
 

@@ -35,19 +35,28 @@ export function UserAvatar({ user, size = 36, fontSize = 12 }) {
 }
 
 // ─── Card ─────────────────────────────────────────────────────────────────────
-export const Card = ({ children, style: s = {}, onClick }) => (
-  <div
-    onClick={onClick}
-    style={{
-      background: C.s2, border: `1px solid ${C.border}`, borderRadius: 20,
-      padding: 16, boxShadow: C.cardShadow,
-      cursor: onClick ? 'pointer' : 'default',
-      transition: 'box-shadow 0.2s, transform 0.15s', ...s,
-    }}
-  >
-    {children}
-  </div>
-);
+export const Card = ({ children, style: s = {}, onClick }) => {
+  const isDark = C.bg === '#111111';
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        background: isDark ? 'rgba(26, 26, 26, 0.65)' : 'rgba(255, 255, 255, 0.70)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)'}`,
+        borderRadius: 20,
+        padding: 16,
+        boxShadow: C.cardShadow,
+        cursor: onClick ? 'pointer' : 'default',
+        transition: 'box-shadow 0.2s, transform 0.15s, background-color 0.2s, border-color 0.2s',
+        ...s,
+      }}
+    >
+      {children}
+    </div>
+  );
+};
 
 // ─── Tag ──────────────────────────────────────────────────────────────────────
 export const Tag = ({ label, active, color, onClick }) => (

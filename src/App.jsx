@@ -231,14 +231,30 @@ export default function MSG() {
     const timeout = setTimeout(() => setGymLoading(false), 10000);
     try {
       const doc = await getUserDoc(uid);
-      if (doc?.gymId) {
-        setGymId(doc.gymId);   save('msg_gym_id', doc.gymId);
-        setRole(doc.role || 'member'); save('msg_role', doc.role || 'member');
-        try {
-          const db = await getFBFirestore();
-          const gymDoc = await db.doc(`gyms/${doc.gymId}`).get();
-          if (gymDoc.exists) { const n = gymDoc.data().name; setGymName(n); save('msg_gym_name', n); }
-        } catch(_) {}
+      if (doc) {
+        if (doc.gymId) {
+          setGymId(doc.gymId);   save('msg_gym_id', doc.gymId);
+          setRole(doc.role || 'member'); save('msg_role', doc.role || 'member');
+          try {
+            const db = await getFBFirestore();
+            const gymDoc = await db.doc(`gyms/${doc.gymId}`).get();
+            if (gymDoc.exists) { const n = gymDoc.data().name; setGymName(n); save('msg_gym_name', n); }
+          } catch(_) {}
+        } else {
+          setGymId(null); save('msg_gym_id', null);
+          setRole('member'); save('msg_role', 'member');
+          setGymName(''); save('msg_gym_name', '');
+        }
+      } else {
+        // User doc is missing/deleted from Firestore: Self-healing
+        console.warn('User document not found in Firestore. Self-healing state...');
+        setGymId(null); save('msg_gym_id', null);
+        setRole('member'); save('msg_role', 'member');
+        setGymName(''); save('msg_gym_name', '');
+        localStorage.removeItem('msg_gym_id');
+        localStorage.removeItem('msg_gym_name');
+        localStorage.removeItem('msg_role');
+        setShowProfileSetup(true); // Re-run profile setup / user doc creation
       }
     } catch (e) { console.warn('resolveGym:', e.message); }
     clearTimeout(timeout);
@@ -275,8 +291,22 @@ export default function MSG() {
     setMealLog([]);         setProgressLogs([]);  setDietGoal(null);  setWeekPlan(null);
     gymResolvedRef.current = false;
     // Background cleanup (fire-and-forget — errors are swallowed intentionally)
-    getFBAuth().then(auth => auth.signOut()).catch(() => {});
-    GoogleAuth.signOut().catch(() => {});
+    try {
+      getFBAuth().then(auth => {
+        try {
+          auth.signOut().catch(e => console.warn('Firebase signOut promise error:', e));
+        } catch (e) {
+          console.warn('Firebase signOut throw error:', e);
+        }
+      }).catch(e => console.warn('getFBAuth error during signOut:', e));
+    } catch (e) {
+      console.warn('Firebase signOut failed to initiate:', e);
+    }
+    try {
+      GoogleAuth.signOut().catch(e => console.warn('GoogleAuth.signOut promise error:', e));
+    } catch (e) {
+      console.warn('GoogleAuth signOut failed to initiate:', e);
+    }
   };
 
   // ── Gym joined callback ────────────────────────────────────────────────────

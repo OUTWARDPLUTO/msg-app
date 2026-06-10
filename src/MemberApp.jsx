@@ -4,8 +4,8 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, 
 // ─── Theme (shared — imported from shared/theme.js) ──────────────────────────
 import { THEMES, C, fn, fb, MC } from './shared/theme.js';
 import { AnatomicalFigure } from './AnatomicalFigure';
-import logoLight from './assets/logo-light.png';
-import logoDark from './assets/logo-dark.png';
+import appIconLight from './assets/app-icon-light.png';
+import appIconDark from './assets/app-icon-dark.png';
 import { UserAvatar } from './shared/primitives.jsx';
 import AttendanceButton from './sections/AttendanceButton.jsx';
 
@@ -544,9 +544,28 @@ async function callClaude(sys, userMsg) {
 }
 
 // ─── Primitives ─────────────────────────────────────────────────────────────
-const Card = ({ children, style: s = {}, onClick }) => (
-  <div onClick={onClick} style={{ background: C.s2, border: `1px solid ${C.border}`, borderRadius: 20, padding: 16, boxShadow: C.cardShadow, cursor: onClick ? 'pointer' : 'default', transition: 'box-shadow 0.2s, transform 0.15s', ...s }}>{children}</div>
-);
+const Card = ({ children, style: s = {}, onClick }) => {
+  const isDark = C.bg === '#111111';
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        background: isDark ? 'rgba(26, 26, 26, 0.65)' : 'rgba(255, 255, 255, 0.70)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)'}`,
+        borderRadius: 20,
+        padding: 16,
+        boxShadow: C.cardShadow,
+        cursor: onClick ? 'pointer' : 'default',
+        transition: 'box-shadow 0.2s, transform 0.15s, background-color 0.2s, border-color 0.2s',
+        ...s,
+      }}
+    >
+      {children}
+    </div>
+  );
+};
 const Tag = ({ label, active, color, onClick }) => (
   <button onClick={onClick} style={{
     background: active ? (color || C.accent) : 'transparent',
@@ -4497,7 +4516,7 @@ function ProfileDropdown({ onClose, onNavigate, onLogout, user, darkMode }) {
           </div>
         </div>
         {items.map((item, i) => (
-          <button key={i} onClick={() => { onClose(); item.action === 'logout' ? onLogout() : onNavigate(item.action); }} style={{
+          <button key={i} onClick={() => { onClose(); item.action === 'logout' ? setTimeout(() => onLogout(), 100) : onNavigate(item.action); }} style={{
             display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '13px 16px',
             background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left',
             borderBottom: i < items.length - 1 ? `1px solid ${C.border}` : 'none',
@@ -5052,11 +5071,11 @@ export default function MemberApp({
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 'env(safe-area-inset-top)', background: C.bg, zIndex: 999, flexShrink: 0 }} />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 'calc(env(safe-area-inset-top) + 12px)', paddingLeft: 20, paddingRight: 20, paddingBottom: 0, flexShrink: 0, zIndex: 10, background: C.bg }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div style={{ height: 32, display: 'flex', alignItems: 'center' }}>
+          <div style={{ height: 32, width: 32, display: 'flex', alignItems: 'center' }}>
             <img
-              src={darkMode ? logoDark : logoLight}
+              src={darkMode ? appIconDark : appIconLight}
               alt="MSG"
-              style={{ height: '100%', objectFit: 'contain', display: 'block' }}
+              style={{ height: '100%', width: '100%', objectFit: 'contain', display: 'block', borderRadius: 8 }}
             />
           </div>
         </div>

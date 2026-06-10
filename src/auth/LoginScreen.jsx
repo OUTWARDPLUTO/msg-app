@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { getFBAuth } from '../shared/firebase.js';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
-import logoLight from '../assets/logo-light.png';
-import logoDark from '../assets/logo-dark.png';
+import appIconLight from '../assets/app-icon-light.png';
+import appIconDark from '../assets/app-icon-dark.png';
 
 export default function LoginScreen({ onLogin, darkMode }) {
   const [mode, setMode]       = useState('login');
@@ -120,9 +120,9 @@ export default function LoginScreen({ onLogin, darkMode }) {
       {/* Logo */}
       <div style={{ textAlign: 'center', marginBottom: 32 }}>
         <img
-          src={darkMode ? logoDark : logoLight}
+          src={darkMode ? appIconDark : appIconLight}
           alt="MSG"
-          style={{ height: 48, objectFit: 'contain', display: 'block', margin: '0 auto' }}
+          style={{ height: 72, width: 72, objectFit: 'contain', display: 'block', margin: '0 auto', borderRadius: 16 }}
         />
         <div style={{ color: C.sub, fontSize: 13, marginTop: 14, lineHeight: 1.6 }}>Train smart. Eat right. Track everything.</div>
       </div>

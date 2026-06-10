@@ -7,11 +7,20 @@ service cloud.firestore {
     function isUser(uid) { return isAuth() && request.auth.uid == uid; }
 
     function getUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      let path = /databases/$(database)/documents/users/$(request.auth.uid);
+      return exists(path) ? get(path).data : null;
     }
 
-    function userGymId() { return getUserData().gymId; }
-    function userRole()  { return getUserData().role; }
+    function userGymId() {
+      let data = getUserData();
+      return data != null && 'gymId' in data ? data.gymId : null;
+    }
+
+    function userRole() {
+      let data = getUserData();
+      return data != null && 'role' in data ? data.role : null;
+    }
+
     function isOwnerOf(gymId) { return isAuth() && userGymId() == gymId && userRole() == 'owner'; }
     function isMemberOf(gymId) { return isAuth() && userGymId() == gymId; }
 

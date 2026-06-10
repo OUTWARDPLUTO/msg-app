@@ -231,9 +231,11 @@ export default function AttendanceButton({ uid, gymId, onCheckIn }) {
           width: '100%', display: 'flex', alignItems: 'center', gap: 14,
           padding: '14px 18px',
           background: checked
-            ? `linear-gradient(135deg, ${C.green}18, ${C.green}08)`
-            : `linear-gradient(135deg, ${C.accent}18, ${C.accent}08)`,
-          border: `1px solid ${checked ? C.green + '44' : C.accent + '44'}`,
+            ? `linear-gradient(135deg, ${C.green}25, ${C.green}10)`
+            : `linear-gradient(135deg, ${C.accent}25, ${C.accent}10)`,
+          border: `1px solid ${checked ? C.green + '40' : C.accent + '40'}`,
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
           borderRadius: 16, cursor: checked ? 'default' : 'pointer',
           transition: 'all 0.3s ease',
           transform: animating ? 'scale(0.97)' : 'scale(1)',

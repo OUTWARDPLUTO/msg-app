@@ -316,23 +316,24 @@ export default function StoreTab({ gymId }) {
       ) : (
         <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {filtered.map(p => (
-            <Card key={p.id} style={{ padding: 0, overflow: 'hidden' }}>
-              <div style={{ display: 'flex', gap: 0 }}>
-                {/* Image */}
-                <div style={{
-                  width: 90, minHeight: 90, flexShrink: 0,
-                  background: C.s3, overflow: 'hidden',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  {p.imageUrl
-                    ? <img src={p.imageUrl} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.currentTarget.style.display = 'none'; }} />
-                    : <span style={{ fontSize: 32, opacity: 0.5 }}>{CAT_ICONS[p.category] || '📦'}</span>
-                  }
-                </div>
-                {/* Info */}
-                <div style={{ flex: 1, padding: '12px 12px 12px 12px', minWidth: 0 }}>
+            <Card key={p.id} style={{ padding: 0, overflow: 'hidden', position: 'relative', minHeight: 120 }}>
+              {/* Image cell (absolute positioned on the left, full height) */}
+              <div style={{
+                position: 'absolute', top: 0, left: 0, bottom: 0, width: 100,
+                background: C.s3, overflow: 'hidden',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                borderRight: `1px solid ${C.border}`,
+              }}>
+                {p.imageUrl
+                  ? <img src={p.imageUrl} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.currentTarget.style.display = 'none'; }} />
+                  : <span style={{ fontSize: 32, opacity: 0.5 }}>{CAT_ICONS[p.category] || '📦'}</span>
+                }
+              </div>
+              {/* Info & Actions (structured flex column on the right) */}
+              <div style={{ marginLeft: 100, padding: 14, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 120, boxSizing: 'border-box' }}>
+                <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {p.name}
                       </div>
@@ -347,27 +348,27 @@ export default function StoreTab({ gymId }) {
                       {p.description}
                     </div>
                   )}
-                  {/* Footer */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
-                    <div style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 4,
-                      padding: '2px 8px', borderRadius: 6, fontSize: 9, fontFamily: fb, fontWeight: 700,
-                      background: p.inStock ? C.green + '15' : C.red + '15',
-                      color: p.inStock ? C.green : C.red,
-                      border: `1px solid ${p.inStock ? C.green + '33' : C.red + '33'}`,
-                    }}>
-                      {p.inStock ? '● IN STOCK' : '○ OUT OF STOCK'}
-                    </div>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <button onClick={() => setModal(p)} style={{
-                        background: C.s3, border: `1px solid ${C.border}`, borderRadius: 8,
-                        padding: '4px 10px', fontSize: 11, color: C.sub, cursor: 'pointer', fontFamily: fn, fontWeight: 600,
-                      }}>Edit</button>
-                      <button onClick={() => setDeleteConfirm(p.id)} style={{
-                        background: C.red + '15', border: `1px solid ${C.red}33`, borderRadius: 8,
-                        padding: '4px 10px', fontSize: 11, color: C.red, cursor: 'pointer', fontFamily: fn, fontWeight: 600,
-                      }}>Delete</button>
-                    </div>
+                </div>
+                {/* Footer / Actions */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 10, gap: 8, flexWrap: 'wrap' }}>
+                  <div style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 4,
+                    padding: '2px 8px', borderRadius: 6, fontSize: 9, fontFamily: fb, fontWeight: 700,
+                    background: p.inStock ? C.green + '15' : C.red + '15',
+                    color: p.inStock ? C.green : C.red,
+                    border: `1px solid ${p.inStock ? C.green + '33' : C.red + '33'}`,
+                  }}>
+                    {p.inStock ? '● IN STOCK' : '○ OUT OF STOCK'}
+                  </div>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button onClick={() => setModal(p)} style={{
+                      background: C.s3, border: `1px solid ${C.border}`, borderRadius: 8,
+                      padding: '4px 10px', fontSize: 11, color: C.sub, cursor: 'pointer', fontFamily: fn, fontWeight: 600,
+                    }}>Edit</button>
+                    <button onClick={() => setDeleteConfirm(p.id)} style={{
+                      background: C.red + '15', border: `1px solid ${C.red}33`, borderRadius: 8,
+                      padding: '4px 10px', fontSize: 11, color: C.red, cursor: 'pointer', fontFamily: fn, fontWeight: 600,
+                    }}>Delete</button>
                   </div>
                 </div>
               </div>
