@@ -126,6 +126,19 @@ export default function AttendanceButton({ uid, gymId, onCheckIn }) {
             closeScanner();
             return;
           }
+        } else if (code.data.startsWith('msg-checkin-static:')) {
+          const parts = code.data.split(':');
+          const scannedGymId = parts[1];
+          
+          if (scannedGymId === gymId) {
+            closeScanner();
+            submitCheckIn(`static_${gymId}`);
+            return;
+          } else {
+            alert("This QR code belongs to a different gym.");
+            closeScanner();
+            return;
+          }
         }
       }
     }

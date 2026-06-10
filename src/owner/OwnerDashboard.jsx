@@ -11,6 +11,8 @@ import StoreTab from './StoreTab.jsx';
 import MembershipsTab from './MembershipsTab.jsx';
 import appIconLight from '../assets/app-icon-light.png';
 import appIconDark from '../assets/app-icon-dark.png';
+import OwnerAccountTab from './OwnerAccountTab.jsx';
+import OwnerAppSettingsTab from './OwnerAppSettingsTab.jsx';
 
 const NAV = [
   { key: 'overview',      label: 'Home',       icon: '🏠' },
@@ -35,10 +37,12 @@ function OwnerNavIcon({ id, active }) {
 // ─── More Tab ─────────────────────────────────────────────────────────────────
 function MoreTab({ gymId, gymName, ownerUid, onNavigate }) {
   const items = [
-    { key: 'memberships', icon: '💳', label: 'Memberships', sub: 'Manage plans and member subscriptions' },
-    { key: 'alerts',      icon: '⚠️', label: 'Alerts',      sub: 'Members at risk of going inactive' },
-    { key: 'import',      icon: '📤', label: 'CSV Import',  sub: 'Bulk import members from CSV' },
-    { key: 'settings',    icon: '⚙️', label: 'Gym Settings', sub: 'Gym code, name & notifications' },
+    { key: 'account',     icon: '👤', label: 'My Account',    sub: 'Manage your profile and personal details' },
+    { key: 'appSettings', icon: '📱', label: 'App Settings',  sub: 'Dark mode, preferences & notifications' },
+    { key: 'memberships', icon: '💳', label: 'Memberships',   sub: 'Manage plans and member subscriptions' },
+    { key: 'settings',    icon: '⚙️', label: 'Gym Settings',  sub: 'Gym code, name & check-in verification' },
+    { key: 'alerts',      icon: '⚠️', label: 'Alerts',        sub: 'Members at risk of going inactive' },
+    { key: 'import',      icon: '📤', label: 'CSV Import',    sub: 'Bulk import members from CSV' },
   ];
   return (
     <div style={{ padding: '20px 16px 32px' }}>
@@ -66,7 +70,7 @@ function MoreTab({ gymId, gymName, ownerUid, onNavigate }) {
 }
 
 // ─── Owner Profile Dropdown ────────────────────────────────────────────────────
-function OwnerProfileDropdown({ user, gymName, gymCode, onLogout, onClose, onSettings, darkMode }) {
+function OwnerProfileDropdown({ user, gymName, gymCode, onLogout, onClose, onSettings, onAccount, darkMode }) {
   const ref = useRef(null);
 
   useEffect(() => {
@@ -134,6 +138,7 @@ function OwnerProfileDropdown({ user, gymName, gymCode, onLogout, onClose, onSet
       </div>
 
       {/* Actions */}
+      {row('👤', 'My Account', 'Manage profile & personal details', onAccount)}
       {row('⚙️', 'Gym Settings', 'Manage gym code, name & alerts', onSettings)}
       {row('🚪', 'Log Out', null, onLogout, true)}
     </div>
@@ -141,7 +146,7 @@ function OwnerProfileDropdown({ user, gymName, gymCode, onLogout, onClose, onSet
 }
 
 // ─── Owner Dashboard ──────────────────────────────────────────────────────────
-export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMode }) {
+export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMode, onToggleTheme }) {
   const [tab, setTab]           = useState('overview');
   const [prevTab, setPrevTab]   = useState(null);
   const [tabHistory, setTabHistory] = useState(['overview']);
@@ -149,6 +154,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
   const [gymCode, setGymCode]   = useState('');
   // Sub-screen from "More" tab
   const [moreScreen, setMoreScreen] = useState(null);
+  const [childBackHandler, setChildBackHandler] = useState(null);
 
   // Load gym code once
   useEffect(() => {
@@ -170,25 +176,37 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
   // Navigate to a sub-screen inside More
   const handleMoreNavigate = (screen) => {
     setMoreScreen(screen);
+    setTab('more');
     window.history.pushState({ ownerTab: 'more', moreScreen: screen }, '');
   };
 
-  // ── Back button (browser + Android) ───────────────────────────────────────
+  // ── Back button registration for Android (Capacitor) ────────────────────────
   useEffect(() => {
-    window.history.pushState({ ownerTab: 'overview' }, '');
-    const onPop = () => {
-      if (moreScreen) { setMoreScreen(null); return; }
-      setTabHistory(h => {
-        if (h.length <= 1) { onLogout(); return h; }
-        const next = h[h.length - 2];
-        setPrevTab(tab);
-        setTab(next);
-        return h.slice(0, -1);
-      });
+    window.__msgGoBack = () => {
+      if (showProfile) {
+        setShowProfile(false);
+        return true;
+      }
+      if (childBackHandler) {
+        const handled = childBackHandler();
+        if (handled) return true;
+      }
+      if (moreScreen) {
+        setMoreScreen(null);
+        return true;
+      }
+      if (tabHistory.length > 1) {
+        const prev = tabHistory[tabHistory.length - 2];
+        setTabHistory(h => h.slice(0, -1));
+        setTab(prev);
+        return true;
+      }
+      return false;
     };
-    window.addEventListener('popstate', onPop);
-    return () => window.removeEventListener('popstate', onPop);
-  }, [moreScreen]); // eslint-disable-line
+    return () => {
+      window.__msgGoBack = null;
+    };
+  }, [showProfile, childBackHandler, moreScreen, tabHistory]);
 
   // Render sub-screen from More
   function renderMoreScreen() {
@@ -196,6 +214,8 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
     if (moreScreen === 'alerts') return <AlertsTab gymId={gymId} />;
     if (moreScreen === 'import') return <CSVImport gymId={gymId} />;
     if (moreScreen === 'settings') return <GymSettingsTab gymId={gymId} gymName={gymName} ownerUid={user?.uid} />;
+    if (moreScreen === 'account') return <OwnerAccountTab user={user} onLogout={onLogout} />;
+    if (moreScreen === 'appSettings') return <OwnerAppSettingsTab darkMode={darkMode} onToggleTheme={onToggleTheme} />;
     return null;
   }
 
@@ -252,6 +272,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
           onLogout={onLogout}
           onClose={() => setShowProfile(false)}
           onSettings={() => { handleMoreNavigate('settings'); setShowProfile(false); }}
+          onAccount={() => { handleMoreNavigate('account'); setShowProfile(false); }}
           darkMode={darkMode}
         />
       )}
@@ -265,10 +286,10 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
             <MoreTab gymId={gymId} gymName={gymName} ownerUid={user?.uid} onNavigate={handleMoreNavigate} />
           )}
           {/* Main tabs */}
-          {tab === 'overview'   && <OverviewTab gymId={gymId} user={user} />}
-          {tab === 'members'    && <MemberListTab gymId={gymId} />}
+          {tab === 'overview'   && <OverviewTab gymId={gymId} user={user} onNavigate={handleMoreNavigate} />}
+          {tab === 'members'    && <MemberListTab gymId={gymId} setBackHandler={setChildBackHandler} />}
           {tab === 'attendance' && <AttendanceTab gymId={gymId} />}
-          {tab === 'store'      && <StoreTab gymId={gymId} />}
+          {tab === 'store'      && <StoreTab gymId={gymId} setBackHandler={setChildBackHandler} />}
         </div>
       </div>
 
@@ -322,7 +343,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
 }
 
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
-function OverviewTab({ gymId, user }) {
+function OverviewTab({ gymId, user, onNavigate }) {
   const [stats, setStats] = useState(null);
   const [feed, setFeed]   = useState([]);
   const [loading, setLoading] = useState(true);
@@ -442,6 +463,30 @@ function OverviewTab({ gymId, user }) {
                 Average across all {stats?.total ?? 0} members (last 30 days)
               </div>
             </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Reception QR Code Quick Print */}
+      <div style={{ padding: '0 16px', marginBottom: 16 }}>
+        <Card style={{ padding: '14px 16px', background: `linear-gradient(135deg, ${C.accent}15, transparent)`, border: `1px solid ${C.accent}33` }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+            <div style={{ flex: 1 }}>
+              <Lbl text="Reception Check-In QR" style={{ marginBottom: 4 }} />
+              <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>Print Reception QR Code</div>
+              <div style={{ fontSize: 11, color: C.muted, marginTop: 4, lineHeight: 1.4 }}>
+                Display a printed QR code at your reception counter so members can check in without requiring you to keep your phone open.
+              </div>
+            </div>
+            {onNavigate && (
+              <button onClick={() => { onNavigate('settings'); }} style={{
+                background: C.accent, border: 'none', borderRadius: 10,
+                padding: '8px 14px', color: '#111', fontFamily: fn, fontWeight: 700, fontSize: 11,
+                cursor: 'pointer', boxShadow: C.accentShadow, flexShrink: 0,
+              }}>
+                Print QR
+              </button>
+            )}
           </div>
         </Card>
       </div>

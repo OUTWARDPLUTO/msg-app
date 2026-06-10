@@ -790,7 +790,7 @@ function ChartTip({ active, payload, label, color, unit }) {
 }
 
 // ─── Home Section ────────────────────────────────────────────────────────────
-function HomeSection({ mealLog, progressLogs, dietGoal, onLogClick, user, gymId, onAchievementsClick }) {
+function HomeSection({ mealLog, progressLogs, dietGoal, onLogClick, user, gymId, onAchievementsClick, setBackHandler }) {
   const [checkInKey, setCheckInKey] = useState(0);
   const tot = mealLog.reduce((a, i) => ({ cal: a.cal + i.calories, p: a.p + i.protein, c: a.c + (i.carbs || 0), f: a.f + (i.fat || 0), na: a.na + (i.sodium || 0) }), { cal: 0, p: 0, c: 0, f: 0, na: 0 });
   const dri = { ...BASE_DRI, ...(dietGoal || {}) };
@@ -856,7 +856,7 @@ function HomeSection({ mealLog, progressLogs, dietGoal, onLogClick, user, gymId,
       </div>
 
       {/* Membership Status Card */}
-      {gymId && user?.uid && <MembershipCard uid={user.uid} gymId={gymId} />}
+      {gymId && user?.uid && <MembershipCard uid={user.uid} gymId={gymId} setBackHandler={setBackHandler} />}
 
       {/* Attendance Check-in Button */}
       {gymId && user?.uid && (
@@ -3008,12 +3008,24 @@ const PAYMENT_METHODS = [
   { key: 'bank', label: 'Bank Transfer', icon: '🏦', sub: 'Direct bank transfer' },
 ];
 
-function StoreSection({ gymId }) {
+function StoreSection({ gymId, setBackHandler }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterCat, setFilterCat] = useState('All');
   const [selected, setSelected] = useState(null);
   const [gymInfo, setGymInfo] = useState(null);
+
+  useEffect(() => {
+    if (selected && setBackHandler) {
+      setBackHandler(() => () => {
+        setSelected(null);
+        return true;
+      });
+    } else if (setBackHandler) {
+      setBackHandler(null);
+    }
+    return () => { if (setBackHandler) setBackHandler(null); };
+  }, [selected, setBackHandler]);
 
   useEffect(() => {
     if (!gymId) { setLoading(false); return; }
@@ -3224,11 +3236,23 @@ function ProductDetailSheet({ product, gymInfo, onClose }) {
 }
 
 // ─── Membership Status Card ───────────────────────────────────────────────────
-function MembershipCard({ uid, gymId }) {
+function MembershipCard({ uid, gymId, setBackHandler }) {
   const [membership, setMembership] = useState(null);
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showPlans, setShowPlans] = useState(false);
+
+  useEffect(() => {
+    if (showPlans && setBackHandler) {
+      setBackHandler(() => () => {
+        setShowPlans(false);
+        return true;
+      });
+    } else if (setBackHandler) {
+      setBackHandler(null);
+    }
+    return () => { if (setBackHandler) setBackHandler(null); };
+  }, [showPlans, setBackHandler]);
 
   useEffect(() => {
     if (!uid || !gymId || gymId === 'demo-gym') { setLoading(false); return; }
@@ -3795,15 +3819,31 @@ function ProfileScreen({ onClose, progressLogs, dietGoal, mealLog = [], weekPlan
       const dataUrl = ev.target.result;
       setPhoto(dataUrl);
       try { localStorage.setItem('msg_profile_photo', dataUrl); } catch {}
+      if (user) {
+        user.photo = dataUrl;
+        try { localStorage.setItem('msg_user', JSON.stringify(user)); } catch {}
+        if (user.uid && user.uid !== 'demo') {
+          import('./shared/firebase.js').then(f => {
+            f.updateUserDoc(user.uid, { photo: dataUrl }).catch(() => {});
+          });
+        }
+      }
     };
     reader.readAsDataURL(file);
   };
 
-  const [profile, setProfile] = useState({
-    name: user?.name || 'User',
-    initials,
-    bio: '',
-    age: '', gender: '', phone: '', city: '',
+  const [profile, setProfile] = useState(() => {
+    try {
+      const p = localStorage.getItem('msg_profile_details');
+      if (p) return JSON.parse(p);
+      if (user?.profile) return user.profile;
+    } catch {}
+    return user?.profile || {
+      name: user?.name || 'User',
+      initials,
+      bio: '',
+      age: '', gender: '', phone: '', city: '',
+    };
   });
   const [draft, setDraft] = useState({ ...profile });
   const sp = (k, v) => setDraft(p => ({ ...p, [k]: v }));
@@ -3932,7 +3972,21 @@ function ProfileScreen({ onClose, progressLogs, dietGoal, mealLog = [], weekPlan
           </div>
           <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
             <button onClick={() => setEditing(false)} style={{ flex: 1, background: C.s3, border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, color: C.sub, fontFamily: fn, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
-            <button onClick={() => { setProfile({ ...draft }); setEditing(false); }} style={{ flex: 2, background: C.accent, border: 'none', borderRadius: 12, padding: 14, color: '#000', fontFamily: fn, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Save Changes</button>
+            <button onClick={() => {
+              setProfile({ ...draft });
+              try {
+                localStorage.setItem('msg_profile_details', JSON.stringify(draft));
+                user.name = draft.name;
+                user.profile = draft;
+                localStorage.setItem('msg_user', JSON.stringify(user));
+                if (user.uid && user.uid !== 'demo') {
+                  import('./shared/firebase.js').then(f => {
+                    f.updateUserDoc(user.uid, { name: draft.name.trim(), profile: draft }).catch(() => {});
+                  });
+                }
+              } catch {}
+              setEditing(false);
+            }} style={{ flex: 2, background: C.accent, border: 'none', borderRadius: 12, padding: 14, color: '#000', fontFamily: fn, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Save Changes</button>
           </div>
         </div>
       </ModalShell>
@@ -4433,7 +4487,11 @@ function SettingsScreen({ onClose, onResetDiet, onResetWorkout, darkMode, onTogg
 
 // ─── Language Screen ──────────────────────────────────────────────────────────
 function LanguageScreen({ onClose }) {
-  const [selected, setSelected] = useState('en-IN');
+  const [selected, setSelected] = useState(() => {
+    try {
+      return localStorage.getItem('msg_lang') || 'en-IN';
+    } catch { return 'en-IN'; }
+  });
   const langs = [
     { code: 'en-IN', name: 'English', region: 'India', native: 'English' },
     { code: 'hi-IN', name: 'Hindi', region: 'India', native: 'हिन्दी' },
@@ -4462,7 +4520,10 @@ function LanguageScreen({ onClose }) {
           <div key={region} style={{ marginBottom: 18 }}>
             <div style={{ color: C.muted, fontSize: 10, fontFamily: fb, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>{region}</div>
             {langs.filter(l => l.region === region).map(l => (
-              <button key={l.code} onClick={() => setSelected(l.code)} style={{
+              <button key={l.code} onClick={() => {
+                setSelected(l.code);
+                try { localStorage.setItem('msg_lang', l.code); } catch {}
+              }} style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', boxSizing: 'border-box',
                 padding: '13px 14px', marginBottom: 7,
                 background: selected === l.code ? C.accent + '18' : C.s2,
@@ -4958,6 +5019,7 @@ export default function MemberApp({
   const [showProfile, setShowProfile] = useState(false);
   const [showLogModal, setShowLogModal] = useState(false);
   const [profileScreen, setProfileScreen] = useState(null);
+  const [childBackHandler, setChildBackHandler] = useState(null);
 
   // Setup + tutorial gating
   // msg_setup_done is set after ProfileSetupScreen completes
@@ -5008,6 +5070,10 @@ export default function MemberApp({
       if (!setupDone) return true;          // block back during setup
       if (showTutorial) return true;        // block back during tutorial
       if (profileScreen) { setProfileScreen(null); return true; }
+      if (childBackHandler) {
+        const handled = childBackHandler();
+        if (handled) return true;
+      }
       if (showLogModal)  { setShowLogModal(false);  return true; }
       if (showProfile)   { setShowProfile(false);   return true; }
       if (tabHistoryRef.current.length > 1) {
@@ -5019,7 +5085,7 @@ export default function MemberApp({
       return false;
     };
     return () => { window.__msgGoBack = null; };
-  }, [setupDone, showTutorial, profileScreen, showLogModal, showProfile, tab]);
+  }, [setupDone, showTutorial, profileScreen, childBackHandler, showLogModal, showProfile, tab]);
 
   const handleSaveProgress = (entry) => {
     setProgressLogs(l => [...l, entry]);
@@ -5038,12 +5104,13 @@ export default function MemberApp({
           user={user}
           gymId={gymId}
           onAchievementsClick={() => setProfileScreen('profile')}
+          setBackHandler={setChildBackHandler}
         />
       </div>
     ),
     workout: <WorkoutSection weekPlan={weekPlan} setWeekPlan={setWeekPlan} />,
     diet:    <DietSection dietGoal={dietGoal} setDietGoal={setDietGoal} mealLog={mealLog} setMealLog={setMealLog} />,
-    store:   <StoreSection gymId={gymId} />,
+    store:   <StoreSection gymId={gymId} setBackHandler={setChildBackHandler} />,
     progress: <ProgressSection logs={progressLogs} onLogClick={() => setShowLogModal(true)} onDelete={i => setProgressLogs(l => l.filter((_, j) => j !== i))} />,
   };
 

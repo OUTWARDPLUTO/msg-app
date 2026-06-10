@@ -232,6 +232,23 @@ export default function MSG() {
     try {
       const doc = await getUserDoc(uid);
       if (doc) {
+        // Sync user properties (name, photo, profile) from Firestore to client session
+        const updatedUser = {
+          uid,
+          name: doc.name || user?.name || doc.email?.split('@')[0] || 'User',
+          email: doc.email || user?.email || '',
+          photo: doc.photo || user?.photo || null,
+          profile: doc.profile || null,
+        };
+        setUser(updatedUser);
+        save('msg_user', updatedUser);
+        if (doc.profile) {
+          try { localStorage.setItem('msg_profile_details', JSON.stringify(doc.profile)); } catch {}
+        }
+        if (doc.photo) {
+          try { localStorage.setItem('msg_profile_photo', doc.photo); } catch {}
+        }
+
         if (doc.gymId) {
           setGymId(doc.gymId);   save('msg_gym_id', doc.gymId);
           setRole(doc.role || 'member'); save('msg_role', doc.role || 'member');
@@ -362,13 +379,16 @@ export default function MSG() {
 
   // 5. Role-based routing
   if (role === 'owner') return (
-    <OwnerDashboard
-      gymId={gymId}
-      gymName={gymName}
-      user={user}
-      onLogout={handleLogout}
-      darkMode={darkMode}
-    />
+    <ErrorBoundary C={C} fn={fn} onRetry={() => { setGymId(null); save('msg_gym_id', null); }}>
+      <OwnerDashboard
+        gymId={gymId}
+        gymName={gymName}
+        user={user}
+        onLogout={handleLogout}
+        darkMode={darkMode}
+        onToggleTheme={toggleTheme}
+      />
+    </ErrorBoundary>
   );
 
   if (role === 'trainer') return (

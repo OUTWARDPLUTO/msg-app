@@ -158,19 +158,22 @@ export function ScoreRing({ score = 0, size = 64, strokeWidth = 6 }) {
   const circ = 2 * Math.PI * r;
   const dash = (score / 100) * circ;
   const color = score >= 70 ? C.green : score >= 40 ? C.accent : C.red;
+  const half = size / 2;
   return (
-    <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={C.s4} strokeWidth={strokeWidth} />
+    <svg width={size} height={size} style={{ display: 'block', overflow: 'visible' }}>
+      <circle cx={half} cy={half} r={r} fill="none" stroke={C.s4} strokeWidth={strokeWidth}
+        transform={`rotate(-90 ${half} ${half})`} />
       <circle
-        cx={size / 2} cy={size / 2} r={r} fill="none"
+        cx={half} cy={half} r={r} fill="none"
         stroke={color} strokeWidth={strokeWidth}
         strokeDasharray={`${dash} ${circ - dash}`}
         strokeLinecap="round"
+        transform={`rotate(-90 ${half} ${half})`}
         style={{ transition: 'stroke-dasharray 0.6s ease' }}
       />
       <text
-        x="50%" y="50%" textAnchor="middle" dominantBaseline="central"
-        style={{ transform: 'rotate(90deg)', transformOrigin: '50% 50%', fill: color, fontSize: size * 0.28, fontWeight: 800, fontFamily: fn }}
+        x={half} y={half} textAnchor="middle" dominantBaseline="central"
+        style={{ fill: color, fontSize: size * 0.28, fontWeight: 800, fontFamily: fn }}
       >
         {score}
       </text>

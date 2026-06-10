@@ -3,11 +3,31 @@ import { C, fn, fb } from '../shared/theme.js';
 import { Card, Lbl, ScoreRing, StatusBadge, ModalShell, Spinner } from '../shared/primitives.jsx';
 import { getFBFirestore } from '../shared/firebase.js';
 
-export default function MemberListTab({ gymId }) {
+function getJsDate(field) {
+  if (!field) return null;
+  if (typeof field.toDate === 'function') return field.toDate();
+  if (field.seconds) return new Date(field.seconds * 1000);
+  const d = new Date(field);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+export default function MemberListTab({ gymId, setBackHandler }) {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(null); // member for detail sheet
+
+  useEffect(() => {
+    if (selected && setBackHandler) {
+      setBackHandler(() => () => {
+        setSelected(null);
+        return true;
+      });
+    } else if (setBackHandler) {
+      setBackHandler(null);
+    }
+    return () => { if (setBackHandler) setBackHandler(null); };
+  }, [selected, setBackHandler]);
 
   useEffect(() => { if (gymId) loadMembers(); }, [gymId]);
 
@@ -26,8 +46,10 @@ export default function MemberListTab({ gymId }) {
     setLoading(false);
   }
 
+
   function computeStatus(member) {
-    const la = member.lastActiveAt?.toDate?.()?.getTime() || 0;
+    const date = getJsDate(member.lastActiveAt);
+    const la = date ? date.getTime() : 0;
     const now = Date.now();
     if (!la || now - la > 5 * 86400000) return 'inactive';
     if (now - la > 3 * 86400000) return 'at-risk';
@@ -35,9 +57,9 @@ export default function MemberListTab({ gymId }) {
   }
 
   function lastSeenText(member) {
-    const la = member.lastActiveAt?.toDate?.()?.getTime();
-    if (!la) return 'Never';
-    const diff = Date.now() - la;
+    const date = getJsDate(member.lastActiveAt);
+    if (!date) return 'Never';
+    const diff = Date.now() - date.getTime();
     if (diff < 3600000) return 'Just now';
     if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
     return `${Math.floor(diff / 86400000)}d ago`;
@@ -155,12 +177,19 @@ function MemberDetailSheet({ member, gymId, onClose }) {
   }
 
   function timeAgo(ts) {
-    if (!ts?.toDate) return '';
-    const diff = Date.now() - ts.toDate().getTime();
+    const date = getJsDate(ts);
+    if (!date) return '—';
+    const diff = Date.now() - date.getTime();
+    if (diff < 60000) return 'Just now';
     if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
     if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
     return `${Math.floor(diff / 86400000)}d ago`;
   }
+
+  const getJoinedDate = () => {
+    const d = getJsDate(member.joinedAt);
+    return d ? d.toLocaleDateString('en-IN') : '—';
+  };
 
   const TYPE_ICONS = { workout: '💪', diet: '🥗', progress: '📊', checkin: '✅' };
 
@@ -194,7 +223,7 @@ function MemberDetailSheet({ member, gymId, onClose }) {
             { l: 'Engagement Score', v: `${member.engagementScore ?? 0}/100`, c: C.accent },
             { l: 'Role', v: member.role || 'member', c: C.blue },
             { l: 'Status', v: member.status || 'active', c: member.status === 'active' ? C.green : C.orange },
-            { l: 'Joined', v: member.joinedAt?.toDate ? member.joinedAt.toDate().toLocaleDateString('en-IN') : '—', c: C.sub },
+            { l: 'Joined', v: getJoinedDate(), c: C.sub },
           ].map(s => (
             <Card key={s.l} style={{ padding: '12px 14px' }}>
               <Lbl text={s.l} style={{ marginBottom: 4 }} />

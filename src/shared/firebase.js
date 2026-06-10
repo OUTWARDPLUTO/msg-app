@@ -269,13 +269,16 @@ export async function checkIn(uid, gymId, qrToken = null) {
       if (!qrToken) {
         return { error: 'QR Code verification is required for this gym.' };
       }
-      const activeQr = gymData.activeQrToken;
-      if (!activeQr || !activeQr.token || activeQr.token !== qrToken) {
-        return { error: 'Invalid QR Code. Please scan the current code displayed at reception.' };
-      }
-      const expiresAt = activeQr.expiresAt?.toDate ? activeQr.expiresAt.toDate().getTime() : new Date(activeQr.expiresAt).getTime();
-      if (Date.now() > expiresAt) {
-        return { error: 'QR Code has expired. Please scan the new code displayed at reception.' };
+      const isStaticMatch = settings.useStaticQr && qrToken === `static_${gymId}`;
+      if (!isStaticMatch) {
+        const activeQr = gymData.activeQrToken;
+        if (!activeQr || !activeQr.token || activeQr.token !== qrToken) {
+          return { error: 'Invalid QR Code. Please scan the current code displayed at reception.' };
+        }
+        const expiresAt = activeQr.expiresAt?.toDate ? activeQr.expiresAt.toDate().getTime() : new Date(activeQr.expiresAt).getTime();
+        if (Date.now() > expiresAt) {
+          return { error: 'QR Code has expired. Please scan the new code displayed at reception.' };
+        }
       }
     }
 

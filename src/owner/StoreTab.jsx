@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
-import { Card, Lbl, Spinner } from '../shared/primitives.jsx';
+import { Card, Lbl, Spinner, ModalShell } from '../shared/primitives.jsx';
 import { getFBFirestore, serverTimestamp, uploadFile } from '../shared/firebase.js';
 
 const CATS = ['Protein', 'Creatine', 'Vitamins', 'Pre-Workout', 'BCAA', 'Fat Burner', 'Accessories', 'Other'];
@@ -98,22 +98,8 @@ function ProductModal({ gymId, initial, onSave, onClose }) {
   );
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 400,
-      background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'flex-end',
-    }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{
-        background: C.s1, borderRadius: '24px 24px 0 0', width: '100%',
-        maxHeight: '90dvh', overflowY: 'auto', padding: '0 0 env(safe-area-inset-bottom,0)',
-      }}>
-        {/* Handle */}
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 0' }}>
-          <div style={{ width: 36, height: 4, borderRadius: 2, background: C.border }} />
-        </div>
-        <div style={{ padding: '8px 20px 28px' }}>
-          <div style={{ fontFamily: fn, fontSize: 20, fontWeight: 800, color: C.text, marginBottom: 20 }}>
-            {initial ? 'Edit Product' : 'New Product'}
-          </div>
+    <ModalShell title={initial ? 'Edit Product' : 'New Product'} onClose={onClose}>
+      <div style={{ padding: '8px 20px 28px' }}>
 
           {/* Image */}
           <div style={{ marginBottom: 16 }}>
@@ -216,19 +202,35 @@ function ProductModal({ gymId, initial, onSave, onClose }) {
           }}>
             {saving ? 'Saving…' : uploading ? 'Uploading image…' : initial ? 'Save Changes' : 'Add Product'}
           </button>
-        </div>
       </div>
-    </div>
+    </ModalShell>
   );
 }
 
 // ─── Store Tab ────────────────────────────────────────────────────────────────
-export default function StoreTab({ gymId }) {
+export default function StoreTab({ gymId, setBackHandler }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null); // null | 'new' | product object (edit)
   const [filterCat, setFilterCat] = useState('All');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+
+  useEffect(() => {
+    if (modal && setBackHandler) {
+      setBackHandler(() => () => {
+        setModal(null);
+        return true;
+      });
+    } else if (deleteConfirm && setBackHandler) {
+      setBackHandler(() => () => {
+        setDeleteConfirm(null);
+        return true;
+      });
+    } else if (setBackHandler) {
+      setBackHandler(null);
+    }
+    return () => { if (setBackHandler) setBackHandler(null); };
+  }, [modal, deleteConfirm, setBackHandler]);
 
   useEffect(() => { if (gymId) load(); }, [gymId]);
 

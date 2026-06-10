@@ -15,6 +15,7 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const [useQr, setUseQr] = useState(false);
+  const [useStaticQr, setUseStaticQr] = useState(false);
 
   const handleSave = async () => {
     setLoading(true);
@@ -28,6 +29,7 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
           latitude: latitude ? parseFloat(latitude) : null,
           longitude: longitude ? parseFloat(longitude) : null,
           useQr,
+          useStaticQr,
         },
       });
       setSaved(true);
@@ -49,6 +51,7 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
         setLatitude(s.latitude !== undefined && s.latitude !== null ? String(s.latitude) : '');
         setLongitude(s.longitude !== undefined && s.longitude !== null ? String(s.longitude) : '');
         setUseQr(s.useQr || false);
+        setUseStaticQr(s.useStaticQr || false);
       }
     } catch (e) { console.warn(e); }
   };
@@ -168,7 +171,7 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
 
       {/* QR Settings Card */}
       <Card style={{ padding: '14px 16px', marginBottom: 20 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: useQr ? 12 : 0 }}>
           <div>
             <Lbl text="QR Code Scan Verification" />
             <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
@@ -177,6 +180,53 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
           </div>
           <SettingsToggle on={useQr} onTap={() => setUseQr(!useQr)} />
         </div>
+
+        {useQr && (
+          <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 12 }} className="msg-anim-fadein">
+            <Lbl text="QR Code Mode" />
+            <div style={{ display: 'flex', gap: 8 }}>
+              {[
+                { label: '⚡ Dynamic', val: false },
+                { label: '📄 Static (Printed)', val: true }
+              ].map(m => (
+                <button key={m.label} onClick={() => setUseStaticQr(m.val)} style={{
+                  flex: 1, padding: '10px',
+                  background: useStaticQr === m.val ? C.accent + '18' : C.s3,
+                  border: `1px solid ${useStaticQr === m.val ? C.accent : C.border}`,
+                  borderRadius: 10, color: useStaticQr === m.val ? C.accent : C.sub,
+                  fontFamily: fn, fontWeight: 700, fontSize: 12, cursor: 'pointer',
+                }}>
+                  {m.label}
+                </button>
+              ))}
+            </div>
+
+            {useStaticQr && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, marginTop: 10, background: C.s3, padding: 14, borderRadius: 14 }}>
+                <div style={{ fontSize: 11, color: C.sub, textAlign: 'center', lineHeight: 1.5 }}>
+                  Print this static QR code and display it at your gym's reception desk. Members scan this to check in.
+                </div>
+                <div style={{ background: '#fff', padding: 10, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=msg-checkin-static:${gymId}`}
+                    alt="Static QR Code"
+                    style={{ width: 150, height: 150 }}
+                  />
+                </div>
+                <button onClick={() => {
+                  const win = window.open();
+                  win.document.write(`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;"><h2>${name} Attendance QR Code</h2><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=msg-checkin-static:${gymId}" style="width:300px;height:300px;"/><p style="margin-top:20px;font-size:14px;color:#666;">Scan to Check In</p></div>`);
+                  win.print();
+                }} style={{
+                  background: C.s2, border: `1px solid ${C.border}`, borderRadius: 8,
+                  padding: '6px 12px', fontSize: 11, color: C.text, fontFamily: fn, fontWeight: 600, cursor: 'pointer'
+                }}>
+                  🖨️ Print QR Code
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </Card>
 
       <button onClick={handleSave} disabled={loading} style={{
