@@ -24,7 +24,7 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ── Gyms ──────────────────────────────────────────────────────────────────
+        // ── Gyms ──────────────────────────────────────────────────────────────────
     // Anyone authenticated can read a gym (needed for join-by-code lookup)
     // Only the gym owner can update settings
     match /gyms/{gymId} {
@@ -32,6 +32,16 @@ service cloud.firestore {
       allow create: if isAuth();   // creator will be stored as ownerUid in doc
       allow update: if isOwnerOf(gymId);
       allow delete: if false;
+
+      match /store_products/{productId} {
+        allow read:   if isMemberOf(gymId) || isOwnerOf(gymId);
+        allow write:  if isOwnerOf(gymId);
+      }
+
+      match /membership_plans/{planId} {
+        allow read:   if isMemberOf(gymId) || isOwnerOf(gymId);
+        allow write:  if isOwnerOf(gymId);
+      }
     }
 
     // ── Members ───────────────────────────────────────────────────────────────
@@ -39,6 +49,7 @@ service cloud.firestore {
     match /members/{docId} {
       // docId is "{gymId}_{uid}"
       allow read:   if isAuth() && (
+                      resource == null ||
                       isMemberOf(resource.data.gymId) ||
                       isOwnerOf(resource.data.gymId)
                     );

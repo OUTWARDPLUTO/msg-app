@@ -320,7 +320,7 @@ export default function StoreTab({ gymId }) {
               <div style={{ display: 'flex', gap: 0 }}>
                 {/* Image */}
                 <div style={{
-                  width: 90, height: 90, flexShrink: 0,
+                  width: 90, minHeight: 90, flexShrink: 0,
                   background: C.s3, overflow: 'hidden',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
