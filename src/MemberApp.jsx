@@ -1461,15 +1461,21 @@ function ManualPlanBuilder({ setWeekPlan, onBack }) {
   return (
     <div style={{ padding: '0 16px' }}>
       {/* Day tabs */}
-      <div style={{ display: 'flex', gap: 5, overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: 4, marginBottom: 14 }}>
+      <div style={{ display: 'flex', gap: 6, overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: 6, marginBottom: 14 }}>
         {planDays.map((d, i) => (
           <button key={i} onClick={() => { setActiveDay(i); setSearchResult(null); setExInput(''); }} style={{
-            flexShrink: 0, padding: '7px 12px',
+            flexShrink: 0, padding: '10px 14px',
             background: activeDay === i ? C.accent : C.s2,
             border: `1px solid ${activeDay === i ? C.accent : C.border}`,
-            borderRadius: 8, color: activeDay === i ? '#000' : C.sub,
+            borderRadius: 12, color: activeDay === i ? '#000' : C.sub,
             fontFamily: fn, fontWeight: 700, fontSize: 10, cursor: 'pointer',
-          }}>{d.dayName}</button>
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, minWidth: 80
+          }}>
+            <span>{d.dayName.toUpperCase()}</span>
+            <span style={{ fontSize: 9, opacity: activeDay === i ? 0.8 : 0.5, fontWeight: 500, textTransform: 'capitalize' }}>
+              {(d.focus || 'Split').split('—')[0].trim()}
+            </span>
+          </button>
         ))}
       </div>
 
@@ -1785,12 +1791,12 @@ function WorkoutSection({ weekPlan, setWeekPlan }) {
     <div>
       <Hd t="Workout" s="Week Plan · Library · Execute" />
       <div style={{ padding: '0 16px', display: 'flex', gap: 6, marginBottom: 16 }}>
-        {[['plan', 'Week Plan'], ['library', 'Exercise Library']].map(([k, l]) => (
+        {[['plan', 'Week Plan'], ['library', 'Exercise Library'], ['explore', 'Muscle Map']].map(([k, l]) => (
           <button key={k} onClick={() => setView(k)} style={{
-            flex: 1, padding: '10px', background: view === k ? C.accent : C.s2,
+            flex: 1, padding: '10px 6px', background: view === k ? C.accent : C.s2,
             border: `1px solid ${view === k ? C.accent : C.border}`, borderRadius: 10,
-            color: view === k ? '#000' : C.sub, fontFamily: fn, fontWeight: 700, fontSize: 11,
-            letterSpacing: '0.04em', textTransform: 'uppercase', cursor: 'pointer',
+            color: view === k ? '#000' : C.sub, fontFamily: fn, fontWeight: 700, fontSize: 10.5,
+            letterSpacing: '0.03em', textTransform: 'uppercase', cursor: 'pointer',
           }}>{l}</button>
         ))}
       </div>
@@ -1908,16 +1914,20 @@ function WorkoutSection({ weekPlan, setWeekPlan }) {
                 </div>
 
                 {/* Day tabs */}
-                <div style={{ display: 'flex', gap: 5, overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: 4 }}>
+                <div style={{ display: 'flex', gap: 6, overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: 6 }}>
                   {weekPlan.map((d, i) => (
                     <button key={i} onClick={() => setActiveDay(i)} style={{
-                      flexShrink: 0, padding: '7px 12px',
+                      flexShrink: 0, padding: '10px 14px',
                       background: activeDay === i ? C.accent : C.s2,
-                      border: `1px solid ${activeDay === i ? C.accent : C.border}`, borderRadius: 8,
+                      border: `1px solid ${activeDay === i ? C.accent : C.border}`, borderRadius: 12,
                       color: activeDay === i ? '#000' : C.sub,
                       fontFamily: fn, fontWeight: 700, fontSize: 10, cursor: 'pointer', whiteSpace: 'nowrap',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, minWidth: 80
                     }}>
-                      {d.day.toUpperCase()}
+                      <span>{d.day.toUpperCase()}</span>
+                      <span style={{ fontSize: 9, opacity: activeDay === i ? 0.8 : 0.5, fontWeight: 500, textTransform: 'capitalize' }}>
+                        {(d.focus || 'Rest').split('—')[0].split(' - ')[0].trim()}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -2066,6 +2076,11 @@ function WorkoutSection({ weekPlan, setWeekPlan }) {
             );
           })()}
         </div>
+      )}
+
+      {/* ── EXPLORE TAB (Muscle Map) ── */}
+      {view === 'explore' && (
+        <ExploreSection />
       )}
     </div>
   );
@@ -2854,8 +2869,8 @@ function DietSection({ dietGoal, setDietGoal, mealLog, setMealLog }) {
   );
 }
 
-// ─── Attendance Heat Map (GitHub-style) ───────────────────────────────────────
-// Renders a 52-week × 7-day grid coloured by check-in intensity
+// ─── Attendance Heat Map (30-Day Grid) ─────────────────────────────────────────
+// Renders a static, non-scrollable 10 columns × 3 rows grid representing the last 30 days
 function AttendanceHeatMap({ uid, gymId }) {
   const [checkInDates, setCheckInDates] = useState(new Set());
   const [loading, setLoading] = useState(true);
@@ -2867,10 +2882,10 @@ function AttendanceHeatMap({ uid, gymId }) {
     (async () => {
       try {
         const db = await import('./shared/firebase.js').then(m => m.getFBFirestore());
-        const oneYearAgo = new Date(Date.now() - 365 * 86400000).toISOString().split('T')[0];
+        const thirtyDaysAgo = new Date(Date.now() - 31 * 86400000).toISOString().split('T')[0];
         const snap = await db.collection(`attendance/${gymId}/logs`)
           .where('uid', '==', uid)
-          .where('date', '>=', oneYearAgo)
+          .where('date', '>=', thirtyDaysAgo)
           .get();
         const dates = new Set(snap.docs.map(d => d.data().date));
         setCheckInDates(dates);
@@ -2880,7 +2895,7 @@ function AttendanceHeatMap({ uid, gymId }) {
         let d = new Date();
         while (true) {
           const key = d.toISOString().split('T')[0];
-          if (dates.has(key)) { s++; d = new Date(d - 86400000); }
+          if (dates.has(key)) { s++; d = new Date(d.getTime() - 86400000); }
           else break;
         }
         setStreak(s);
@@ -2888,38 +2903,6 @@ function AttendanceHeatMap({ uid, gymId }) {
       setLoading(false);
     })();
   }, [uid, gymId]);
-
-  // Build 52 weeks × 7 days grid, starting from today going back
-  const weeks = [];
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  // Align to start of week (Sunday=0)
-  const dayOfWeek = today.getDay();
-  // Go back to cover 52 full weeks + current partial week
-  const startDate = new Date(today);
-  startDate.setDate(startDate.getDate() - (52 * 7 + dayOfWeek));
-
-  let cur = new Date(startDate);
-  let week = [];
-  while (cur <= today) {
-    const key = cur.toISOString().split('T')[0];
-    week.push({ date: key, hasCheckIn: checkInDates.has(key), isToday: key === today.toISOString().split('T')[0] });
-    if (week.length === 7) { weeks.push(week); week = []; }
-    cur = new Date(cur.getTime() + 86400000);
-  }
-  if (week.length > 0) weeks.push(week);
-
-  // Month labels
-  const monthLabels = [];
-  weeks.forEach((wk, wi) => {
-    const first = wk[0];
-    if (first) {
-      const d = new Date(first.date + 'T00:00:00');
-      if (d.getDate() <= 7) {
-        monthLabels.push({ wi, label: d.toLocaleString('en-IN', { month: 'short' }) });
-      }
-    }
-  });
 
   const cellColor = (day) => {
     if (!day.hasCheckIn) return C.s4;
@@ -2929,58 +2912,67 @@ function AttendanceHeatMap({ uid, gymId }) {
 
   if (loading) return null;
 
+  // Build the list of last 30 days
+  const daysList = [];
+  const now = new Date();
+  now.setHours(0,0,0,0);
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(now.getTime() - i * 86400000);
+    const key = d.toISOString().split('T')[0];
+    daysList.push({
+      date: d,
+      key: key,
+      hasCheckIn: checkInDates.has(key),
+      isToday: key === now.toISOString().split('T')[0]
+    });
+  }
+
   return (
     <div style={{ padding: '14px 16px 0' }}>
-      <Card style={{ padding: '14px 14px 10px', overflow: 'hidden' }}>
+      <Card style={{ padding: '14px 14px 12px' }}>
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <div>
-            <Lbl text="Check-in Consistency" style={{ marginBottom: 2 }} />
-            <div style={{ fontSize: 10, color: C.muted }}>{totalCheckIns} days in the last year</div>
+            <Lbl text="Attendance (Last 30 Days)" style={{ marginBottom: 2 }} />
+            <div style={{ fontSize: 10, color: C.muted }}>{totalCheckIns} check-in{totalCheckIns !== 1 ? 's' : ''} recorded</div>
           </div>
-          <div style={{ display: 'flex', gap: 16 }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontFamily: fn, fontSize: 18, fontWeight: 800, color: C.accent, lineHeight: 1 }}>{streak}</div>
-              <div style={{ fontSize: 8, color: C.muted, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', marginTop: 2 }}>Streak</div>
-            </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontFamily: fn, fontSize: 18, fontWeight: 800, color: C.accent, lineHeight: 1 }}>{streak}</div>
+            <div style={{ fontSize: 8, color: C.muted, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', marginTop: 2 }}>Streak</div>
           </div>
         </div>
 
-        {/* Month labels */}
-        <div style={{ display: 'flex', marginBottom: 2, marginLeft: 0, overflowX: 'auto', paddingBottom: 2 }}>
-          {weeks.map((_, wi) => {
-            const lbl = monthLabels.find(m => m.wi === wi);
-            return (
-              <div key={wi} style={{ width: 11, flexShrink: 0, marginRight: 2 }}>
-                {lbl ? <div style={{ fontSize: 7, color: C.muted, fontFamily: fb, whiteSpace: 'nowrap', transform: 'translateX(-2px)' }}>{lbl.label}</div> : null}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Grid — columns = weeks, rows = days */}
-        <div style={{ display: 'flex', gap: 2, overflowX: 'auto' }}>
-          {weeks.map((wk, wi) => (
-            <div key={wi} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {wk.map((day, di) => (
-                <div key={di} title={`${day.date}${day.hasCheckIn ? ' ✅' : ''}`} style={{
-                  width: 9, height: 9, borderRadius: 2,
-                  background: cellColor(day),
-                  boxShadow: day.isToday && day.hasCheckIn ? `0 0 6px ${C.accent}88` : 'none',
-                  transition: 'background 0.2s',
-                }} />
-              ))}
+        {/* 10 columns × 3 rows static grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: 6, marginBottom: 12 }}>
+          {daysList.map((day, i) => (
+            <div key={i} title={`${day.key}${day.hasCheckIn ? ' (Checked In)' : ' (Absent)'}`} style={{
+              aspectRatio: '1', borderRadius: 6,
+              background: cellColor(day),
+              boxShadow: day.isToday && day.hasCheckIn ? `0 0 6px ${C.accent}88` : 'none',
+              border: day.isToday ? `1.5px solid ${C.accent}` : `1px solid ${C.border}`,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              cursor: 'default', transition: 'background 0.2s', position: 'relative'
+            }}>
+              <span style={{
+                fontSize: 8, fontFamily: fb, fontWeight: 800,
+                color: day.hasCheckIn ? '#111' : C.muted
+              }}>
+                {day.date.getDate()}
+              </span>
             </div>
           ))}
         </div>
 
         {/* Legend */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 5, marginTop: 6 }}>
-          <span style={{ fontSize: 8, color: C.muted, fontFamily: fb }}>Less</span>
-          {[C.s4, C.accent + '44', C.accent + '88', C.accent + 'BB', C.accent].map((c, i) => (
-            <div key={i} style={{ width: 9, height: 9, borderRadius: 2, background: c }} />
-          ))}
-          <span style={{ fontSize: 8, color: C.muted, fontFamily: fb }}>More</span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div style={{ width: 8, height: 8, borderRadius: 2, background: C.s4 }} />
+            <span style={{ fontSize: 8, color: C.muted, fontFamily: fb }}>Absent</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div style={{ width: 8, height: 8, borderRadius: 2, background: C.accent }} />
+            <span style={{ fontSize: 8, color: C.muted, fontFamily: fb }}>Checked In</span>
+          </div>
         </div>
       </Card>
     </div>
@@ -3441,8 +3433,6 @@ function ExploreSection() {
 
   return (
     <div>
-      <Hd t="EXPLORE" s="Tap muscle · browse exercises" />
-
       {/* Search bar */}
       <div style={{ padding: '0 16px 12px', position: 'relative' }}>
         <span style={{ position: 'absolute', left: 28, top: '50%', transform: 'translateY(-50%)', fontSize: 14, opacity: 0.4 }}>🔍</span>
