@@ -41,10 +41,10 @@ export const Card = ({ children, style: s = {}, onClick }) => {
     <div
       onClick={onClick}
       style={{
-        background: isDark ? 'rgba(26, 26, 26, 0.65)' : 'rgba(255, 255, 255, 0.70)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)'}`,
+        background: isDark ? 'rgba(26, 26, 26, 0.45)' : 'rgba(255, 255, 255, 0.50)',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
+        border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)'}`,
         borderRadius: 20,
         padding: 16,
         boxShadow: C.cardShadow,
@@ -108,7 +108,10 @@ export const Hd = ({ t, s: sub }) => (
 export function ModalShell({ title, onClose, children }) {
   return (
     <div style={{
-      position: 'absolute', inset: 0, zIndex: 100, background: C.bg,
+      position: 'absolute', inset: 0, zIndex: 100,
+      background: C.bg === '#111111' ? 'rgba(17, 17, 17, 0.70)' : 'rgba(246, 246, 246, 0.75)',
+      backdropFilter: 'blur(28px)',
+      WebkitBackdropFilter: 'blur(28px)',
       display: 'flex', flexDirection: 'column', overflowY: 'auto',
     }}>
       <div style={{

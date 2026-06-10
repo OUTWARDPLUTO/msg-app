@@ -44,13 +44,18 @@ function MoreTab({ gymId, gymName, ownerUid, onNavigate }) {
     { key: 'alerts',      icon: '⚠️', label: 'Alerts',        sub: 'Members at risk of going inactive' },
     { key: 'import',      icon: '📤', label: 'CSV Import',    sub: 'Bulk import members from CSV' },
   ];
+  const isDark = C.bg === '#111111';
   return (
     <div style={{ padding: '20px 16px 32px' }}>
       <div style={{ fontFamily: fn, fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: '-0.02em', marginBottom: 20 }}>More</div>
       {items.map(item => (
         <button key={item.key} onClick={() => onNavigate(item.key)} style={{
           width: '100%', display: 'flex', alignItems: 'center', gap: 14,
-          padding: '14px 16px', background: C.s2, border: `1px solid ${C.border}`,
+          padding: '14px 16px',
+          background: isDark ? 'rgba(26, 26, 26, 0.40)' : 'rgba(255, 255, 255, 0.45)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)'}`,
           borderRadius: 14, marginBottom: 10, cursor: 'pointer', textAlign: 'left',
           transition: 'border-color 0.2s',
         }}
@@ -96,10 +101,10 @@ function OwnerProfileDropdown({ user, gymName, gymCode, onLogout, onClose, onSet
   return (
     <div ref={ref} style={{
       position: 'absolute', top: 64, right: 16, zIndex: 200, width: 280,
-      background: darkMode ? 'rgba(18, 18, 18, 0.85)' : 'rgba(255, 255, 255, 0.9)',
-      backdropFilter: 'blur(20px)',
-      WebkitBackdropFilter: 'blur(20px)',
-      border: `1px solid ${darkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)'}`,
+      background: darkMode ? 'rgba(18, 18, 18, 0.60)' : 'rgba(255, 255, 255, 0.65)',
+      backdropFilter: 'blur(24px)',
+      WebkitBackdropFilter: 'blur(24px)',
+      border: `1px solid ${darkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)'}`,
       borderRadius: 20,
       boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.25)', overflow: 'hidden',
     }}>
@@ -225,6 +230,9 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
       display: 'flex', flexDirection: 'column', height: '100dvh',
       maxWidth: 430, margin: '0 auto', overflow: 'hidden', position: 'relative',
     }}>
+      {/* Decorative ambient glassmorphic background glow blobs */}
+      <div style={{ position: 'absolute', top: '15%', left: '-20%', width: 280, height: 280, borderRadius: '50%', background: 'radial-gradient(circle, rgba(217,154,43,0.15) 0%, transparent 70%)', filter: 'blur(45px)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'absolute', bottom: '25%', right: '-20%', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(78,159,255,0.12) 0%, transparent 70%)', filter: 'blur(50px)', pointerEvents: 'none', zIndex: 0 }} />
       {/* Header top bar */}
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -301,10 +309,10 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
         right: 16,
         zIndex: 100,
         borderRadius: 24,
-        background: darkMode ? 'rgba(18, 18, 18, 0.75)' : 'rgba(255, 255, 255, 0.8)',
-        border: `1px solid ${darkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)'}`,
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
+        background: darkMode ? 'rgba(18, 18, 18, 0.45)' : 'rgba(255, 255, 255, 0.50)',
+        border: `1px solid ${darkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)'}`,
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
         boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.25)',
         display: 'flex',
         padding: '6px 0 4px',

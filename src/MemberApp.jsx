@@ -3094,7 +3094,11 @@ function StoreSection({ gymId, setBackHandler }) {
         <div style={{ padding: '0 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           {filtered.map(p => (
             <button key={p.id} onClick={() => setSelected(p)} style={{
-              background: C.s2, border: `1px solid ${C.border}`, borderRadius: 16,
+              background: C.bg === '#111111' ? 'rgba(26, 26, 26, 0.40)' : 'rgba(255, 255, 255, 0.45)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              border: `1px solid ${C.bg === '#111111' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)'}`,
+              borderRadius: 16,
               overflow: 'hidden', cursor: 'pointer', textAlign: 'left', padding: 0,
               transition: 'border-color 0.2s, transform 0.15s',
             }}
@@ -3790,7 +3794,13 @@ function ProgressSection({ logs, onLogClick, onDelete }) {
 // ─── Modal Shell ─────────────────────────────────────────────────────────────
 function ModalShell({ title, onClose, children }) {
   return (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 100, background: C.bg, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+    <div style={{
+      position: 'absolute', inset: 0, zIndex: 100,
+      background: C.bg === '#111111' ? 'rgba(17, 17, 17, 0.70)' : 'rgba(246, 246, 246, 0.75)',
+      backdropFilter: 'blur(28px)',
+      WebkitBackdropFilter: 'blur(28px)',
+      display: 'flex', flexDirection: 'column', overflowY: 'auto'
+    }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px 12px', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
         <button onClick={onClose} style={{ background: C.s3, border: 'none', width: 34, height: 34, borderRadius: '50%', color: C.sub, fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>←</button>
         <div style={{ fontFamily: fn, fontSize: 28, color: C.text, letterSpacing: '0.06em', lineHeight: 1 }}>{title}</div>
@@ -4560,10 +4570,10 @@ function ProfileDropdown({ onClose, onNavigate, onLogout, user, darkMode }) {
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, zIndex: 49 }} />
       <div style={{
         position: 'absolute', top: 56, right: 16, zIndex: 50,
-        background: darkMode ? 'rgba(18, 18, 18, 0.85)' : 'rgba(255, 255, 255, 0.9)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        border: `1px solid ${darkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)'}`,
+        background: darkMode ? 'rgba(18, 18, 18, 0.60)' : 'rgba(255, 255, 255, 0.65)',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
+        border: `1px solid ${darkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)'}`,
         borderRadius: 14, minWidth: 228, overflow: 'hidden',
         boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.25)'
       }}>
@@ -4690,10 +4700,10 @@ function BottomNavAnimated({ tab, setTab, darkMode }) {
       right: 16,
       zIndex: 100,
       borderRadius: 24,
-      background: darkMode ? 'rgba(18, 18, 18, 0.75)' : 'rgba(255, 255, 255, 0.8)',
-      border: `1px solid ${darkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)'}`,
-      backdropFilter: 'blur(20px)',
-      WebkitBackdropFilter: 'blur(20px)',
+      background: darkMode ? 'rgba(18, 18, 18, 0.45)' : 'rgba(255, 255, 255, 0.50)',
+      border: `1px solid ${darkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)'}`,
+      backdropFilter: 'blur(24px)',
+      WebkitBackdropFilter: 'blur(24px)',
       boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.25)',
       display: 'flex',
       padding: '6px 0 4px',
@@ -5133,6 +5143,9 @@ export default function MemberApp({
 
   return (
     <div className="msg-root" style={{ position: 'relative', background: C.bg, color: C.text, fontFamily: "'Plus Jakarta Sans',sans-serif", display: 'flex', flexDirection: 'column', height: '100dvh', maxWidth: 430, margin: '0 auto', overflow: 'hidden', colorScheme: darkMode ? 'dark' : 'light' }}>
+      {/* Decorative ambient glassmorphic background glow blobs */}
+      <div style={{ position: 'absolute', top: '15%', left: '-20%', width: 280, height: 280, borderRadius: '50%', background: 'radial-gradient(circle, rgba(217,154,43,0.15) 0%, transparent 70%)', filter: 'blur(45px)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'absolute', bottom: '25%', right: '-20%', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(78,159,255,0.12) 0%, transparent 70%)', filter: 'blur(50px)', pointerEvents: 'none', zIndex: 0 }} />
       {showTutorial && <TutorialOverlay onDone={() => { setShowTutorial(false); localStorage.setItem('msg_tutorial_done', '1'); }} />}
       {/* Status bar background — fills the notch/status bar area on edge-to-edge devices */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 'env(safe-area-inset-top)', background: C.bg, zIndex: 999, flexShrink: 0 }} />

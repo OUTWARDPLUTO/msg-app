@@ -96,9 +96,12 @@ export default function MemberListTab({ gymId, setBackHandler }) {
           value={query} onChange={e => setQuery(e.target.value)}
           placeholder="Search by name, email or phone…"
           style={{
-            width: '100%', boxSizing: 'border-box', background: C.s2,
+            width: '100%', boxSizing: 'border-box',
+            background: C.bg === '#111111' ? 'rgba(26, 26, 26, 0.40)' : 'rgba(255, 255, 255, 0.45)',
             border: `1px solid ${C.border}`, borderRadius: 12, padding: '12px 14px',
             color: C.text, fontSize: 13, fontFamily: fn, outline: 'none',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
           }}
           onFocus={e => e.target.style.borderColor = C.accent}
           onBlur={e => e.target.style.borderColor = C.border}
@@ -116,9 +119,13 @@ export default function MemberListTab({ gymId, setBackHandler }) {
           return (
             <button key={m.id} onClick={() => setSelected(m)} style={{
               width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-              padding: '12px 14px', background: C.s2, border: `1px solid ${C.border}`,
+              padding: '12px 14px',
+              background: C.bg === '#111111' ? 'rgba(26, 26, 26, 0.40)' : 'rgba(255, 255, 255, 0.45)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              border: `1px solid ${C.bg === '#111111' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)'}`,
               borderRadius: 14, marginBottom: 8, cursor: 'pointer', textAlign: 'left',
-              transition: 'border-color 0.2s',
+              transition: 'border-color 0.2s, transform 0.15s',
             }}
               onMouseEnter={e => e.currentTarget.style.borderColor = C.accent + '44'}
               onMouseLeave={e => e.currentTarget.style.borderColor = C.border}
