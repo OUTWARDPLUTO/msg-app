@@ -22,17 +22,18 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
     setLoading(true);
     try {
       const db = await getFBFirestore();
+      const newName = name.trim() || gymName;
       await db.doc(`gyms/${gymId}`).update({
-        name: name.trim() || gymName,
-        settings: {
-          inactivityThresholdDays: threshold,
-          useGps,
-          latitude: latitude ? parseFloat(latitude) : null,
-          longitude: longitude ? parseFloat(longitude) : null,
-          useQr,
-          useStaticQr,
-        },
+        name: newName,
+        'settings.inactivityThresholdDays': threshold,
+        'settings.useGps': useGps,
+        'settings.latitude': latitude ? parseFloat(latitude) : null,
+        'settings.longitude': longitude ? parseFloat(longitude) : null,
+        'settings.useQr': useQr,
+        'settings.useStaticQr': useStaticQr,
       });
+      localStorage.setItem('msg_gym_name', newName);
+      window.dispatchEvent(new CustomEvent('msg_gym_name_changed', { detail: newName }));
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (e) { console.warn(e); }
@@ -45,6 +46,7 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
       const doc = await db.doc(`gyms/${gymId}`).get();
       if (doc.exists) {
         const data = doc.data();
+        if (data.name) setName(data.name);
         setCode(data.gymCode || '—');
         const s = data.settings || {};
         setThreshold(s.inactivityThresholdDays || 5);
@@ -223,7 +225,7 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
                   </button>
                   <button onClick={() => {
                     const win = window.open();
-                    win.document.write(`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;"><h2>${name || gymName} Attendance QR Code</h2><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=msg-checkin-static:${gymId}" style="width:300px;height:300px;"/><p style="margin-top:20px;font-size:14px;color:#666;">Scan to Check In</p><button onclick="window.close()" style="margin-top:30px;padding:12px 24px;border-radius:12px;background:#111;color:#fff;border:none;cursor:pointer;font-weight:bold;font-size:14px;">← Close / Go Back</button></div>`);
+                    win.document.write(`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;"><h2>${name || gymName} Attendance QR Code</h2><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=msg-checkin-static:${gymId}" style="width:300px;height:300px;"/><p style="margin-top:20px;font-size:14px;color:#666;">Scan to Check In</p><button onclick="window.close(); if(!window.closed) history.back();" style="margin-top:30px;padding:12px 24px;border-radius:12px;background:#111;color:#fff;border:none;cursor:pointer;font-weight:bold;font-size:14px;">← Close / Go Back</button></div>`);
                     win.print();
                   }} style={{
                     background: C.s2, border: `1px solid ${C.border}`, borderRadius: 8,
@@ -269,7 +271,7 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
             <button onClick={() => setShowPreview(false)} style={{ flex: 1, padding: 14, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 14, color: '#fff', fontFamily: fn, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Close</button>
             <button onClick={() => {
               const win = window.open();
-              win.document.write(`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;"><h2>${name || gymName} Attendance QR Code</h2><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=msg-checkin-static:${gymId}" style="width:300px;height:300px;"/><p style="margin-top:20px;font-size:14px;color:#666;">Scan to Check In</p><button onclick="window.close()" style="margin-top:30px;padding:12px 24px;border-radius:12px;background:#111;color:#fff;border:none;cursor:pointer;font-weight:bold;font-size:14px;">← Close / Go Back</button></div>`);
+              win.document.write(`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;"><h2>${name || gymName} Attendance QR Code</h2><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=msg-checkin-static:${gymId}" style="width:300px;height:300px;"/><p style="margin-top:20px;font-size:14px;color:#666;">Scan to Check In</p><button onclick="window.close(); if(!window.closed) history.back();" style="margin-top:30px;padding:12px 24px;border-radius:12px;background:#111;color:#fff;border:none;cursor:pointer;font-weight:bold;font-size:14px;">← Close / Go Back</button></div>`);
               win.print();
             }} style={{ flex: 2, padding: 14, background: C.accent, border: 'none', borderRadius: 14, color: '#111', fontFamily: fn, fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: C.accentShadow }}>🖨️ Print QR</button>
           </div>

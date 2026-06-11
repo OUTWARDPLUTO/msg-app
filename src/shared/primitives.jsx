@@ -35,21 +35,19 @@ export function UserAvatar({ user, size = 36, fontSize = 12 }) {
 }
 
 // ─── Card ─────────────────────────────────────────────────────────────────────
-export const Card = ({ children, style: s = {}, onClick }) => {
-  const isDark = C.bg === '#111111';
+export const Card = ({ children, style: s = {}, onClick, className: c = '' }) => {
+  const isDark = C.bg === '#000000';
   return (
     <div
       onClick={onClick}
+      className={`msg-card-scale ${c}`}
       style={{
-        background: isDark ? 'rgba(26, 26, 26, 0.45)' : 'rgba(255, 255, 255, 0.50)',
-        backdropFilter: 'blur(24px)',
-        WebkitBackdropFilter: 'blur(24px)',
-        border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)'}`,
+        background: isDark ? 'rgba(18, 18, 18, 0.85)' : 'rgba(255, 255, 255, 0.85)',
+        border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)'}`,
         borderRadius: 20,
         padding: 16,
         boxShadow: C.cardShadow,
         cursor: onClick ? 'pointer' : 'default',
-        transition: 'box-shadow 0.2s, transform 0.15s, background-color 0.2s, border-color 0.2s',
         ...s,
       }}
     >
@@ -62,6 +60,7 @@ export const Card = ({ children, style: s = {}, onClick }) => {
 export const Tag = ({ label, active, color, onClick }) => (
   <button
     onClick={onClick}
+    className="msg-card-scale"
     style={{
       background: active ? (color || C.accent) : 'transparent',
       color: active ? '#111111' : C.sub,
@@ -70,7 +69,6 @@ export const Tag = ({ label, active, color, onClick }) => (
       fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase',
       cursor: 'pointer', whiteSpace: 'nowrap',
       boxShadow: active ? C.accentShadow : 'none',
-      transition: 'all 0.18s ease',
     }}
   >
     {label}
@@ -108,11 +106,10 @@ export const Hd = ({ t, s: sub }) => (
 export function ModalShell({ title, onClose, children }) {
   return (
     <div style={{
-      position: 'absolute', inset: 0, zIndex: 100,
-      background: C.bg === '#111111' ? 'rgba(17, 17, 17, 0.70)' : 'rgba(246, 246, 246, 0.75)',
-      backdropFilter: 'blur(28px)',
-      WebkitBackdropFilter: 'blur(28px)',
+      position: 'fixed', inset: 0, zIndex: 999,
+      paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)',
       display: 'flex', flexDirection: 'column', overflowY: 'auto',
+      background: C.bg,
     }}>
       <div style={{
         display: 'flex', alignItems: 'center', gap: 14,

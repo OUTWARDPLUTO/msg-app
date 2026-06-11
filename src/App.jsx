@@ -339,6 +339,22 @@ export default function MSG() {
     setGymName(gName); save('msg_gym_name', gName);
   };
 
+  // Sync state between tabs if another tab changes it
+  useEffect(() => {
+    const handleStorage = (e) => {
+      if (e.key === 'msg_gym_name') setGymName(e.newValue || '');
+    };
+    const handleCustom = (e) => {
+      setGymName(e.detail);
+    };
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('msg_gym_name_changed', handleCustom);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('msg_gym_name_changed', handleCustom);
+    };
+  }, []);
+
   // ── One-time data migration ────────────────────────────────────────────────
   useEffect(() => {
     if (load('msg_data_version', 1) < 2) {

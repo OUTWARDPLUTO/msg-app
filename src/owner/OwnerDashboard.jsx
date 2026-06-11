@@ -14,6 +14,7 @@ import appIconDark from '../assets/app-icon-dark.png';
 import OwnerAccountTab from './OwnerAccountTab.jsx';
 import OwnerAppSettingsTab from './OwnerAppSettingsTab.jsx';
 import MemberDetailSheet from './MemberDetailSheet.jsx';
+import AmbientBackground from '../shared/AmbientBackground.jsx';
 
 const NAV = [
   { key: 'overview',      label: 'Home',       icon: '🏠' },
@@ -45,7 +46,7 @@ function MoreTab({ gymId, gymName, ownerUid, onNavigate }) {
     { key: 'alerts',      icon: '⚠️', label: 'Alerts',        sub: 'Members at risk of going inactive' },
     { key: 'import',      icon: '📤', label: 'CSV Import',    sub: 'Bulk import members from CSV' },
   ];
-  const isDark = C.bg === '#111111';
+  const isDark = C.bg === '#000000';
   return (
     <div style={{ padding: '20px 16px 32px' }}>
       <div style={{ fontFamily: fn, fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: '-0.02em', marginBottom: 20 }}>More</div>
@@ -236,9 +237,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
       display: 'flex', flexDirection: 'column', height: '100dvh',
       maxWidth: 430, margin: '0 auto', overflow: 'hidden', position: 'relative',
     }}>
-      {/* Decorative ambient glassmorphic background glow blobs */}
-      <div style={{ position: 'absolute', top: '15%', left: '-20%', width: 280, height: 280, borderRadius: '50%', background: 'radial-gradient(circle, rgba(217,154,43,0.15) 0%, transparent 70%)', filter: 'blur(45px)', pointerEvents: 'none', zIndex: 0 }} />
-      <div style={{ position: 'absolute', bottom: '25%', right: '-20%', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(78,159,255,0.12) 0%, transparent 70%)', filter: 'blur(50px)', pointerEvents: 'none', zIndex: 0 }} />
+      <AmbientBackground />
       {/* Header top bar */}
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -255,26 +254,28 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
             </button>
           ) : (
             <div style={{ height: 26, display: 'flex', alignItems: 'center' }}>
-              <img
-                src={darkMode ? appIconLight : appIconDark}
-                alt="MSG"
-                style={{ height: '100%', width: 26, objectFit: 'contain', borderRadius: 6 }}
-              />
-              <span style={{ fontSize: 9, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', marginLeft: 8, padding: '2px 6px', background: C.s2, borderRadius: 6, fontFamily: fb }}>Owner</span>
+              <div style={{
+                background: 'rgba(217,154,43,0.08)',
+                border: `1px solid rgba(217,154,43,0.3)`,
+                padding: '4px 10px', borderRadius: 20, fontSize: 10, fontFamily: fb,
+                fontWeight: 800, color: C.accent, letterSpacing: '0.06em',
+                display: 'flex', alignItems: 'center', gap: 6,
+              }}>
+                <span style={{ fontSize: 12 }}>👑</span> OWNER
+              </div>
             </div>
           )}
         </div>
 
         {/* Profile avatar */}
-        <button onClick={() => setShowProfile(p => !p)} style={{
-          width: 38, height: 38, borderRadius: '50%', background: C.accent,
-          border: `2px solid ${showProfile ? C.text : 'transparent'}`,
-          cursor: 'pointer', fontFamily: fn, fontSize: 12, fontWeight: 800, color: '#111',
-          transition: 'all 0.2s', boxShadow: C.accentShadow, overflow: 'hidden', padding: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        <div className="msg-clickable" onClick={() => setShowProfile(true)} style={{
+          width: 36, height: 36, borderRadius: '50%', background: C.accent, flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontFamily: fn, fontSize: 14, fontWeight: 800, color: '#111',
+          boxShadow: `0 0 15px ${C.accent}66, inset 0 2px 4px rgba(255,255,255,0.4)`, cursor: 'pointer', border: `2px solid ${C.bg === '#000000' ? '#111' : '#fff'}`
         }}>
-          <UserAvatar user={user} size={38} fontSize={12} />
-        </button>
+          <UserAvatar user={user} size={36} fontSize={12} />
+        </div>
       </div>
 
       {/* Profile Dropdown */}
@@ -315,11 +316,11 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
         right: 16,
         zIndex: 100,
         borderRadius: 24,
-        background: darkMode ? 'rgba(18, 18, 18, 0.45)' : 'rgba(255, 255, 255, 0.50)',
-        border: `1px solid ${darkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)'}`,
-        backdropFilter: 'blur(24px)',
-        WebkitBackdropFilter: 'blur(24px)',
-        boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.25)',
+        background: C.bg === '#000000' ? 'rgba(20, 20, 20, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+        border: `1px solid ${C.bg === '#000000' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
+        boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
         display: 'flex',
         padding: '6px 0 4px',
       }}>
@@ -329,6 +330,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
             <button key={n.key} onClick={() => handleTabChange(n.key)} style={{
               flex: 1, padding: '10px 4px 8px', background: 'none', border: 'none',
               cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+              position: 'relative',
             }}>
               <div style={{
                 transform: active ? 'scale(1.15) translateY(-2px)' : 'scale(1) translateY(0)',
@@ -502,11 +504,11 @@ function OverviewTab({ gymId, user, onNavigate, onViewMemberProfile }) {
             </div>
             {onNavigate && (
               <button onClick={() => { onNavigate('settings'); }} style={{
-                background: C.accent, border: 'none', borderRadius: 10,
-                padding: '8px 14px', color: '#111', fontFamily: fn, fontWeight: 700, fontSize: 11,
-                cursor: 'pointer', boxShadow: C.accentShadow, flexShrink: 0,
+                background: `linear-gradient(135deg, ${C.accent}, #F2B94A)`, border: 'none', borderRadius: 10,
+                padding: '8px 14px', color: '#111', fontFamily: fn, fontWeight: 800, fontSize: 11,
+                cursor: 'pointer', boxShadow: `0 0 15px ${C.accent}66`, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6,
               }}>
-                Print QR
+                <span style={{ fontSize: 14 }}>🖨️</span> Print QR
               </button>
             )}
           </div>

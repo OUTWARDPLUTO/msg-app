@@ -127,7 +127,7 @@ export default function LoginScreen({ onLogin, darkMode }) {
       {/* Logo */}
       <div style={{ textAlign: 'center', marginBottom: 32, zIndex: 1 }} className="msg-anim-scalein">
         <img
-          src={darkMode ? appIconLight : appIconDark}
+          src={appIconLight}
           alt="MSG"
           style={{ height: 72, width: 72, objectFit: 'contain', display: 'block', margin: '0 auto', borderRadius: 16, boxShadow: '0 8px 24px rgba(0,0,0,0.15)' }}
         />

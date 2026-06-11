@@ -8,7 +8,7 @@ import appIconLight from './assets/app-icon-light.png';
 import appIconDark from './assets/app-icon-dark.png';
 import { UserAvatar } from './shared/primitives.jsx';
 import AttendanceButton from './sections/AttendanceButton.jsx';
-
+import AmbientBackground from './shared/AmbientBackground.jsx';
 
 
 
@@ -545,7 +545,7 @@ async function callClaude(sys, userMsg) {
 
 // ─── Primitives ─────────────────────────────────────────────────────────────
 const Card = ({ children, style: s = {}, onClick }) => {
-  const isDark = C.bg === '#111111';
+  const isDark = C.bg === '#000000';
   return (
     <div
       onClick={onClick}
@@ -3094,10 +3094,10 @@ function StoreSection({ gymId, setBackHandler }) {
         <div style={{ padding: '0 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           {filtered.map(p => (
             <button key={p.id} onClick={() => setSelected(p)} style={{
-              background: C.bg === '#111111' ? 'rgba(26, 26, 26, 0.40)' : 'rgba(255, 255, 255, 0.45)',
+              background: C.bg === '#000000' ? 'rgba(26, 26, 26, 0.40)' : 'rgba(255, 255, 255, 0.45)',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
-              border: `1px solid ${C.bg === '#111111' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)'}`,
+              border: `1px solid ${C.bg === '#000000' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)'}`,
               borderRadius: 16,
               overflow: 'hidden', cursor: 'pointer', textAlign: 'left', padding: 0,
               transition: 'border-color 0.2s, transform 0.15s',
@@ -3795,8 +3795,9 @@ function ProgressSection({ logs, onLogClick, onDelete }) {
 function ModalShell({ title, onClose, children }) {
   return (
     <div style={{
-      position: 'absolute', inset: 0, zIndex: 100,
-      background: C.bg === '#111111' ? 'rgba(17, 17, 17, 0.70)' : 'rgba(246, 246, 246, 0.75)',
+      position: 'fixed', inset: 0, zIndex: 999,
+      paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)',
+      background: C.bg === '#000000' ? 'rgba(9, 9, 12, 0.95)' : 'rgba(242, 242, 247, 0.95)',
       backdropFilter: 'blur(28px)',
       WebkitBackdropFilter: 'blur(28px)',
       display: 'flex', flexDirection: 'column', overflowY: 'auto'
@@ -4693,18 +4694,18 @@ function NavIcon({ id, active }) {
 function BottomNavAnimated({ tab, setTab, darkMode }) {
   const tabs = ['home', 'workout', 'diet', 'store', 'progress'];
   return (
-    <div style={{
-      position: 'absolute',
+    <div className="msg-bottom-nav" style={{
+      position: 'fixed',
       bottom: 'max(16px, env(safe-area-inset-bottom, 16px))',
       left: 16,
       right: 16,
       zIndex: 100,
       borderRadius: 24,
-      background: darkMode ? 'rgba(18, 18, 18, 0.45)' : 'rgba(255, 255, 255, 0.50)',
-      border: `1px solid ${darkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)'}`,
-      backdropFilter: 'blur(24px)',
-      WebkitBackdropFilter: 'blur(24px)',
-      boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.25)',
+      background: C.bg === '#000000' ? 'rgba(20, 20, 20, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+      backdropFilter: 'blur(20px) saturate(180%)',
+      WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+      border: `1px solid ${C.bg === '#000000' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
+      boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
       display: 'flex',
       padding: '6px 0 4px',
     }}>
@@ -4713,25 +4714,25 @@ function BottomNavAnimated({ tab, setTab, darkMode }) {
         return (
           <button key={id} id={`tut-tab-${id}`} onClick={() => setTab(id)} style={{
             flex: 1, background: 'none', border: 'none', cursor: 'pointer',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '2px 0',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '10px 4px 8px', position: 'relative'
           }}>
             <div style={{
-              transform: active ? 'scale(1.18) translateY(-2px)' : 'scale(1) translateY(0)',
+              transform: active ? 'scale(1.15) translateY(-2px)' : 'scale(1) translateY(0)',
               transition: 'transform 0.25s cubic-bezier(.22,.68,0,1.4)',
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
             }}>
               <NavIcon id={id} active={active} />
             </div>
-            <div style={{
-              fontSize: 8, fontFamily: fb, fontWeight: active ? 700 : 500,
-              letterSpacing: '0.06em', textTransform: 'uppercase',
-              color: active ? C.accent : C.muted,
+            <span style={{
+              fontSize: 8, fontFamily: fb, fontWeight: active ? 800 : 500,
+              color: active ? C.accent : C.muted, textTransform: 'uppercase', letterSpacing: '0.04em',
               transition: 'color 0.2s',
-            }}>{id}</div>
-            <div style={{
-              width: active ? 18 : 0, height: 2, borderRadius: 1, background: C.accent,
-              transition: 'width 0.3s cubic-bezier(.22,.68,0,1.4)', marginTop: -1,
-            }} />
+            }}>
+              {id}
+            </span>
+            {active && (
+              <div className="msg-anim-scalein" style={{ position: 'absolute', bottom: -1, width: 24, height: 3, borderRadius: '3px 3px 0 0', background: C.accent, boxShadow: C.accentShadow }} />
+            )}
           </button>
         );
       })}
@@ -4858,7 +4859,7 @@ const TUTORIAL_STEPS = [
   { id: 'leaderboard',  emoji: '🏅', title: 'Leaderboard — Coming Soon',  body: "Soon you'll be able to compete with friends and climb global fitness ranks.", target: 'tut-leaderboard' },
   { id: 'workout',      emoji: '💪', title: 'Workout',                     body: 'Build your week plan with 140+ exercises across strength, yoga, bands & rehab. Rest timer included.', target: 'tut-tab-workout' },
   { id: 'diet',         emoji: '🥗', title: 'Diet & Water',                body: 'Log any meal in plain language. Track 15 nutrients and set your custom daily water goal in litres.', target: 'tut-tab-diet' },
-  { id: 'explore',      emoji: '🗺️', title: 'Explore',                    body: 'Tap a muscle on the interactive body map to see exercises for that exact muscle group.', target: 'tut-tab-explore' },
+  { id: 'store',        emoji: '🛒', title: 'Store',                       body: 'Browse products and supplements offered by your gym directly from the app.', target: 'tut-tab-store' },
   { id: 'progress',     emoji: '📈', title: 'Progress',                    body: 'Log weight, body fat & measurements. Charts show your transformation week over week.', target: 'tut-tab-progress' },
   { id: 'profile',      emoji: '👤', title: 'Your Profile',                body: 'Tap your avatar to open achievements, settings, language options, or sign out.', target: 'tut-profile-btn' },
   { id: 'done',         emoji: '🚀', title: "You're all set!",             body: "Your fitness journey starts now. Log your first workout, track a meal, or weigh in — every action builds your streak!", target: null },
@@ -4883,7 +4884,7 @@ function TutorialOverlay({ onDone }) {
     // Scroll the element into the center of the viewport first
     el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
 
-    // Wait for scroll animation to settle, then measure
+    let raf;
     const measure = () => {
       const r = el.getBoundingClientRect();
       const W = window.innerWidth, H = window.innerHeight;
@@ -4897,11 +4898,11 @@ function TutorialOverlay({ onDone }) {
       s.height = s.bottom - s.top;
       setSpot(s);
       setAbove(r.top > H * 0.55);
+      raf = requestAnimationFrame(measure);
     };
 
-    // 380ms covers a typical 300ms smooth scroll + buffer
-    const t = setTimeout(measure, 380);
-    return () => clearTimeout(t);
+    raf = requestAnimationFrame(measure);
+    return () => cancelAnimationFrame(raf);
   }, [step, cur.target]);
 
   const W = typeof window !== 'undefined' ? window.innerWidth  : 400;
@@ -5143,9 +5144,7 @@ export default function MemberApp({
 
   return (
     <div className="msg-root" style={{ position: 'relative', background: C.bg, color: C.text, fontFamily: "'Plus Jakarta Sans',sans-serif", display: 'flex', flexDirection: 'column', height: '100dvh', maxWidth: 430, margin: '0 auto', overflow: 'hidden', colorScheme: darkMode ? 'dark' : 'light' }}>
-      {/* Decorative ambient glassmorphic background glow blobs */}
-      <div style={{ position: 'absolute', top: '15%', left: '-20%', width: 280, height: 280, borderRadius: '50%', background: 'radial-gradient(circle, rgba(217,154,43,0.15) 0%, transparent 70%)', filter: 'blur(45px)', pointerEvents: 'none', zIndex: 0 }} />
-      <div style={{ position: 'absolute', bottom: '25%', right: '-20%', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(78,159,255,0.12) 0%, transparent 70%)', filter: 'blur(50px)', pointerEvents: 'none', zIndex: 0 }} />
+      <AmbientBackground />
       {showTutorial && <TutorialOverlay onDone={() => { setShowTutorial(false); localStorage.setItem('msg_tutorial_done', '1'); }} />}
       {/* Status bar background — fills the notch/status bar area on edge-to-edge devices */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 'env(safe-area-inset-top)', background: C.bg, zIndex: 999, flexShrink: 0 }} />
@@ -5153,7 +5152,7 @@ export default function MemberApp({
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <div style={{ height: 32, width: 32, display: 'flex', alignItems: 'center' }}>
             <img
-              src={darkMode ? appIconLight : appIconDark}
+              src={appIconLight}
               alt="MSG"
               style={{ height: '100%', width: '100%', objectFit: 'contain', display: 'block', borderRadius: 8 }}
             />
