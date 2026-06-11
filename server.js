@@ -40,8 +40,7 @@ const PORT = process.env.PORT || 4000
 const API_KEY = process.env.ANTHROPIC_API_KEY
 
 if (!API_KEY) {
-  console.error('❌ ANTHROPIC_API_KEY environment variable is required')
-  process.exit(1)
+  console.warn('⚠️ ANTHROPIC_API_KEY environment variable is missing (Legacy endpoint).')
 }
 
 app.use(cors({
