@@ -513,31 +513,28 @@ const DEF_LOGS = [
   { date: 'Mar 14', weight: 72.5, bodyFat: 16.8, chest: 98, waist: 78.5, arms: 37, legs: 56.5, notes: 'PR on bench today 🔥' },
 ];
 
-// ─── AI API (OpenRouter) ───────────────────────────────────────────────────────
-const OR_KEY = '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';
-const OR_URL = 'https://openrouter.ai/api/v1/chat/completions';
+// ─── AI API (Secure Proxy) ───────────────────────────────────────────────────────
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 async function callClaude(sys, userMsg) {
-  const r = await fetch(OR_URL, {
+  const r = await fetch(`${API_URL}/api/ai/chat`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${OR_KEY}`,
-      'HTTP-Referer': 'https://msg-app-mu.vercel.app',
-      'X-Title': 'MSG - My Smart Gains',
     },
     body: JSON.stringify({
-      model: 'google/gemma-4-31b-it:free',
+      model: 'meta-llama/llama-3.3-70b-instruct:free',
       max_tokens: 2500,
       messages: [
         { role: 'system', content: sys },
         { role: 'user', content: userMsg },
       ],
+      response_format: { type: "json_object" }
     }),
   });
   if (!r.ok) {
     const err = await r.json().catch(() => ({}));
-    throw new Error(err?.error?.message || `OpenRouter error ${r.status}`);
+    throw new Error(err?.error || `Server error ${r.status}`);
   }
   const data = await r.json();
   return data.choices?.[0]?.message?.content ?? '';
@@ -2616,10 +2613,30 @@ function DietSection({ dietGoal, setDietGoal, mealLog, setMealLog }) {
       };
     }
 
+    // ── AI First Strategy (Highly Accurate NLP) ───────────────────────────────
+    try {
+      const sys = `You are a precise nutritionist. Return nutritional information for the EXACT quantity stated. Output ONLY a valid JSON object matching this exact schema: {"name":"string","calories":number,"protein":number,"carbs":number,"fat":number,"fiber":number,"sodium":number,"potassium":number,"calcium":number,"iron":number,"vitaminA":number,"vitaminB12":number,"vitaminC":number,"vitaminD":number,"vitaminE":number,"magnesium":number,"zinc":number}. No markdown, no preamble.`;
+      const text = await callClaude(sys, `Food: "${q}"`);
+      const cleanStr = text.replace(/```json|```/gi, '').trim();
+      const startIdx = cleanStr.indexOf('{');
+      const endIdx = cleanStr.lastIndexOf('}');
+      if (startIdx === -1 || endIdx === -1) throw new Error('No JSON found');
+      
+      const item = JSON.parse(cleanStr.substring(startIdx, endIdx + 1));
+      if (item.calories > 4000) item.calories = Math.round(item.calories / 10);
+      
+      setMealLog(p => [{ ...item, name: item.name || q, source: 'AI' }, ...p]);
+      setLoading(false);
+      return;
+    } catch (e) {
+      console.warn("AI parsing failed, falling back", e);
+    }
+
+    // ── Local Fallback (if AI fails/rate limits) ──────────────────────────────
     const local = parseEntry(q);
     if (local) { setMealLog(p => [local, ...p]); setLoading(false); return; }
 
-    // ── USDA FDC API lookup (accurate macros/micros) ──────────────────────────
+    // ── USDA FDC API lookup (if Local fails) ──────────────────────────────────
     const USDA_KEY = import.meta.env.VITE_USDA_KEY ?? '';
     const USDA_NUTRIENT_MAP = {
       1008: 'calories', 1003: 'protein', 1005: 'carbs', 1004: 'fat',
@@ -2629,7 +2646,6 @@ function DietSection({ dietGoal, setDietGoal, mealLog, setMealLog }) {
     };
     if (USDA_KEY) {
       try {
-        // Extract gram amount from query for scaling
         const gramsMatch = q.match(/(\d+\.?\d*)\s*g(?:ram)?s?\b/i);
         const scaleFactor = gramsMatch ? parseFloat(gramsMatch[1]) / 100 : 1;
         const searchTerm = q.replace(/\d+\.?\d*\s*g(?:ram)?s?\b/gi, '').trim() || q;
@@ -2673,23 +2689,16 @@ function DietSection({ dietGoal, setDietGoal, mealLog, setMealLog }) {
             }
           }
         }
-      } catch (_) { /* fall through to AI */ }
+      } catch (_) { }
     }
 
-    // ── Claude AI fallback ────────────────────────────────────────────────────
-    try {
-      const sys = `Precise nutritionist. Return nutrition for the EXACT quantity stated. ONLY valid JSON, no markdown. Schema: {"name":"string","calories":number,"protein":number,"carbs":number,"fat":number,"fiber":number,"sodium":number,"potassium":number,"calcium":number,"iron":number,"vitaminA":number,"vitaminB12":number,"vitaminC":number,"vitaminD":number,"vitaminE":number,"magnesium":number,"zinc":number}`;
-      const text = await callClaude(sys, `Food: "${q}"`);
-      const item = JSON.parse(text.replace(/```json|```/g, '').trim());
-      if (item.calories > 3000) item.calories = Math.round(item.calories / 10);
-      setMealLog(p => [{ ...item, name: item.name || q }, ...p]);
-    } catch {
-      setMealLog(p => [{
-        name: `${q} (estimated)`, calories: 200, protein: 8, carbs: 28, fat: 6, fiber: 3,
-        sodium: 200, potassium: 250, calcium: 40, iron: 1.5,
-        vitaminA: 15, vitaminB12: 0.3, vitaminC: 5, vitaminD: 0.3, vitaminE: 0.7, magnesium: 30, zinc: 0.8,
-      }, ...p]);
-    }
+    // ── Absolute Fallback ─────────────────────────────────────────────────────
+    setMealLog(p => [{
+      name: `${q} (estimated)`, calories: 200, protein: 8, carbs: 28, fat: 6, fiber: 3,
+      sodium: 200, potassium: 250, calcium: 40, iron: 1.5,
+      vitaminA: 15, vitaminB12: 0.3, vitaminC: 5, vitaminD: 0.3, vitaminE: 0.7, magnesium: 30, zinc: 0.8,
+      source: 'Fallback'
+    }, ...p]);
     setLoading(false);
   };
 

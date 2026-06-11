@@ -102,23 +102,97 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
     }
   };
 
-  // ── Activate subscription (mock — no payment gateway yet) ─────────────────
+  // Helper to load Razorpay SDK dynamically
+  const loadRazorpaySDK = () => {
+    return new Promise((resolve) => {
+      if (window.Razorpay) return resolve(true);
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  // ── Activate subscription (Secure Razorpay Flow) ─────────────────
   const handleActivate = async () => {
     if (!subPlan) return;
     setScreen('loading');
+    setError('');
+
     try {
-      const now = Date.now();
-      const expiresAt = subPlan === 'yearly' ? now + 365 * 86400000 : now + 30 * 86400000;
-      await saveSubscription(user.uid, {
-        status: 'active', plan: subPlan,
-        activatedAt: now, expiresAt,
-        earlyAdopter: true,
+      const isLoaded = await loadRazorpaySDK();
+      if (!isLoaded) throw new Error("Could not load payment gateway. Check your connection.");
+
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
+      // 1. Ask backend to create a secure order
+      const res = await fetch(`${API_URL}/api/create-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: subPlan, gymId: createdGym.id, uid: user.uid })
       });
-      setScreen('success');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to create order");
+
+      // 2. Open Razorpay Checkout widget
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_placeholder', // Public key
+        amount: data.amount,
+        currency: "INR",
+        name: "MSG Gym Platform",
+        description: `${subPlan === 'yearly' ? 'Yearly' : 'Monthly'} Subscription`,
+        order_id: data.orderId,
+        handler: async function (response) {
+          // 3. Send signature to backend for verification
+          setScreen('loading');
+          try {
+            const verifyRes = await fetch(`${API_URL}/api/verify-payment`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                uid: user.uid,
+                plan: subPlan
+              })
+            });
+            const verifyData = await verifyRes.json();
+            if (!verifyRes.ok) throw new Error(verifyData.error || "Verification failed");
+            
+            // Payment successful and verified!
+            setScreen('success');
+          } catch (e) {
+            console.error("Verification Error:", e);
+            setError("Payment verification failed. Please contact support.");
+            setScreen('subscription');
+          }
+        },
+        prefill: {
+          name: user.name || '',
+          email: user.email || '',
+        },
+        theme: {
+          color: "#E5FF00" // C.accent
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (response){
+        console.error("Payment Failed", response.error);
+        setError("Payment failed: " + response.error.description);
+        setScreen('subscription');
+      });
+      
+      // We must close the loading screen because Razorpay opens an overlay
+      setScreen('subscription'); 
+      rzp.open();
+      
     } catch (e) {
       console.error(e);
-      // Even if Firestore write fails, proceed to success (offline-first)
-      setScreen('success');
+      setError(e.message || "An error occurred during payment.");
+      setScreen('subscription');
     }
   };
 

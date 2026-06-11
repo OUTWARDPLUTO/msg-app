@@ -23,31 +23,3 @@ export const NMETA = [
   { key: 'vitaminE',   label: 'Vitamin E',     unit: 'mg',  cat: 'vitamin', color: '#6EE7B7' },
 ];
 
-export const OR_KEY = import.meta.env.VITE_OR_KEY ?? '';
-export const OR_URL = 'https://openrouter.ai/api/v1/chat/completions';
-
-export async function callClaude(sys, userMsg) {
-  const r = await fetch(OR_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${OR_KEY}`,
-      'HTTP-Referer': 'https://msg-app-mu.vercel.app',
-      'X-Title': 'MSG - My Smart Gains',
-    },
-    body: JSON.stringify({
-      model: 'mistralai/mistral-7b-instruct',
-      max_tokens: 1200,
-      messages: [
-        { role: 'system', content: sys },
-        { role: 'user', content: userMsg },
-      ],
-    }),
-  });
-  if (!r.ok) {
-    const err = await r.json().catch(() => ({}));
-    throw new Error(err?.error?.message || `OpenRouter error ${r.status}`);
-  }
-  const data = await r.json();
-  return data.choices?.[0]?.message?.content ?? '';
-}

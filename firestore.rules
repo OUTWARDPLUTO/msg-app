@@ -25,11 +25,12 @@ service cloud.firestore {
     function isMemberOf(gymId) { return isAuth() && userGymId() == gymId; }
 
     // ── Users ─────────────────────────────────────────────────────────────────
-    // Users can read/write their own doc only
+    // Users can read their own doc. They can create/update it, BUT they are strictly
+    // prohibited from modifying their own 'subscription' field (only backend can do this).
     match /users/{uid} {
       allow read:   if isUser(uid);
-      allow create: if isUser(uid);
-      allow update: if isUser(uid);
+      allow create: if isUser(uid) && !('subscription' in request.resource.data);
+      allow update: if isUser(uid) && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['subscription']));
       allow delete: if false;
     }
 
