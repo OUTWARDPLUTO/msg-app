@@ -13,6 +13,7 @@ import appIconLight from '../assets/app-icon-light.png';
 import appIconDark from '../assets/app-icon-dark.png';
 import OwnerAccountTab from './OwnerAccountTab.jsx';
 import OwnerAppSettingsTab from './OwnerAppSettingsTab.jsx';
+import MemberDetailSheet from './MemberDetailSheet.jsx';
 
 const NAV = [
   { key: 'overview',      label: 'Home',       icon: '🏠' },
@@ -160,6 +161,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
   // Sub-screen from "More" tab
   const [moreScreen, setMoreScreen] = useState(null);
   const [childBackHandler, setChildBackHandler] = useState(null);
+  const [profileMember, setProfileMember] = useState(null);
 
   // Load gym code once
   useEffect(() => {
@@ -192,6 +194,10 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
         setShowProfile(false);
         return true;
       }
+      if (profileMember) {
+        setProfileMember(null);
+        return true;
+      }
       if (childBackHandler) {
         const handled = childBackHandler();
         if (handled) return true;
@@ -211,12 +217,12 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
     return () => {
       window.__msgGoBack = null;
     };
-  }, [showProfile, childBackHandler, moreScreen, tabHistory]);
+  }, [showProfile, profileMember, childBackHandler, moreScreen, tabHistory]);
 
   // Render sub-screen from More
   function renderMoreScreen() {
     if (moreScreen === 'memberships') return <MembershipsTab gymId={gymId} />;
-    if (moreScreen === 'alerts') return <AlertsTab gymId={gymId} />;
+    if (moreScreen === 'alerts') return <AlertsTab gymId={gymId} onViewMemberProfile={setProfileMember} />;
     if (moreScreen === 'import') return <CSVImport gymId={gymId} />;
     if (moreScreen === 'settings') return <GymSettingsTab gymId={gymId} gymName={gymName} ownerUid={user?.uid} />;
     if (moreScreen === 'account') return <OwnerAccountTab user={user} onLogout={onLogout} />;
@@ -250,7 +256,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
           ) : (
             <div style={{ height: 26, display: 'flex', alignItems: 'center' }}>
               <img
-                src={darkMode ? appIconDark : appIconLight}
+                src={darkMode ? appIconLight : appIconDark}
                 alt="MSG"
                 style={{ height: '100%', width: 26, objectFit: 'contain', borderRadius: 6 }}
               />
@@ -294,9 +300,9 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
             <MoreTab gymId={gymId} gymName={gymName} ownerUid={user?.uid} onNavigate={handleMoreNavigate} />
           )}
           {/* Main tabs */}
-          {tab === 'overview'   && <OverviewTab gymId={gymId} user={user} onNavigate={handleMoreNavigate} />}
-          {tab === 'members'    && <MemberListTab gymId={gymId} setBackHandler={setChildBackHandler} />}
-          {tab === 'attendance' && <AttendanceTab gymId={gymId} />}
+          {tab === 'overview'   && <OverviewTab gymId={gymId} user={user} onNavigate={handleMoreNavigate} onViewMemberProfile={setProfileMember} />}
+          {tab === 'members'    && <MemberListTab gymId={gymId} setBackHandler={setChildBackHandler} onViewMemberProfile={setProfileMember} />}
+          {tab === 'attendance' && <AttendanceTab gymId={gymId} onViewMemberProfile={setProfileMember} />}
           {tab === 'store'      && <StoreTab gymId={gymId} setBackHandler={setChildBackHandler} />}
         </div>
       </div>
@@ -346,12 +352,20 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
           );
         })}
       </div>
+      {/* Global Member Detail Sheet Modal */}
+      {profileMember && (
+        <MemberDetailSheet
+          member={profileMember}
+          gymId={gymId}
+          onClose={() => setProfileMember(null)}
+        />
+      )}
     </div>
   );
 }
 
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
-function OverviewTab({ gymId, user, onNavigate }) {
+function OverviewTab({ gymId, user, onNavigate, onViewMemberProfile }) {
   const [stats, setStats] = useState(null);
   const [feed, setFeed]   = useState([]);
   const [loading, setLoading] = useState(true);
@@ -507,11 +521,11 @@ function OverviewTab({ gymId, user, onNavigate }) {
             No activity yet — members' actions will appear here.
           </div>
         ) : feed.map((item, i) => (
-          <div key={i} className="msg-anim-fadeup" style={{
+          <div key={i} className="msg-anim-fadeup msg-clickable" onClick={() => onViewMemberProfile && onViewMemberProfile({ uid: item.uid, name: item.memberName })} style={{
             animationDelay: `${i * 0.04}s`,
             display: 'flex', gap: 12, alignItems: 'center',
             padding: '10px 14px', background: C.s2, border: `1px solid ${C.border}`,
-            borderRadius: 12, marginBottom: 8, transition: 'background 0.2s',
+            borderRadius: 12, marginBottom: 8, cursor: 'pointer',
           }}>
             <span style={{ fontSize: 20, flexShrink: 0 }}>{TYPE_ICONS[item.type] || '📌'}</span>
             <div style={{ flex: 1, minWidth: 0 }}>

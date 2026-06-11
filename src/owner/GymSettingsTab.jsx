@@ -16,6 +16,7 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
   const [longitude, setLongitude] = useState('');
   const [useQr, setUseQr] = useState(false);
   const [useStaticQr, setUseStaticQr] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const handleSave = async () => {
     setLoading(true);
@@ -206,23 +207,31 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
                 <div style={{ fontSize: 11, color: C.sub, textAlign: 'center', lineHeight: 1.5 }}>
                   Print this static QR code and display it at your gym's reception desk. Members scan this to check in.
                 </div>
-                <div style={{ background: '#fff', padding: 10, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div onClick={() => setShowPreview(true)} style={{ background: '#fff', padding: 10, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'transform 0.2s' }} className="msg-clickable">
                   <img
                     src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=msg-checkin-static:${gymId}`}
                     alt="Static QR Code"
                     style={{ width: 150, height: 150 }}
                   />
                 </div>
-                <button onClick={() => {
-                  const win = window.open();
-                  win.document.write(`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;"><h2>${name} Attendance QR Code</h2><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=msg-checkin-static:${gymId}" style="width:300px;height:300px;"/><p style="margin-top:20px;font-size:14px;color:#666;">Scan to Check In</p></div>`);
-                  win.print();
-                }} style={{
-                  background: C.s2, border: `1px solid ${C.border}`, borderRadius: 8,
-                  padding: '6px 12px', fontSize: 11, color: C.text, fontFamily: fn, fontWeight: 600, cursor: 'pointer'
-                }}>
-                  🖨️ Print QR Code
-                </button>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => setShowPreview(true)} style={{
+                    background: C.s2, border: `1px solid ${C.border}`, borderRadius: 8,
+                    padding: '6px 12px', fontSize: 11, color: C.text, fontFamily: fn, fontWeight: 600, cursor: 'pointer'
+                  }}>
+                    🔍 Preview
+                  </button>
+                  <button onClick={() => {
+                    const win = window.open();
+                    win.document.write(`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;"><h2>${name || gymName} Attendance QR Code</h2><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=msg-checkin-static:${gymId}" style="width:300px;height:300px;"/><p style="margin-top:20px;font-size:14px;color:#666;">Scan to Check In</p><button onclick="window.close()" style="margin-top:30px;padding:12px 24px;border-radius:12px;background:#111;color:#fff;border:none;cursor:pointer;font-weight:bold;font-size:14px;">← Close / Go Back</button></div>`);
+                    win.print();
+                  }} style={{
+                    background: C.s2, border: `1px solid ${C.border}`, borderRadius: 8,
+                    padding: '6px 12px', fontSize: 11, color: C.text, fontFamily: fn, fontWeight: 600, cursor: 'pointer'
+                  }}>
+                    🖨️ Print QR Code
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -237,6 +246,35 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
       }}>
         {loading ? 'Saving…' : saved ? '✓ Saved Settings!' : 'Save Settings'}
       </button>
+
+      {/* In-app Fullscreen Static QR Preview Modal */}
+      {showPreview && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 600, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, boxSizing: 'border-box' }} className="msg-anim-fadein">
+          <button onClick={() => setShowPreview(false)} style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top, 0px) + 24px)', right: 24, background: 'rgba(255,255,255,0.1)', border: 'none', width: 44, height: 44, borderRadius: '50%', color: '#fff', fontSize: 24, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+          
+          <div style={{ textAlign: 'center', marginBottom: 24 }}>
+            <h2 style={{ fontFamily: fn, color: '#fff', fontSize: 24, fontWeight: 800, marginBottom: 8 }}>{name || gymName}</h2>
+            <p style={{ color: '#aaa', fontSize: 13 }}>Scan this QR code at reception to check in</p>
+          </div>
+
+          <div style={{ background: '#fff', padding: 20, borderRadius: 24, boxShadow: '0 10px 40px rgba(0,0,0,0.3)', marginBottom: 24 }}>
+            <img
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&color=000000&bgcolor=ffffff&qzone=1&data=${encodeURIComponent(`msg-checkin-static:${gymId}`)}`}
+              alt="Static QR Code"
+              style={{ width: 260, height: 260, display: 'block' }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: 12, width: '100%', maxWidth: 300 }}>
+            <button onClick={() => setShowPreview(false)} style={{ flex: 1, padding: 14, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 14, color: '#fff', fontFamily: fn, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Close</button>
+            <button onClick={() => {
+              const win = window.open();
+              win.document.write(`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;"><h2>${name || gymName} Attendance QR Code</h2><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=msg-checkin-static:${gymId}" style="width:300px;height:300px;"/><p style="margin-top:20px;font-size:14px;color:#666;">Scan to Check In</p><button onclick="window.close()" style="margin-top:30px;padding:12px 24px;border-radius:12px;background:#111;color:#fff;border:none;cursor:pointer;font-weight:bold;font-size:14px;">← Close / Go Back</button></div>`);
+              win.print();
+            }} style={{ flex: 2, padding: 14, background: C.accent, border: 'none', borderRadius: 14, color: '#111', fontFamily: fn, fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: C.accentShadow }}>🖨️ Print QR</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

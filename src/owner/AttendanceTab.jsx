@@ -3,7 +3,7 @@ import { C, fn, fb } from '../shared/theme.js';
 import { Card, Lbl, Spinner } from '../shared/primitives.jsx';
 import { getFBFirestore, serverTimestamp } from '../shared/firebase.js';
 
-export default function AttendanceTab({ gymId }) {
+export default function AttendanceTab({ gymId, onViewMemberProfile }) {
   const [logs, setLogs]         = useState([]);
   const [members, setMembers]   = useState({});
   const [allMembers, setAllMembers] = useState([]);
@@ -19,13 +19,16 @@ export default function AttendanceTab({ gymId }) {
   const [qrToken, setQrToken] = useState('');
   const [expiresIn, setExpiresIn] = useState(0);
   const [useQrSetting, setUseQrSetting] = useState(false);
+  const [useStaticQrSetting, setUseStaticQrSetting] = useState(false);
 
   // Fetch active settings when QR code is toggled/loaded
   useEffect(() => {
     if (!gymId) return;
     getFBFirestore().then(db => db.doc(`gyms/${gymId}`).get()).then(snap => {
       if (snap.exists) {
-        setUseQrSetting(snap.data().settings?.useQr || false);
+        const settings = snap.data().settings || {};
+        setUseQrSetting(settings.useQr || false);
+        setUseStaticQrSetting(settings.useStaticQr || false);
       }
     }).catch(() => {});
   }, [gymId, qrModal]);
@@ -263,9 +266,10 @@ export default function AttendanceTab({ gymId }) {
               <span style={{ color: C.accent, marginLeft: 8 }}>{entries.length} check-in{entries.length !== 1 ? 's' : ''}</span>
             </div>
             {entries.map((e, i) => (
-              <div key={i} style={{
+              <div key={i} className="msg-clickable" onClick={() => onViewMemberProfile && onViewMemberProfile({ uid: e.uid, name: members[e.uid] || 'Member' })} style={{
                 display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px',
                 background: C.s2, border: `1px solid ${C.border}`, borderRadius: 10, marginBottom: 6,
+                cursor: 'pointer',
               }}>
                 {/* Avatar */}
                 <div style={{
@@ -373,7 +377,13 @@ export default function AttendanceTab({ gymId }) {
           
           {/* QR Code Container */}
           <div style={{ background: '#fff', padding: 18, borderRadius: 20, boxShadow: '0 10px 40px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 20 }}>
-            {qrToken ? (
+            {useStaticQrSetting ? (
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&color=000000&bgcolor=ffffff&qzone=1&data=${encodeURIComponent(`msg-checkin-static:${gymId}`)}`}
+                alt="Static Check-in QR Code"
+                style={{ width: 220, height: 220 }}
+              />
+            ) : qrToken ? (
               <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&color=000000&bgcolor=ffffff&qzone=1&data=${encodeURIComponent(`msg-checkin:${gymId}:${qrToken}`)}`}
                 alt="Check-in QR Code"
@@ -385,10 +395,16 @@ export default function AttendanceTab({ gymId }) {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-            <div style={{ background: 'rgba(217,154,43,0.15)', color: C.accent, borderRadius: 20, padding: '6px 16px', fontSize: 13, fontWeight: 700, fontFamily: fb, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span>🔄 Rotates in:</span>
-              <span style={{ fontSize: 14, minWidth: 32, textAlign: 'left' }}>{expiresIn}s</span>
-            </div>
+            {!useStaticQrSetting ? (
+              <div style={{ background: 'rgba(217,154,43,0.15)', color: C.accent, borderRadius: 20, padding: '6px 16px', fontSize: 13, fontWeight: 700, fontFamily: fb, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span>🔄 Rotates in:</span>
+                <span style={{ fontSize: 14, minWidth: 32, textAlign: 'left' }}>{expiresIn}s</span>
+              </div>
+            ) : (
+              <div style={{ background: 'rgba(78,159,255,0.15)', color: C.blue, borderRadius: 20, padding: '6px 16px', fontSize: 13, fontWeight: 700, fontFamily: fb }}>
+                📄 Static Printed QR Active
+              </div>
+            )}
             
             {/* Helper warning if QR Verification is not turned on in Gym Settings */}
             {!useQrSetting && (

@@ -3,7 +3,7 @@ import { C, fn, fb } from '../shared/theme.js';
 import { Card, Lbl, StatusBadge, Spinner } from '../shared/primitives.jsx';
 import { getFBFirestore } from '../shared/firebase.js';
 
-export default function AlertsTab({ gymId }) {
+export default function AlertsTab({ gymId, onViewMemberProfile }) {
   const [inactive, setInactive] = useState([]);   // 5+ days
   const [atRisk, setAtRisk]     = useState([]);   // 3-5 days
   const [loading, setLoading]   = useState(true);
@@ -71,6 +71,7 @@ export default function AlertsTab({ gymId }) {
             color={C.orange}
             members={atRisk}
             badge="at-risk"
+            onViewMemberProfile={onViewMemberProfile}
           />
 
           {/* Inactive Section */}
@@ -80,6 +81,7 @@ export default function AlertsTab({ gymId }) {
             color={C.red}
             members={inactive}
             badge="inactive"
+            onViewMemberProfile={onViewMemberProfile}
           />
 
           {inactive.length === 0 && atRisk.length === 0 && (
@@ -95,7 +97,7 @@ export default function AlertsTab({ gymId }) {
   );
 }
 
-function Section({ title, sub, color, members, badge }) {
+function Section({ title, sub, color, members, badge, onViewMemberProfile }) {
   if (members.length === 0) return null;
   return (
     <div style={{ padding: '0 16px', marginBottom: 20 }}>
@@ -108,10 +110,10 @@ function Section({ title, sub, color, members, badge }) {
         </div>
       </div>
       {members.map(m => (
-        <div key={m.id} style={{
+        <div key={m.id} className="msg-clickable" onClick={() => onViewMemberProfile && onViewMemberProfile(m)} style={{
           display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px',
           background: C.s2, border: `1px solid ${color}33`, borderLeft: `3px solid ${color}`,
-          borderRadius: '2px 12px 12px 2px', marginBottom: 8,
+          borderRadius: '2px 12px 12px 2px', marginBottom: 8, cursor: 'pointer',
         }}>
           <div style={{
             width: 38, height: 38, borderRadius: '50%', flexShrink: 0,

@@ -103,42 +103,41 @@ export default function MSG() {
         .msg-bottom-nav { padding-bottom: env(safe-area-inset-bottom, 0px) !important; }
         @supports (height: 100dvh) { .msg-root { height: 100dvh !important; } }
         @supports not (height: 100dvh) { .msg-root { height: 100vh !important; height: -webkit-fill-available !important; } }
-        .msg-root, .msg-root * { transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease; }
+        .msg-root, .msg-root * { transition: background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1), color 0.18s cubic-bezier(0.16, 1, 0.3, 1); }
         .msg-scroll::-webkit-scrollbar { display: none; }
 
-        /* ── Premium animation keyframes ── */
+        /* ── Premium spring animation keyframes ── */
         @keyframes msgFadeSlideUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to   { opacity: 1; transform: translateY(0); }
+          from { opacity: 0; transform: translateY(24px) scale(0.97); filter: blur(3px); }
+          to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
         }
         @keyframes msgFadeIn {
           from { opacity: 0; }
           to   { opacity: 1; }
         }
         @keyframes msgScaleIn {
-          from { opacity: 0; transform: scale(0.88); }
-          to   { opacity: 1; transform: scale(1); }
+          from { opacity: 0; transform: scale(0.92); filter: blur(6px); }
+          to   { opacity: 1; transform: scale(1); filter: blur(0); }
         }
         @keyframes msgSlideLeft {
-          from { opacity: 0; transform: translateX(30px); }
+          from { opacity: 0; transform: translateX(36px); }
           to   { opacity: 1; transform: translateX(0); }
         }
         @keyframes msgSlideRight {
-          from { opacity: 0; transform: translateX(-30px); }
+          from { opacity: 0; transform: translateX(-36px); }
           to   { opacity: 1; transform: translateX(0); }
         }
         @keyframes msgPulse {
           0%, 100% { transform: scale(1); }
-          50%      { transform: scale(1.07); }
+          50%      { transform: scale(1.05); }
         }
         @keyframes msgShimmer {
           0%   { background-position: -200% 0; }
           100% { background-position:  200% 0; }
         }
         @keyframes msgBounceIn {
-          0%   { opacity: 0; transform: scale(0.3); }
-          50%  { opacity: 1; transform: scale(1.1); }
-          70%  { transform: scale(0.95); }
+          0%   { opacity: 0; transform: scale(0.88); }
+          70%  { opacity: 1; transform: scale(1.02); }
           100% { transform: scale(1); }
         }
         @keyframes msgDotBounce {
@@ -147,16 +146,15 @@ export default function MSG() {
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ── Utility animation classes ── */
-        .msg-anim-fadeup  { animation: msgFadeSlideUp 0.4s cubic-bezier(.22,.68,0,1.2) both; }
-        .msg-anim-fadein  { animation: msgFadeIn 0.35s ease both; }
-        .msg-anim-scalein { animation: msgScaleIn 0.35s cubic-bezier(.22,.68,0,1.2) both; }
-        .msg-anim-slide-l { animation: msgSlideLeft 0.38s cubic-bezier(.22,.68,0,1.2) both; }
-        .msg-anim-slide-r { animation: msgSlideRight 0.38s cubic-bezier(.22,.68,0,1.2) both; }
-        .msg-anim-bounce  { animation: msgBounceIn 0.55s cubic-bezier(.22,.68,0,1.2) both; }
+        /* ── Utility animation classes using Apple spring-like easings ── */
+        .msg-anim-fadeup  { animation: msgFadeSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .msg-anim-fadein  { animation: msgFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .msg-anim-scalein { animation: msgScaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+        .msg-anim-slide-l { animation: msgSlideLeft 0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .msg-anim-slide-r { animation: msgSlideRight 0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .msg-anim-bounce  { animation: msgBounceIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
 
         /* ── Stagger delays ── */
-        .msg-d1 { animation-delay: 0.05s; }
         .msg-d2 { animation-delay: 0.10s; }
         .msg-d3 { animation-delay: 0.15s; }
         .msg-d4 { animation-delay: 0.20s; }
@@ -320,7 +318,15 @@ export default function MSG() {
       console.warn('Firebase signOut failed to initiate:', e);
     }
     try {
-      GoogleAuth.signOut().catch(e => console.warn('GoogleAuth.signOut promise error:', e));
+      GoogleAuth.initialize({
+        clientId: '924373588150-g5hhp1hiu6db6tduir3fr9ekfqkavhir.apps.googleusercontent.com',
+        scopes: ['profile', 'email'],
+        grantOfflineAccess: true,
+      }).then(() => {
+        GoogleAuth.signOut().catch(e => console.warn('GoogleAuth.signOut promise error:', e));
+      }).catch(e => {
+        console.warn('GoogleAuth initialize failed during signOut:', e);
+      });
     } catch (e) {
       console.warn('GoogleAuth signOut failed to initiate:', e);
     }

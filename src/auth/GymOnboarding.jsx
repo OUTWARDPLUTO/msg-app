@@ -140,7 +140,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
   const logoBlock = (
     <div style={{ textAlign: 'center', marginBottom: 24 }}>
       <img
-        src={darkMode ? appIconDark : appIconLight}
+        src={darkMode ? appIconLight : appIconDark}
         alt="MSG"
         style={{ height: 60, width: 60, objectFit: 'contain', display: 'block', margin: '0 auto', borderRadius: 14 }}
       />

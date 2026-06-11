@@ -95,15 +95,18 @@ export default function LoginScreen({ onLogin, darkMode }) {
     setLoading(false);
   };
 
-  const inp = (val, set, type = 'text', placeholder = '') => (
+  const inp = (val, set, type = 'text', placeholder = '', autoComplete = 'off') => (
     <input
       type={type} value={val} onChange={e => set(e.target.value)}
       onKeyDown={e => e.key === 'Enter' && handleEmail()}
       placeholder={placeholder}
+      autoComplete={autoComplete}
       style={{
         width: '100%', boxSizing: 'border-box', background: C.s3,
         border: `1px solid ${C.border}`, borderRadius: 14, padding: '14px 16px',
         color: C.text, fontSize: 15, fontFamily: fn, outline: 'none', marginBottom: 12,
+        backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+        transition: 'border-color 0.2s',
       }}
       onFocus={e => e.target.style.borderColor = C.accent}
       onBlur={e => e.target.style.borderColor = C.border}
@@ -117,37 +120,46 @@ export default function LoginScreen({ onLogin, darkMode }) {
       margin: '0 auto', alignItems: 'center', justifyContent: 'center',
       padding: '0 24px', boxSizing: 'border-box', overflowY: 'auto',
     }}>
+      {/* Decorative ambient glassmorphic background glow blobs */}
+      <div style={{ position: 'absolute', top: '10%', left: '-15%', width: 280, height: 280, borderRadius: '50%', background: 'radial-gradient(circle, rgba(217,154,43,0.15) 0%, transparent 70%)', filter: 'blur(40px)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'absolute', bottom: '10%', right: '-15%', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(78,159,255,0.12) 0%, transparent 70%)', filter: 'blur(45px)', pointerEvents: 'none', zIndex: 0 }} />
+
       {/* Logo */}
-      <div style={{ textAlign: 'center', marginBottom: 32 }}>
+      <div style={{ textAlign: 'center', marginBottom: 32, zIndex: 1 }} className="msg-anim-scalein">
         <img
-          src={darkMode ? appIconDark : appIconLight}
+          src={darkMode ? appIconLight : appIconDark}
           alt="MSG"
-          style={{ height: 72, width: 72, objectFit: 'contain', display: 'block', margin: '0 auto', borderRadius: 16 }}
+          style={{ height: 72, width: 72, objectFit: 'contain', display: 'block', margin: '0 auto', borderRadius: 16, boxShadow: '0 8px 24px rgba(0,0,0,0.15)' }}
         />
         <div style={{ color: C.sub, fontSize: 13, marginTop: 14, lineHeight: 1.6 }}>Train smart. Eat right. Track everything.</div>
       </div>
 
       {/* Card */}
-      <div style={{ width: '100%', background: C.s2, border: `1px solid ${C.border}`, borderRadius: 24, padding: '22px 20px', boxShadow: C.elevShadow }}>
+      <div className="msg-anim-fadeup msg-d1" style={{
+        width: '100%', background: C.s2, border: `1px solid ${C.border}`,
+        borderRadius: 24, padding: '22px 20px', boxShadow: C.elevShadow,
+        backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+        zIndex: 1,
+      }}>
         {/* Tabs */}
         <div style={{ display: 'flex', background: C.s3, borderRadius: 12, padding: 3, marginBottom: 18 }}>
           {['login', 'signup'].map(m => (
             <button key={m} onClick={() => { setMode(m); setError(''); }} style={{
               flex: 1, padding: '9px', borderRadius: 10,
-              background: mode === m ? C.s1 : 'transparent',
+              background: mode === m ? C.bg : 'transparent',
               color: mode === m ? C.text : C.muted,
               border: 'none', fontFamily: fn, fontWeight: 700, fontSize: 13, cursor: 'pointer',
-              boxShadow: mode === m ? C.cardShadow : 'none', transition: 'all 0.2s',
+              boxShadow: mode === m ? C.cardShadow : 'none', transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
             }}>{m === 'login' ? 'Log In' : 'Sign Up'}</button>
           ))}
         </div>
 
-        {mode === 'signup' && inp(name, setName, 'text', 'Full name')}
-        {inp(email, setEmail, 'email', 'Email address')}
-        {inp(pass, setPass, 'password', '••••••••')}
+        {mode === 'signup' && inp(name, setName, 'text', 'Full name', 'name')}
+        {inp(email, setEmail, 'email', 'Email address', 'off')}
+        {inp(pass, setPass, 'password', '••••••••', 'new-password')}
 
         {error && (
-          <div style={{ fontSize: 12, color: C.red, marginBottom: 12, padding: '9px 12px', background: C.red + '18', borderRadius: 10, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 12, color: C.red, marginBottom: 12, padding: '9px 12px', background: C.red + '18', borderRadius: 10, lineHeight: 1.5 }} className="msg-anim-fadein">
             ⚠️ {error}
           </div>
         )}
@@ -161,7 +173,7 @@ export default function LoginScreen({ onLogin, darkMode }) {
           fontFamily: fn, fontWeight: 800, fontSize: 14,
           cursor: loading || fbStatus === 'loading' ? 'wait' : 'pointer',
           boxShadow: fbStatus === 'ready' ? C.accentShadow : 'none',
-          opacity: loading ? 0.7 : 1, marginBottom: 12, transition: 'all 0.2s',
+          opacity: loading ? 0.7 : 1, marginBottom: 12, transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
         }}>
           {loading ? '...' : mode === 'login' ? 'Log In' : 'Create Account'}
         </button>
@@ -173,11 +185,12 @@ export default function LoginScreen({ onLogin, darkMode }) {
         </div>
 
         <button onClick={handleGoogle} disabled={loading || fbStatus !== 'ready'} style={{
-          width: '100%', background: C.s1, border: `1px solid ${C.border}`, borderRadius: 14,
+          width: '100%', background: C.bg, border: `1px solid ${C.border}`, borderRadius: 14,
           padding: '13px', color: C.text, fontFamily: fn, fontWeight: 700, fontSize: 13,
           cursor: loading || fbStatus !== 'ready' ? 'not-allowed' : 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
           boxShadow: C.cardShadow, opacity: fbStatus !== 'ready' ? 0.5 : 1,
+          backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
         }}>
           <svg width="18" height="18" viewBox="0 0 18 18">
             <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" />
@@ -189,7 +202,7 @@ export default function LoginScreen({ onLogin, darkMode }) {
         </button>
       </div>
 
-      <div style={{ color: C.muted, fontSize: 11, marginTop: 14, textAlign: 'center', lineHeight: 1.6 }}>
+      <div style={{ color: C.muted, fontSize: 11, marginTop: 14, textAlign: 'center', lineHeight: 1.6, zIndex: 1 }}>
         By continuing you agree to our Terms of Service.
       </div>
     </div>

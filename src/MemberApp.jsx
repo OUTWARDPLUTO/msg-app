@@ -5153,7 +5153,7 @@ export default function MemberApp({
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <div style={{ height: 32, width: 32, display: 'flex', alignItems: 'center' }}>
             <img
-              src={darkMode ? appIconDark : appIconLight}
+              src={darkMode ? appIconLight : appIconDark}
               alt="MSG"
               style={{ height: '100%', width: '100%', objectFit: 'contain', display: 'block', borderRadius: 8 }}
             />
