@@ -37,15 +37,14 @@ export function UserAvatar({ user, size = 36, fontSize = 12 }) {
 
 // ─── Card ─────────────────────────────────────────────────────────────────────
 export const Card = ({ children, style: s = {}, onClick, className: c = '' }) => {
-  const isDark = C.bg === '#000000';
   return (
     <div
       onClick={onClick}
       className={`msg-card-scale ${c}`}
       style={{
-        background: isDark ? 'rgba(18, 18, 18, 0.85)' : 'rgba(255, 255, 255, 0.85)',
-        border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)'}`,
-        borderRadius: 20,
+        background: C.s3,
+        border: `1px solid ${C.border}`,
+        borderRadius: 24,
         padding: 16,
         boxShadow: C.cardShadow,
         cursor: onClick ? 'pointer' : 'default',

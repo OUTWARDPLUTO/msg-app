@@ -109,51 +109,50 @@ export default function MSG() {
 
         /* ── Premium spring animation keyframes ── */
         @keyframes msgFadeSlideUp {
-          from { opacity: 0; transform: translateY(24px) scale(0.97); filter: blur(3px); }
+          from { opacity: 0; transform: translateY(12px) scale(0.99); filter: blur(2px); }
           to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
         }
         @keyframes msgFadeIn {
-          from { opacity: 0; }
-          to   { opacity: 1; }
+          from { opacity: 0; filter: blur(2px); }
+          to   { opacity: 1; filter: blur(0); }
         }
         @keyframes msgScaleIn {
-          from { opacity: 0; transform: scale(0.92); filter: blur(6px); }
+          from { opacity: 0; transform: scale(0.96); filter: blur(4px); }
           to   { opacity: 1; transform: scale(1); filter: blur(0); }
         }
         @keyframes msgSlideLeft {
-          from { opacity: 0; transform: translateX(36px); }
+          from { opacity: 0; transform: translateX(20px); }
           to   { opacity: 1; transform: translateX(0); }
         }
         @keyframes msgSlideRight {
-          from { opacity: 0; transform: translateX(-36px); }
+          from { opacity: 0; transform: translateX(-20px); }
           to   { opacity: 1; transform: translateX(0); }
         }
         @keyframes msgPulse {
           0%, 100% { transform: scale(1); }
-          50%      { transform: scale(1.05); }
+          50%      { transform: scale(1.02); }
         }
         @keyframes msgShimmer {
           0%   { background-position: -200% 0; }
           100% { background-position:  200% 0; }
         }
         @keyframes msgBounceIn {
-          0%   { opacity: 0; transform: scale(0.88); }
-          70%  { opacity: 1; transform: scale(1.02); }
-          100% { transform: scale(1); }
+          0%   { opacity: 0; transform: scale(0.94); }
+          100% { opacity: 1; transform: scale(1); }
         }
         @keyframes msgDotBounce {
           0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
-          40%            { transform: translateY(-8px); opacity: 1; }
+          40%            { transform: translateY(-4px); opacity: 1; }
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
         /* ── Utility animation classes using Apple spring-like easings ── */
-        .msg-anim-fadeup  { animation: msgFadeSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
-        .msg-anim-fadein  { animation: msgFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both; }
-        .msg-anim-scalein { animation: msgScaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
-        .msg-anim-slide-l { animation: msgSlideLeft 0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
-        .msg-anim-slide-r { animation: msgSlideRight 0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
-        .msg-anim-bounce  { animation: msgBounceIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+        .msg-anim-fadeup  { animation: msgFadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .msg-anim-fadein  { animation: msgFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .msg-anim-scalein { animation: msgScaleIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .msg-anim-slide-l { animation: msgSlideLeft 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .msg-anim-slide-r { animation: msgSlideRight 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .msg-anim-bounce  { animation: msgBounceIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
 
         /* ── Stagger delays ── */
         .msg-d2 { animation-delay: 0.10s; }

@@ -53,7 +53,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
   useEffect(() => { getFBFirestore().catch(() => {}); }, []);
 
   // ── Join gym by code (members) ─────────────────────────────────────────────
-  const handleJoin = async (overrideCode = null) => {
+  const handleJoin = async (overrideCode = null, overrideRole = 'member') => {
     const code = (overrideCode || gymCode).trim().toUpperCase();
     if (code.length !== 6) { setError('Please enter a valid 6-character gym code.'); return; }
     setScreen('loading'); setError('');
@@ -64,17 +64,36 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
         setError('No gym found with that code. Double-check with your gym owner.');
         return;
       }
-      await setUserDoc(user.uid, {
-        uid: user.uid, name: user.name || '', email: user.email || '',
-        role: 'member', gymId: gym.id,
-        joinedAt: serverTimestamp(), lastActiveAt: serverTimestamp(),
-      });
-      await createMemberDoc(gym.id, user.uid, {
-        name: user.name || '', email: user.email || '', phone: '', role: 'member',
-      });
-      onGymJoined(gym.id, 'member', gym.name);
+
+      if (overrideRole === 'trainer') {
+        // Trainer application
+        await setUserDoc(user.uid, {
+          uid: user.uid, name: user.name || '', email: user.email || '',
+          role: 'trainer', gymId: gym.id,
+          joinedAt: serverTimestamp(), lastActiveAt: serverTimestamp(),
+        });
+        const db = await getFBFirestore();
+        await db.doc(`gyms/${gym.id}/trainers/${user.uid}`).set({
+          uid: user.uid, name: user.name || '', email: user.email || '',
+          status: 'pending', appliedAt: serverTimestamp()
+        });
+        onGymJoined(gym.id, 'trainer', gym.name);
+      } else {
+        // Member join
+        await setUserDoc(user.uid, {
+          uid: user.uid, name: user.name || '', email: user.email || '',
+          role: 'member', gymId: gym.id,
+          joinedAt: serverTimestamp(), lastActiveAt: serverTimestamp(),
+        });
+        await createMemberDoc(gym.id, user.uid, {
+          name: user.name || '', email: user.email || '', phone: '', role: 'member',
+        });
+        const db = await getFBFirestore();
+        await db.doc(`gyms/${gym.id}/member_codes/${user.uid.substring(0,6).toUpperCase()}`).set({ uid: user.uid });
+        onGymJoined(gym.id, 'member', gym.name);
+      }
     } catch (e) {
-      setScreen('join');
+      setScreen(overrideRole === 'trainer' ? 'trainer' : 'join');
       const msg = e?.code === 'unavailable' || e?.message?.includes('network')
         ? 'Network error. Check your internet connection and try again.'
         : e?.code === 'permission-denied'
@@ -625,6 +644,16 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
         <div style={{ fontFamily: fn, fontSize: 17, fontWeight: 800, color: C.text, marginBottom: 4 }}>I'm a Gym Member</div>
         <div style={{ fontSize: 13, color: C.sub, lineHeight: 1.5 }}>Enter your gym's 6-character code to join and start training.</div>
       </button>
+
+      <button onClick={() => setScreen('trainer')} className="ob-choice ob-card-3 ob-btn" style={{
+        width: '100%', padding: '16px 18px',
+        background: C.s2, border: `1px solid ${C.border}`, borderRadius: 18,
+        cursor: 'pointer', textAlign: 'left',
+      }}>
+        <div style={{ fontSize: 24, marginBottom: 6 }}>哨</div>
+        <div style={{ fontFamily: fn, fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 4 }}>I'm a Trainer</div>
+        <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.5 }}>Apply to join a gym and manage your assigned members.</div>
+      </button>
     </>
   );
 
@@ -653,14 +682,54 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
             transition: 'border-color 0.2s',
           }}
         />
-        <button onClick={startScanner} style={{
-          background: C.s3, border: `1px solid ${C.border}`, borderRadius: 14,
-          padding: '0 20px', color: C.text, fontSize: 24, cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center'
+      </div>
+      
+      <button onClick={startScanner} style={{ width: '100%', padding: '14px', background: C.s2, border: `1px solid ${C.border}`, borderRadius: 14, color: C.text, fontFamily: fn, fontWeight: 700, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+        <span>📷</span> Scan QR Code Instead
+      </button>
+    </>
+  );
+
+  // ── Trainer Application Screen ──────────────────────────────────────────────
+  if (screen === 'trainer') return wrap(
+    <>
+      {backBtn('choice')}
+      <div className="ob-card" style={{ fontSize: 40, marginBottom: 12 }}>哨</div>
+      <div className="ob-card" style={{ fontFamily: fn, fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 8, letterSpacing: '-0.02em' }}>Join as Trainer</div>
+      <div className="ob-card" style={{ color: C.sub, fontSize: 13, marginBottom: 28, lineHeight: 1.5 }}>
+        Enter the gym's 6-character code to apply as a trainer. The gym owner must approve your application.
+      </div>
+
+      <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
+        <input
+          value={gymCode}
+          onChange={e => { setGymCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')); setError(''); }}
+          placeholder="e.g. GYM123"
+          maxLength={6}
+          style={{
+            flex: 1, boxSizing: 'border-box', background: C.s2,
+            border: `2px solid ${gymCode.length === 6 ? C.accent : C.border}`,
+            borderRadius: 14, padding: '16px', color: C.text, fontSize: 24,
+            fontFamily: fb, fontWeight: 800, textAlign: 'center', letterSpacing: '0.2em', outline: 'none'
+          }}
+        />
+      </div>
+
+      {error && <div style={{ color: C.red, fontSize: 12, marginBottom: 16, textAlign: 'center' }}>{error}</div>}
+
+      <div style={{ marginBottom: 24 }}>
+        <button onClick={() => handleJoin(null, 'trainer')} className="ob-btn" style={{
+          width: '100%', padding: '16px', background: gymCode.length === 6 ? C.accent : C.s4,
+          color: gymCode.length === 6 ? '#111' : C.muted, border: 'none', borderRadius: 14,
+          fontFamily: fn, fontWeight: 800, fontSize: 16, cursor: gymCode.length === 6 ? 'pointer' : 'not-allowed',
+          boxShadow: gymCode.length === 6 ? C.accentShadow : 'none', transition: 'all 0.2s',
         }}>
-          📷
+          Apply to Gym →
         </button>
       </div>
+    </>
+  );
+
       {errorBox}
 
       {/* Code dots indicator */}

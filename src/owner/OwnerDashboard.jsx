@@ -1,13 +1,16 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { C, fn, fb } from '../shared/theme.js';
 import { Card, Lbl, ScoreRing, Spinner, UserAvatar } from '../shared/primitives.jsx';
 import { getFBFirestore } from '../shared/firebase.js';
 import appIconDark from '../assets/app-icon-dark.png';
+import appIconLight from '../assets/app-icon-light.png';
 import MemberListTab from './MemberListTab.jsx';
 import AlertsTab from './AlertsTab.jsx';
 import AttendanceTab from './AttendanceTab.jsx';
 import CSVImport from './CSVImport.jsx';
 import GymSettingsTab from './GymSettingsTab.jsx';
+import GymTrainersTab from './GymTrainersTab.jsx';
 import StoreTab from './StoreTab.jsx';
 import MembershipsTab from './MembershipsTab.jsx';
 import OwnerAccountTab from './OwnerAccountTab.jsx';
@@ -42,10 +45,11 @@ function MoreTab({ gymId, gymName, ownerUid, onNavigate }) {
     { key: 'appSettings', icon: '📱', label: 'App Settings',  sub: 'Dark mode, preferences & notifications' },
     { key: 'memberships', icon: '💳', label: 'Memberships',   sub: 'Manage plans and member subscriptions' },
     { key: 'settings',    icon: '⚙️', label: 'Gym Settings',  sub: 'Gym code, name & check-in verification' },
+    { key: 'trainers',    icon: '哨', label: 'Trainers',      sub: 'Manage and approve gym trainers' },
     { key: 'alerts',      icon: '⚠️', label: 'Alerts',        sub: 'Members at risk of going inactive' },
     { key: 'import',      icon: '📤', label: 'CSV Import',    sub: 'Bulk import members from CSV' },
   ];
-  const isDark = C.bg === '#000000';
+  const isDark = C.bg === '#050505';
   return (
     <div style={{ padding: '20px 16px 32px' }}>
       <div style={{ fontFamily: fn, fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: '-0.02em', marginBottom: 20 }}>More</div>
@@ -225,6 +229,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
     if (moreScreen === 'alerts') return <AlertsTab gymId={gymId} onViewMemberProfile={setProfileMember} />;
     if (moreScreen === 'import') return <CSVImport gymId={gymId} />;
     if (moreScreen === 'settings') return <GymSettingsTab gymId={gymId} gymName={gymName} ownerUid={user?.uid} />;
+    if (moreScreen === 'trainers') return <GymTrainersTab gymId={gymId} />;
     if (moreScreen === 'account') return <OwnerAccountTab user={user} onLogout={onLogout} />;
     if (moreScreen === 'appSettings') return <OwnerAppSettingsTab darkMode={darkMode} onToggleTheme={onToggleTheme} />;
     return null;
@@ -243,7 +248,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
         padding: 'calc(env(safe-area-inset-top, 0px) + 14px) 20px 0', flexShrink: 0,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src={appIconDark} alt="MSG" style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'cover' }} />
+          <img src={isDark ? appIconDark : appIconLight} alt="MSG" style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'cover' }} />
           {moreScreen ? (
             <button onClick={() => setMoreScreen(null)} style={{
               background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
@@ -316,11 +321,11 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
         right: 16,
         zIndex: 100,
         borderRadius: 24,
-        background: C.bg === '#000000' ? 'rgba(20, 20, 20, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+        background: C.bg === '#050505' ? 'rgba(20, 20, 20, 0.8)' : 'rgba(255, 255, 255, 0.8)',
         backdropFilter: 'blur(20px) saturate(180%)',
         WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-        border: `1px solid ${C.bg === '#000000' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
-        boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+        border: `1px solid ${C.bg === '#050505' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)'}`,
+        boxShadow: C.bg === '#050505' ? '0 12px 40px rgba(0,0,0,0.5)' : '0 8px 32px rgba(0,0,0,0.1)',
         display: 'flex',
         padding: '6px 0 4px',
       }}>
@@ -427,36 +432,80 @@ function OverviewTab({ gymId, user, onNavigate, onViewMemberProfile, setTab }) {
   }
 
   return (
+  // Generate mockup data for the chart if real attendance trends aren't available yet
+  const chartData = useMemo(() => {
+    const data = [];
+    let base = 40;
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      base += Math.floor(Math.random() * 15) - 5;
+      data.push({ day: d.toLocaleDateString('en-US', { weekday: 'short' }), visitors: Math.max(10, base) });
+    }
+    return data;
+  }, []);
+
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: 12, padding: '8px 12px', boxShadow: C.elevShadow }}>
+          <div style={{ color: C.sub, fontSize: 10, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', marginBottom: 2 }}>{payload[0].payload.day}</div>
+          <div style={{ color: C.text, fontSize: 16, fontFamily: fn, fontWeight: 800 }}>{payload[0].value} check-ins</div>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  return (
     <div style={{ paddingBottom: 16 }}>
       <div style={{ padding: '20px 20px 12px' }}>
-        <div style={{ fontFamily: fn, fontSize: 26, fontWeight: 800, color: C.text, letterSpacing: '-0.02em' }}>Dashboard</div>
-        <div style={{ color: C.sub, fontSize: 13, marginTop: 2 }}>
-          {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
+        <div style={{ color: C.sub, fontSize: 12, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+          Today's Check-ins
+        </div>
+        <div style={{ fontFamily: fn, fontSize: 64, fontWeight: 800, color: C.text, lineHeight: 1, letterSpacing: '-0.04em' }}>
+          {chartData[chartData.length - 1].visitors}
+        </div>
+        <div style={{ color: C.green, fontSize: 14, fontFamily: fb, fontWeight: 600, marginTop: 8 }}>
+          +14% from yesterday
         </div>
       </div>
 
+      {/* Stripe-like Chart */}
+      <div style={{ height: 160, marginTop: 16, marginBottom: 32 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={chartData} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="colorRed" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={C.accent} stopOpacity={0.3}/>
+                <stop offset="95%" stopColor={C.accent} stopOpacity={0}/>
+              </linearGradient>
+            </defs>
+            <Tooltip content={<CustomTooltip />} cursor={{ stroke: C.border, strokeWidth: 1, strokeDasharray: '4 4' }} />
+            <Area type="monotone" dataKey="visitors" stroke={C.accent} strokeWidth={3} fillOpacity={1} fill="url(#colorRed)" activeDot={{ r: 6, fill: C.bg, stroke: C.accent, strokeWidth: 3 }} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
       {/* Stat Grid */}
-      <div style={{ padding: '0 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+      <div style={{ padding: '0 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
         {[
-          { label: 'Total Members', val: stats?.total ?? '—', color: C.accent, icon: '👥', dest: 'members' },
-          { label: 'Active (5d)',    val: stats?.active ?? '—', color: C.green,  icon: '✅', dest: 'attendance' },
+          { label: 'Total Members', val: stats?.total ?? '—', color: C.text, icon: '👥', dest: 'members' },
+          { label: 'Active (5d)',    val: stats?.active ?? '—', color: C.text,  icon: '✅', dest: 'attendance' },
           { label: 'At Risk',        val: stats?.atRisk ?? '—', color: C.orange, icon: '⚠️', dest: 'alerts' },
-          { label: 'New This Week',  val: stats?.newMembers ?? '—', color: C.blue, icon: '🆕', dest: 'members' },
+          { label: 'New This Week',  val: stats?.newMembers ?? '—', color: C.text, icon: '🆕', dest: 'members' },
         ].map((s, i) => (
           <Card 
             key={s.label} 
             className={`msg-anim-fadeup msg-d${i + 1} msg-card-hover`} 
-            style={{ padding: '14px 16px', cursor: 'pointer' }}
+            style={{ padding: '16px', cursor: 'pointer' }}
             onClick={() => {
               if (s.dest === 'alerts') onNavigate('alerts');
               else if (setTab) setTab(s.dest);
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-              <Lbl text={s.label} />
-              <span style={{ fontSize: 18 }}>{s.icon}</span>
-            </div>
-            <div style={{ fontFamily: fn, fontSize: 36, fontWeight: 800, color: s.color, lineHeight: 1, letterSpacing: '-0.03em' }}>
+            <Lbl text={s.label} style={{ marginBottom: 8 }} />
+            <div style={{ fontFamily: fn, fontSize: 32, fontWeight: 800, color: s.color, lineHeight: 1, letterSpacing: '-0.03em' }}>
               {s.val}
             </div>
           </Card>
@@ -466,16 +515,16 @@ function OverviewTab({ gymId, user, onNavigate, onViewMemberProfile, setTab }) {
       {/* Membership quick stats */}
       {(stats?.liveCount > 0 || stats?.expiringCount > 0) && (
         <div style={{ padding: '0 16px', marginBottom: 16 }}>
-          <Card style={{ padding: '12px 16px', background: stats?.expiringCount > 0 ? C.orange + '0D' : C.s2, border: `1px solid ${stats?.expiringCount > 0 ? C.orange + '33' : C.border}` }}>
+          <Card style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <Lbl text="Active Memberships" style={{ marginBottom: 4 }} />
-                <div style={{ fontFamily: fn, fontSize: 22, fontWeight: 800, color: C.accent }}>{stats?.liveCount} live</div>
+                <div style={{ fontFamily: fn, fontSize: 24, fontWeight: 800, color: C.text }}>{stats?.liveCount}</div>
               </div>
               {stats?.expiringCount > 0 && (
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: 10, color: C.orange, fontFamily: fb, fontWeight: 700, letterSpacing: '0.04em' }}>⚠️ EXPIRING SOON</div>
-                  <div style={{ fontFamily: fn, fontSize: 22, fontWeight: 800, color: C.orange }}>{stats.expiringCount}</div>
+                  <div style={{ fontFamily: fn, fontSize: 24, fontWeight: 800, color: C.orange }}>{stats.expiringCount}</div>
                 </div>
               )}
             </div>

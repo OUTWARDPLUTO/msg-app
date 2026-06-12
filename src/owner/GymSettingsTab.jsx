@@ -11,6 +11,8 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
   const [qrToken, setQrToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [subData, setSubData] = useState(null);
+  const [subPlan, setSubPlan] = useState('monthly'); // 'trial', 'monthly', 'yearly'
+  const [paymentError, setPaymentError] = useState('');
 
   // GPS and QR settings states
   const [useGps, setUseGps] = useState(false);
@@ -40,6 +42,94 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
       setTimeout(() => setSaved(false), 2000);
     } catch (e) { console.warn(e); }
     setLoading(false);
+  };
+
+  const loadRazorpaySDK = () => {
+    return new Promise((resolve) => {
+      if (window.Razorpay) return resolve(true);
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handleActivate = async () => {
+    if (!subPlan || !ownerUid) return;
+    setLoading(true);
+    setPaymentError('');
+
+    try {
+      const isLoaded = await loadRazorpaySDK();
+      if (!isLoaded) throw new Error("Could not load payment gateway. Check your connection.");
+
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
+      const res = await fetch(`${API_URL}/api/create-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: subPlan, gymId, uid: ownerUid })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to create order");
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_placeholder',
+        amount: data.amount,
+        currency: "INR",
+        name: "MSG Gym Platform",
+        description: `${subPlan === 'yearly' ? 'Yearly' : subPlan === 'monthly' ? 'Monthly' : 'Trial'} Subscription`,
+        order_id: data.orderId,
+        handler: async function (response) {
+          setLoading(true);
+          try {
+            const verifyRes = await fetch(`${API_URL}/api/verify-payment`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                uid: ownerUid,
+                plan: subPlan,
+                gymId: gymId
+              })
+            });
+            const verifyData = await verifyRes.json();
+            if (!verifyRes.ok) throw new Error(verifyData.error || "Verification failed");
+            
+            // Payment successful
+            await loadSettings();
+          } catch (e) {
+            console.error("Verification Error:", e);
+            setPaymentError("Payment verification failed. Please contact support.");
+          } finally {
+            setLoading(false);
+          }
+        },
+        prefill: {
+          name: gymName,
+        },
+        theme: {
+          color: C.accent
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (response){
+        console.error("Payment Failed", response.error);
+        setPaymentError("Payment failed: " + response.error.description);
+      });
+      
+      rzp.open();
+      
+    } catch (e) {
+      console.error(e);
+      setPaymentError(e.message || "An error occurred during payment.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const loadSettings = async () => {
@@ -80,25 +170,35 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
       <Card style={{ padding: '14px 16px', marginBottom: 16 }}>
         <Lbl text="Gym Code & QR" style={{ marginBottom: 8 }} />
         
-        {code && code !== '—' && (
-          <div style={{ background: '#fff', padding: 8, borderRadius: 8, display: 'inline-block', marginBottom: 12 }}>
-            <img 
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${code}`} 
-              alt="Gym QR Code" 
-              style={{ width: 120, height: 120, display: 'block' }}
-            />
+        {(!subData || !subData.active) ? (
+          <div style={{ textAlign: 'center', padding: '20px 10px', background: C.s3, borderRadius: 12, border: `1px dashed ${C.border}` }}>
+            <span style={{ fontSize: 24, display: 'block', marginBottom: 8 }}>🔒</span>
+            <div style={{ fontSize: 13, color: C.text, fontFamily: fb, fontWeight: 700 }}>Code Locked</div>
+            <div style={{ fontSize: 11, color: C.sub, marginTop: 4 }}>Activate your subscription below to view your gym code.</div>
           </div>
-        )}
+        ) : (
+          <>
+            {code && code !== '—' && (
+              <div style={{ background: '#fff', padding: 8, borderRadius: 8, display: 'inline-block', marginBottom: 12 }}>
+                <img 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${code}`} 
+                  alt="Gym QR Code" 
+                  style={{ width: 120, height: 120, display: 'block' }}
+                />
+              </div>
+            )}
 
-        <div style={{ fontFamily: fn, fontSize: 32, fontWeight: 800, color: C.accent, letterSpacing: '0.3em' }}>
-          {code || '——'}
-        </div>
-        <div style={{ fontSize: 12, color: C.sub, marginTop: 6, lineHeight: 1.5 }}>
-          Share this code or QR with members. They scan/enter it in the app to join your gym.
-        </div>
+            <div style={{ fontFamily: fn, fontSize: 32, fontWeight: 800, color: C.accent, letterSpacing: '0.3em' }}>
+              {code || '——'}
+            </div>
+            <div style={{ fontSize: 12, color: C.sub, marginTop: 6, lineHeight: 1.5 }}>
+              Share this code or QR with members. They scan/enter it in the app to join your gym.
+            </div>
+          </>
+        )}
       </Card>
 
-      <Card style={{ padding: '14px 16px', marginBottom: 16 }}>
+      <Card style={{ padding: '14px 16px', marginBottom: 16, border: subData?.active ? `1px solid ${C.border}` : `2px solid ${C.accent}` }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
           <Lbl text="MSG App Subscription" />
           <span style={{ 
@@ -118,19 +218,44 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
                 Expires: {subData.expiresAt ? new Date(subData.expiresAt).toLocaleDateString('en-IN') : 'Forever'}
               </>
             ) : (
-              <>Your subscription has expired. Members cannot access the app.</>
+              <span style={{ color: C.red }}>Your subscription has expired. Members cannot access the app.</span>
             )}
           </div>
         )}
-        
-        <button onClick={() => {
-            alert('To manage your subscription, please login to the MSG Web Portal.');
-        }} style={{
-          background: C.s3, border: `1px solid ${C.border}`, borderRadius: 10,
-          padding: '8px 14px', color: C.text, fontFamily: fn, fontWeight: 700, fontSize: 12, cursor: 'pointer',
-        }}>
-          Manage Billing
-        </button>
+
+        {paymentError && (
+          <div style={{ padding: '10px', background: C.red + '22', color: C.red, borderRadius: 8, fontSize: 12, marginBottom: 12 }}>
+            {paymentError}
+          </div>
+        )}
+
+        {!subData?.active && (
+          <div style={{ marginTop: 16 }}>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+              {['trial', 'monthly', 'yearly'].map(plan => (
+                <button key={plan} onClick={() => setSubPlan(plan)} style={{
+                  flex: 1, padding: '10px 4px',
+                  background: subPlan === plan ? C.accent + '18' : C.s3,
+                  border: `1px solid ${subPlan === plan ? C.accent : C.border}`,
+                  borderRadius: 10, color: subPlan === plan ? C.accent : C.sub,
+                  fontFamily: fn, fontWeight: 700, fontSize: 11, cursor: 'pointer',
+                  textTransform: 'capitalize'
+                }}>
+                  {plan}
+                  <div style={{ fontSize: 10, marginTop: 4, color: subPlan === plan ? C.accent : C.muted }}>
+                    {plan === 'trial' ? '₹149' : plan === 'monthly' ? '₹499' : '₹4,199'}
+                  </div>
+                </button>
+              ))}
+            </div>
+            <button onClick={handleActivate} disabled={loading} style={{
+              width: '100%', background: C.accent, border: 'none', borderRadius: 10,
+              padding: '12px 14px', color: '#111', fontFamily: fn, fontWeight: 800, fontSize: 14, cursor: loading ? 'wait' : 'pointer',
+            }}>
+              {loading ? 'Processing...' : `Activate ${subPlan} plan →`}
+            </button>
+          </div>
+        )}
       </Card>
 
       <Card style={{ padding: '14px 16px', marginBottom: 16 }}>

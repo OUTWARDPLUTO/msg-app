@@ -54,26 +54,48 @@ service cloud.firestore {
       }
     }
 
+    // ── Trainers ──────────────────────────────────────────────────────────────
+    match /gyms/{gymId}/trainers/{uid} {
+      allow read:   if isOwnerOf(gymId) || isUser(uid);
+      allow create: if isAuth() && isUser(uid); // Trainer applies
+      allow update: if isOwnerOf(gymId); // Owner approves
+      allow delete: if isOwnerOf(gymId);
+    }
+
+    // ── Member Codes (for linking) ────────────────────────────────────────────
+    match /gyms/{gymId}/member_codes/{code} {
+      allow read:   if isTrainerOf(gymId) || isOwnerOf(gymId) || isMemberOf(gymId);
+      allow write:  if isMemberOf(gymId) || isOwnerOf(gymId);
+    }
+
     // ── Members ───────────────────────────────────────────────────────────────
     // Members can read their own doc; owners can read/write all members in their gym
+    // Trainers can only list their assigned members, but can get a specific member if they have the ID (via member_code)
     match /members/{docId} {
       // docId is "{gymId}_{uid}"
-      allow read:   if isAuth() && (
+      allow get:    if isAuth() && (
                       resource == null ||
-                      isMemberOf(resource.data.gymId) ||
-                      isOwnerOf(resource.data.gymId)
+                      isUser(resource.data.uid) ||
+                      isOwnerOf(resource.data.gymId) ||
+                      isTrainerOf(resource.data.gymId)
+                    );
+      allow list:   if isAuth() && (
+                      isUser(resource.data.uid) ||
+                      isOwnerOf(resource.data.gymId) ||
+                      (isTrainerOf(resource.data.gymId) && resource.data.trainerUid == request.auth.uid)
                     );
       allow create: if isAuth();
       allow update: if isAuth() && (
                       isUser(resource.data.uid) ||
-                      isOwnerOf(resource.data.gymId)
+                      isOwnerOf(resource.data.gymId) ||
+                      (isTrainerOf(resource.data.gymId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['trainerUid']))
                     );
       allow delete: if isOwnerOf(resource.data.gymId);
     }
 
     // ── Attendance ────────────────────────────────────────────────────────────
     match /attendance/{gymId}/logs/{logId} {
-      allow read:   if isOwnerOf(gymId) || (isMemberOf(gymId) && isUser(resource.data.uid));
+      allow read:   if isOwnerOf(gymId) || (isMemberOf(gymId) && isUser(resource.data.uid)) || isTrainerOf(gymId);
       allow create: if isMemberOf(gymId) && isUser(request.resource.data.uid);
       allow update: if false;
       allow delete: if false;
@@ -81,7 +103,7 @@ service cloud.firestore {
 
     // ── Activity Logs ─────────────────────────────────────────────────────────
     match /activityLogs/{gymId}/events/{eventId} {
-      allow read:   if isOwnerOf(gymId) || (isMemberOf(gymId) && isUser(resource.data.uid));
+      allow read:   if isOwnerOf(gymId) || (isMemberOf(gymId) && isUser(resource.data.uid)) || isTrainerOf(gymId);
       allow create: if isMemberOf(gymId) && isUser(request.resource.data.uid);
       allow update: if false;
       allow delete: if false;

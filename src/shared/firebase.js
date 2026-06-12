@@ -308,7 +308,9 @@ export async function getTodayCheckIn(uid, gymId) {
 
 // ─── CSV Import ───────────────────────────────────────────────────────────────
 export function parseCSV(text) {
-  const lines = text.trim().split(/\r?\n/);
+  // Strip BOM and normalize line endings
+  const cleanText = (text || '').replace(/^\uFEFF/, '').trim();
+  const lines = cleanText.split(/\r\n|\r|\n/).filter(line => line.trim().length > 0);
   if (lines.length < 2) return { headers: [], rows: [] };
   
   const parseLine = (line) => {

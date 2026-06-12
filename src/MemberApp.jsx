@@ -870,7 +870,7 @@ function HomeSection({ mealLog, progressLogs, dietGoal, onLogClick, user, gymId,
       {/* Stats row */}
       <div id="tut-stats" style={{ padding: '14px 16px 0', display: 'flex', gap: 10 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flex: '0 0 auto', width: 90 }}>
-          <Card style={{ background: C.accentD, border: '1px solid rgba(196,255,71,0.25)', textAlign: 'center', padding: '14px 8px' }}>
+          <Card style={{ background: C.accentD || C.s3, border: `1px solid ${C.accent}40`, textAlign: 'center', padding: '14px 8px' }}>
             <div style={{ fontFamily: fn, fontSize: 40, fontWeight: 800, color: C.accent, lineHeight: 1 }}>{streak}</div>
             <div style={{ color: C.accent, opacity: .7, fontSize: 8, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 3 }}>
               {streak === 1 ? 'Day' : 'Days'}
@@ -1543,7 +1543,12 @@ function ManualPlanBuilder({ setWeekPlan, onBack }) {
       </div>
 
       {/* Save plan button */}
-      <button onClick={savePlan} disabled={planDays.every(d => d.exercises.length === 0)} style={{
+      <button onClick={() => {
+        savePlan();
+        if (user?.uid && gymId && user.uid !== 'demo') {
+          import('./shared/firebase.js').then(f => f.trackActivity(user.uid, gymId, 'workout'));
+        }
+      }} disabled={planDays.every(d => d.exercises.length === 0)} style={{
         width: '100%', padding: '14px', marginBottom: 20,
         background: planDays.some(d => d.exercises.length > 0) ? C.accent : C.s4,
         color: planDays.some(d => d.exercises.length > 0) ? '#000' : C.muted,
@@ -4099,6 +4104,19 @@ function ProfileScreen({ onClose, progressLogs, dietGoal, mealLog = [], weekPlan
           </div>
         )}
       </div>
+
+      {/* Trainer Link Code */}
+      <div style={{ padding: '0 16px', marginTop: 16 }}>
+        <div style={{ background: C.s2, border: `1px solid ${C.accent}44`, borderRadius: 12, padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <div style={{ fontSize: 11, color: C.accent, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Trainer Link Code</div>
+            <div style={{ fontSize: 11, color: C.sub }}>Share this code with your trainer</div>
+          </div>
+          <div style={{ fontFamily: fn, fontSize: 18, fontWeight: 800, color: C.text, letterSpacing: '0.15em', background: C.s3, padding: '6px 12px', borderRadius: 8, border: `1px solid ${C.border}` }}>
+            {user?.uid?.substring(0, 6)?.toUpperCase() || '------'}
+          </div>
+        </div>
+      </div>
       {/* Stats grid */}
       <div style={{ padding: '16px 16px 0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
         {stats.map((s, i) => (
@@ -4728,6 +4746,7 @@ function NavIcon({ id, active }) {
 
 function BottomNavAnimated({ tab, setTab, darkMode }) {
   const tabs = ['home', 'workout', 'diet', 'store', 'progress'];
+  const isDark = C.bg === '#050505';
   return (
     <div className="msg-bottom-nav" style={{
       position: 'fixed',
@@ -4736,11 +4755,11 @@ function BottomNavAnimated({ tab, setTab, darkMode }) {
       right: 16,
       zIndex: 100,
       borderRadius: 24,
-      background: C.bg === '#000000' ? 'rgba(20, 20, 20, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+      background: isDark ? 'rgba(20, 20, 20, 0.8)' : 'rgba(255, 255, 255, 0.8)',
       backdropFilter: 'blur(20px) saturate(180%)',
       WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-      border: `1px solid ${C.bg === '#000000' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
-      boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+      border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)'}`,
+      boxShadow: isDark ? '0 12px 40px rgba(0,0,0,0.5)' : '0 8px 32px rgba(0,0,0,0.1)',
       display: 'flex',
       padding: '6px 0 4px',
     }}>
@@ -5135,8 +5154,21 @@ export default function MemberApp({
 
   const handleSaveProgress = (entry) => {
     setProgressLogs(l => [...l, entry]);
-
+    if (user?.uid && gymId && user.uid !== 'demo') {
+      import('./shared/firebase.js').then(f => f.trackActivity(user.uid, gymId, 'progress'));
+    }
   };
+
+  // Track diet engagement
+  const prevMealCount = useRef(mealLog.length);
+  useEffect(() => {
+    if (mealLog.length > prevMealCount.current) {
+      if (user?.uid && gymId && user.uid !== 'demo') {
+        import('./shared/firebase.js').then(f => f.trackActivity(user.uid, gymId, 'diet'));
+      }
+    }
+    prevMealCount.current = mealLog.length;
+  }, [mealLog.length, user?.uid, gymId]);
 
 
   const views = {

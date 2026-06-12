@@ -1,22 +1,9 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import { C } from './theme.js';
 
 export default function AmbientBackground() {
-  const [embers, setEmbers] = useState([]);
   const bgRef = useRef(null);
-
-  useEffect(() => {
-    // Generate 12 random embers
-    const generated = Array.from({ length: 12 }).map((_, i) => ({
-      id: i,
-      left: Math.random() * 100, // percentage
-      bottom: Math.random() * 20 - 10, // start slightly below screen
-      size: Math.random() * 4 + 2, // 2px to 6px
-      duration: Math.random() * 6 + 6, // 6s to 12s
-      delay: Math.random() * 5, // 0s to 5s
-      opacity: Math.random() * 0.5 + 0.3, // 0.3 to 0.8
-    }));
-    setEmbers(generated);
-  }, []);
+  const isDark = C.bg === '#050505';
 
   useEffect(() => {
     const scrollContainer = document.querySelector('.msg-scroll');
@@ -48,27 +35,20 @@ export default function AmbientBackground() {
       pointerEvents: 'none',
       zIndex: 0,
       transform: `translate3d(0, 0, 0)`,
-      transition: 'transform 0.1s linear' // Smooth out the parallax slightly
+      transition: 'transform 0.1s linear'
     }}>
-      {/* Ambient Glow */}
-      <div className="ambient-glow" />
-      
-      {/* Embers */}
-      {embers.map(e => (
-        <div
-          key={e.id}
-          className="ember-particle"
-          style={{
-            left: `${e.left}%`,
-            bottom: `${e.bottom}%`,
-            width: e.size,
-            height: e.size,
-            '--duration': `${e.duration}s`,
-            '--delay': `${e.delay}s`,
-            '--max-opacity': e.opacity,
-          }}
-        />
-      ))}
+      {/* Subtle Premium Glow at the top edge */}
+      <div style={{
+        position: 'absolute',
+        top: -100,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: '120vw',
+        height: '40vh',
+        background: `radial-gradient(ellipse at top, ${isDark ? 'rgba(255, 45, 45, 0.06)' : 'rgba(255, 45, 45, 0.04)'} 0%, transparent 70%)`,
+        opacity: 0.8,
+        filter: 'blur(40px)',
+      }} />
     </div>
   );
 }
