@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
-import { Card, Lbl, Spinner } from '../shared/primitives.jsx';
+import { Card, Lbl, Spinner, UserAvatar } from '../shared/primitives.jsx';
 import { getFBFirestore } from '../shared/firebase.js';
 import MemberDetailSheet from './MemberDetailSheet.jsx';
-import UserAvatar from '../shared/UserAvatar.jsx';
 
 export default function TrainerView({ gymId, user, onLogout }) {
   const [members, setMembers] = useState([]);

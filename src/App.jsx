@@ -7,7 +7,7 @@ import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 // ────────────────────────────────────────────────────────────────────────────
 // Error Boundary — catches MemberApp crashes, shows recovery UI (no blank screen)
 // ────────────────────────────────────────────────────────────────────────────
-class ErrorBoundary extends Component {
+export class ErrorBoundary extends Component {
   constructor(props) { super(props); this.state = { hasError: false, error: null }; }
   static getDerivedStateFromError(error) { return { hasError: true, error }; }
   componentDidCatch(err, info) { console.error('[MSG] ErrorBoundary caught:', err, info); }
@@ -63,6 +63,12 @@ export default function MSG() {
   const [darkMode, setDarkMode] = useState(() => load('msg_dark', true));
   Object.assign(C, THEMES[darkMode ? 'dark' : 'light']);
   const toggleTheme = () => setDarkMode(d => { const n = !d; save('msg_dark', n); Object.assign(C, THEMES[n ? 'dark' : 'light']); return n; });
+
+  useEffect(() => {
+    document.body.style.backgroundColor = C.bg;
+    document.documentElement.style.backgroundColor = C.bg;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', C.bg);
+  }, [darkMode]);
 
   // ── Auth ───────────────────────────────────────────────────────────────────
   const [user, setUser]         = useState(() => load('msg_user', null));

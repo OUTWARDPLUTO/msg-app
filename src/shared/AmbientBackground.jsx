@@ -3,7 +3,7 @@ import { C } from './theme.js';
 
 export default function AmbientBackground() {
   const bgRef = useRef(null);
-  const isDark = C.bg === '#050505';
+  const isDark = !C.isLight;
 
   useEffect(() => {
     const scrollContainer = document.querySelector('.msg-scroll');

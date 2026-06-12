@@ -5,6 +5,7 @@ import { Card, Lbl, ScoreRing, Spinner, UserAvatar } from '../shared/primitives.
 import { getFBFirestore } from '../shared/firebase.js';
 import appIconDark from '../assets/app-icon-dark.png';
 import appIconLight from '../assets/app-icon-light.png';
+import { ErrorBoundary } from '../App.jsx';
 import MemberListTab from './MemberListTab.jsx';
 import AlertsTab from './AlertsTab.jsx';
 import AttendanceTab from './AttendanceTab.jsx';
@@ -39,7 +40,7 @@ function OwnerNavIcon({ id, active }) {
 }
 
 // ─── More Tab ─────────────────────────────────────────────────────────────────
-function MoreTab({ gymId, gymName, ownerUid, onNavigate }) {
+function MoreTab({ gymId, gymName, ownerUid, onNavigate, pendingTrainersCount = 0 }) {
   const items = [
     { key: 'account',     icon: '👤', label: 'My Account',    sub: 'Manage your profile and personal details' },
     { key: 'appSettings', icon: '📱', label: 'App Settings',  sub: 'Dark mode, preferences & notifications' },
@@ -49,7 +50,7 @@ function MoreTab({ gymId, gymName, ownerUid, onNavigate }) {
     { key: 'alerts',      icon: '⚠️', label: 'Alerts',        sub: 'Members at risk of going inactive' },
     { key: 'import',      icon: '📤', label: 'CSV Import',    sub: 'Bulk import members from CSV' },
   ];
-  const isDark = C.bg === '#050505';
+  const isDark = !C.isLight;
   return (
     <div style={{ padding: '20px 16px 32px' }}>
       <div style={{ fontFamily: fn, fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: '-0.02em', marginBottom: 20 }}>More</div>
@@ -63,13 +64,19 @@ function MoreTab({ gymId, gymName, ownerUid, onNavigate }) {
           border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)'}`,
           borderRadius: 14, marginBottom: 10, cursor: 'pointer', textAlign: 'left',
           transition: 'border-color 0.2s',
+          position: 'relative'
         }}
           onMouseEnter={e => e.currentTarget.style.borderColor = C.accent + '55'}
           onMouseLeave={e => e.currentTarget.style.borderColor = C.border}
         >
           <span style={{ fontSize: 22, width: 30, textAlign: 'center', flexShrink: 0 }}>{item.icon}</span>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{item.label}</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.text, display: 'flex', alignItems: 'center', gap: 8 }}>
+              {item.label}
+              {item.key === 'trainers' && pendingTrainersCount > 0 && (
+                <span style={{ background: C.orange, color: '#111', fontSize: 9, fontFamily: fb, fontWeight: 700, padding: '2px 6px', borderRadius: 10 }}>{pendingTrainersCount} PENDING</span>
+              )}
+            </div>
             <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{item.sub}</div>
           </div>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6" /></svg>
@@ -157,6 +164,7 @@ function OwnerProfileDropdown({ user, gymName, gymCode, onLogout, onClose, onSet
 
 // ─── Owner Dashboard ──────────────────────────────────────────────────────────
 export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMode, onToggleTheme }) {
+  const isDark = !C.isLight;
   const [tab, setTab]           = useState('overview');
   const [prevTab, setPrevTab]   = useState(null);
   const [tabHistory, setTabHistory] = useState(['overview']);
@@ -167,12 +175,25 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
   const [childBackHandler, setChildBackHandler] = useState(null);
   const [profileMember, setProfileMember] = useState(null);
 
-  // Load gym code once
+  const [pendingTrainersCount, setPendingTrainersCount] = useState(0);
+
+  // Load gym code and pending trainers
   useEffect(() => {
     if (!gymId || gymId === 'demo-gym') return;
-    getFBFirestore().then(db => db.doc(`gyms/${gymId}`).get()).then(snap => {
-      if (snap.exists) setGymCode(snap.data().gymCode || '');
+    let unsubscribe;
+    getFBFirestore().then(db => {
+      // Load Gym Code
+      db.doc(`gyms/${gymId}`).get().then(snap => {
+        if (snap.exists) setGymCode(snap.data().gymCode || '');
+      }).catch(() => {});
+
+      // Listen for Pending Trainers
+      unsubscribe = db.collection(`gyms/${gymId}/trainers`)
+        .where('status', '==', 'pending')
+        .onSnapshot(snap => setPendingTrainersCount(snap.size), () => {});
     }).catch(() => {});
+
+    return () => unsubscribe && unsubscribe();
   }, [gymId]);
 
   // ── Tab navigation with history ────────────────────────────────────────────
@@ -277,7 +298,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
           width: 36, height: 36, borderRadius: '50%', background: C.accent, flexShrink: 0,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontFamily: fn, fontSize: 14, fontWeight: 800, color: '#111',
-          boxShadow: `0 0 15px ${C.accent}66, inset 0 2px 4px rgba(255,255,255,0.4)`, cursor: 'pointer', border: `2px solid ${C.bg === '#000000' ? '#111' : '#fff'}`
+          boxShadow: `0 0 15px ${C.accent}66, inset 0 2px 4px rgba(255,255,255,0.4)`, cursor: 'pointer', border: `2px solid ${!C.isLight ? '#111' : '#fff'}`
         }}>
           <UserAvatar user={user} size={36} fontSize={12} />
         </div>
@@ -299,18 +320,20 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
 
       {/* Content */}
       <div className="msg-scroll" style={{ flex: 1, overflowY: 'auto', paddingBottom: 100 }}>
-        <div key={moreScreen || tab} className="msg-anim-slide-l">
-          {/* More sub-screens */}
-          {tab === 'more' && moreScreen && renderMoreScreen()}
-          {tab === 'more' && !moreScreen && (
-            <MoreTab gymId={gymId} gymName={gymName} ownerUid={user?.uid} onNavigate={handleMoreNavigate} />
-          )}
-          {/* Main tabs */}
-          {tab === 'overview'   && <OverviewTab gymId={gymId} user={user} onNavigate={handleMoreNavigate} onViewMemberProfile={setProfileMember} setTab={setTab} />}
-          {tab === 'members'    && <MemberListTab gymId={gymId} setBackHandler={setChildBackHandler} onViewMemberProfile={setProfileMember} />}
-          {tab === 'attendance' && <AttendanceTab gymId={gymId} onViewMemberProfile={setProfileMember} />}
-          {tab === 'store'      && <StoreTab gymId={gymId} setBackHandler={setChildBackHandler} />}
-        </div>
+        <ErrorBoundary C={C} fn={fn} onRetry={() => setTab('overview')}>
+          <div key={moreScreen || tab} className="msg-anim-slide-l">
+            {/* More sub-screens */}
+            {tab === 'more' && moreScreen && renderMoreScreen()}
+            {tab === 'more' && !moreScreen && (
+              <MoreTab gymId={gymId} gymName={gymName} ownerUid={user?.uid} onNavigate={handleMoreNavigate} pendingTrainersCount={pendingTrainersCount} />
+            )}
+            {/* Main tabs */}
+            {tab === 'overview'   && <OverviewTab gymId={gymId} user={user} onNavigate={handleMoreNavigate} onViewMemberProfile={setProfileMember} setTab={setTab} />}
+            {tab === 'members'    && <MemberListTab gymId={gymId} setBackHandler={setChildBackHandler} onViewMemberProfile={setProfileMember} />}
+            {tab === 'attendance' && <AttendanceTab gymId={gymId} onViewMemberProfile={setProfileMember} />}
+            {tab === 'store'      && <StoreTab gymId={gymId} setBackHandler={setChildBackHandler} />}
+          </div>
+        </ErrorBoundary>
       </div>
 
       {/* Bottom Nav — 5 tabs */}
@@ -321,11 +344,11 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
         right: 16,
         zIndex: 100,
         borderRadius: 24,
-        background: C.bg === '#050505' ? 'rgba(20, 20, 20, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+        background: !C.isLight ? 'rgba(20, 20, 20, 0.8)' : 'rgba(255, 255, 255, 0.8)',
         backdropFilter: 'blur(20px) saturate(180%)',
         WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-        border: `1px solid ${C.bg === '#050505' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)'}`,
-        boxShadow: C.bg === '#050505' ? '0 12px 40px rgba(0,0,0,0.5)' : '0 8px 32px rgba(0,0,0,0.1)',
+        border: `1px solid ${!C.isLight ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)'}`,
+        boxShadow: !C.isLight ? '0 12px 40px rgba(0,0,0,0.5)' : '0 8px 32px rgba(0,0,0,0.1)',
         display: 'flex',
         padding: '6px 0 4px',
       }}>
@@ -342,6 +365,9 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
                 transition: 'transform 0.25s cubic-bezier(.22,.68,0,1.4)',
               }}>
                 <OwnerNavIcon id={n.key} active={active} />
+                {n.key === 'more' && pendingTrainersCount > 0 && (
+                  <div style={{ position: 'absolute', top: -2, right: -4, width: 8, height: 8, borderRadius: '50%', background: C.orange, border: `2px solid ${!C.isLight ? '#141414' : '#fff'}` }} />
+                )}
               </div>
               <span style={{
                 fontSize: 8, fontFamily: fb, fontWeight: active ? 700 : 500,
@@ -417,8 +443,6 @@ function OverviewTab({ gymId, user, onNavigate, onViewMemberProfile, setTab }) {
     setLoading(false);
   }
 
-  if (loading) return <Spinner text="Loading dashboard…" />;
-
   const TYPE_ICONS  = { workout: '💪', diet: '🥗', progress: '📊', checkin: '✅' };
   const TYPE_LABELS = { workout: 'logged a workout', diet: 'logged meals', progress: 'logged progress', checkin: 'checked in' };
 
@@ -431,7 +455,6 @@ function OverviewTab({ gymId, user, onNavigate, onViewMemberProfile, setTab }) {
     return `${Math.floor(diff / 86400000)}d ago`;
   }
 
-  return (
   // Generate mockup data for the chart if real attendance trends aren't available yet
   const chartData = useMemo(() => {
     const data = [];
@@ -444,6 +467,8 @@ function OverviewTab({ gymId, user, onNavigate, onViewMemberProfile, setTab }) {
     }
     return data;
   }, []);
+
+  if (loading) return <Spinner text="Loading dashboard…" />;
 
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {

@@ -129,9 +129,6 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
     }
   };
 
-    }
-  };
-
   // ── QR Scanner Logic ───────────────────────────────────────────────────────
   const loadJsQR = () => {
     return new Promise((resolve, reject) => {
@@ -687,48 +684,6 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
       <button onClick={startScanner} style={{ width: '100%', padding: '14px', background: C.s2, border: `1px solid ${C.border}`, borderRadius: 14, color: C.text, fontFamily: fn, fontWeight: 700, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
         <span>📷</span> Scan QR Code Instead
       </button>
-    </>
-  );
-
-  // ── Trainer Application Screen ──────────────────────────────────────────────
-  if (screen === 'trainer') return wrap(
-    <>
-      {backBtn('choice')}
-      <div className="ob-card" style={{ fontSize: 40, marginBottom: 12 }}>哨</div>
-      <div className="ob-card" style={{ fontFamily: fn, fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 8, letterSpacing: '-0.02em' }}>Join as Trainer</div>
-      <div className="ob-card" style={{ color: C.sub, fontSize: 13, marginBottom: 28, lineHeight: 1.5 }}>
-        Enter the gym's 6-character code to apply as a trainer. The gym owner must approve your application.
-      </div>
-
-      <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
-        <input
-          value={gymCode}
-          onChange={e => { setGymCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')); setError(''); }}
-          placeholder="e.g. GYM123"
-          maxLength={6}
-          style={{
-            flex: 1, boxSizing: 'border-box', background: C.s2,
-            border: `2px solid ${gymCode.length === 6 ? C.accent : C.border}`,
-            borderRadius: 14, padding: '16px', color: C.text, fontSize: 24,
-            fontFamily: fb, fontWeight: 800, textAlign: 'center', letterSpacing: '0.2em', outline: 'none'
-          }}
-        />
-      </div>
-
-      {error && <div style={{ color: C.red, fontSize: 12, marginBottom: 16, textAlign: 'center' }}>{error}</div>}
-
-      <div style={{ marginBottom: 24 }}>
-        <button onClick={() => handleJoin(null, 'trainer')} className="ob-btn" style={{
-          width: '100%', padding: '16px', background: gymCode.length === 6 ? C.accent : C.s4,
-          color: gymCode.length === 6 ? '#111' : C.muted, border: 'none', borderRadius: 14,
-          fontFamily: fn, fontWeight: 800, fontSize: 16, cursor: gymCode.length === 6 ? 'pointer' : 'not-allowed',
-          boxShadow: gymCode.length === 6 ? C.accentShadow : 'none', transition: 'all 0.2s',
-        }}>
-          Apply to Gym →
-        </button>
-      </div>
-    </>
-  );
 
       {errorBox}
 
@@ -809,6 +764,46 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
           <canvas ref={canvasRef} style={{ display: 'none' }} />
         </div>
       )}
+    </>
+  );
+
+  // ── Trainer Application Screen ──────────────────────────────────────────────
+  if (screen === 'trainer') return wrap(
+    <>
+      {backBtn('choice')}
+      <div className="ob-card" style={{ fontSize: 40, marginBottom: 12 }}>哨</div>
+      <div className="ob-card" style={{ fontFamily: fn, fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 8, letterSpacing: '-0.02em' }}>Join as Trainer</div>
+      <div className="ob-card" style={{ color: C.sub, fontSize: 13, marginBottom: 28, lineHeight: 1.5 }}>
+        Enter the gym's 6-character code to apply as a trainer. The gym owner must approve your application.
+      </div>
+
+      <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
+        <input
+          value={gymCode}
+          onChange={e => { setGymCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')); setError(''); }}
+          placeholder="e.g. GYM123"
+          maxLength={6}
+          style={{
+            flex: 1, boxSizing: 'border-box', background: C.s2,
+            border: `2px solid ${gymCode.length === 6 ? C.accent : C.border}`,
+            borderRadius: 14, padding: '16px', color: C.text, fontSize: 24,
+            fontFamily: fb, fontWeight: 800, textAlign: 'center', letterSpacing: '0.2em', outline: 'none'
+          }}
+        />
+      </div>
+
+      {error && <div style={{ color: C.red, fontSize: 12, marginBottom: 16, textAlign: 'center' }}>{error}</div>}
+
+      <div style={{ marginBottom: 24 }}>
+        <button onClick={() => handleJoin(null, 'trainer')} className="ob-btn" style={{
+          width: '100%', padding: '16px', background: gymCode.length === 6 ? C.accent : C.s4,
+          color: gymCode.length === 6 ? '#111' : C.muted, border: 'none', borderRadius: 14,
+          fontFamily: fn, fontWeight: 800, fontSize: 16, cursor: gymCode.length === 6 ? 'pointer' : 'not-allowed',
+          boxShadow: gymCode.length === 6 ? C.accentShadow : 'none', transition: 'all 0.2s',
+        }}>
+          Apply to Gym →
+        </button>
+      </div>
     </>
   );
 

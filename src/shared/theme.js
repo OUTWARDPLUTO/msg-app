@@ -1,6 +1,7 @@
 // ─── Theme System ─────────────────────────────────────────────────────────────
 export const THEMES = {
   dark: {
+    isLight: false,
     bg: '#0B0B0B', s1: '#151515', s2: '#1C1C1C', s3: '#151515', s4: '#1C1C1C',
     accent: '#FF4D4D', accentD: 'rgba(255,77,77,0.15)', darkAccent: '#E53935',
     orange: '#FF5C33', blue: '#3388FF', purple: '#9966FF', teal: '#2DD4BF', pink: '#FF4D94',
@@ -11,6 +12,7 @@ export const THEMES = {
     accentShadow: '0 0 16px rgba(255,77,77,0.3)',
   },
   light: {
+    isLight: true,
     bg: '#F7F7F5', s1: '#FFFFFF', s2: '#F1F1EF', s3: '#FFFFFF', s4: '#F1F1EF',
     accent: '#E53935', accentD: 'rgba(229,57,53,0.1)', darkAccent: '#C62828',
     orange: '#E55A3C', blue: '#2E7FDF', purple: '#7C5CDB', teal: '#1AAD9B', pink: '#D45494',
