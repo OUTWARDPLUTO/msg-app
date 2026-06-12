@@ -22,6 +22,7 @@ service cloud.firestore {
     }
 
     function isOwnerOf(gymId) { return isAuth() && userGymId() == gymId && userRole() == 'owner'; }
+    function isTrainerOf(gymId) { return isAuth() && userGymId() == gymId && userRole() == 'trainer'; }
     function isMemberOf(gymId) { return isAuth() && userGymId() == gymId; }
 
     // ── Users ─────────────────────────────────────────────────────────────────

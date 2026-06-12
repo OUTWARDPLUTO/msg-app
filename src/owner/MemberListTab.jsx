@@ -77,84 +77,116 @@ export default function MemberListTab({ gymId, setBackHandler, onViewMemberProfi
     return <MemberDetailSheet member={selected} gymId={gymId} onClose={() => setSelected(null)} />;
   }
 
+  const [activeTab, setActiveTab] = useState('All');
+
   return (
-    <div style={{ paddingBottom: 16 }}>
-      <div style={{ padding: '20px 20px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <div style={{ fontFamily: fn, fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: '-0.02em' }}>Members</div>
-          <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>{members.length} total</div>
+    <div style={{ paddingBottom: 100, background: C.bg, minHeight: '100vh' }}>
+      {/* Header */}
+      <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 20px) 20px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button style={{ background: 'none', border: 'none', color: C.text, padding: 0, cursor: 'pointer', display: 'flex' }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <div style={{ fontFamily: fb, fontSize: 20, fontWeight: 700, color: C.text }}>Members</div>
         </div>
-        <button onClick={loadMembers} style={{
-          background: C.s3, border: `1px solid ${C.border}`, borderRadius: 10,
-          padding: '7px 14px', color: C.sub, fontFamily: fb, fontWeight: 700, fontSize: 11,
-          cursor: 'pointer', letterSpacing: '0.04em', textTransform: 'uppercase',
-        }}>↺ Refresh</button>
+        <button style={{ background: 'none', border: 'none', color: C.text, padding: 0, cursor: 'pointer', display: 'flex' }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+        </button>
       </div>
 
       {/* Search */}
-      <div style={{ padding: '0 16px', marginBottom: 14 }}>
-        <input
-          value={query} onChange={e => setQuery(e.target.value)}
-          placeholder="Search by name, email or phone…"
-          style={{
-            width: '100%', boxSizing: 'border-box',
-            background: !C.isLight ? 'rgba(26, 26, 26, 0.40)' : 'rgba(255, 255, 255, 0.45)',
-            border: `1px solid ${C.border}`, borderRadius: 12, padding: '12px 14px',
-            color: C.text, fontSize: 13, fontFamily: fn, outline: 'none',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-          }}
-          onFocus={e => e.target.style.borderColor = C.accent}
-          onBlur={e => e.target.style.borderColor = C.border}
-        />
+      <div style={{ padding: '0 20px', marginBottom: 16 }}>
+        <div style={{ position: 'relative' }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)' }}>
+            <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input
+            value={query} onChange={e => setQuery(e.target.value)}
+            placeholder="Search members..."
+            style={{
+              width: '100%', boxSizing: 'border-box',
+              background: C.s1, border: `1px solid ${C.border}`, borderRadius: 16, 
+              padding: '16px 48px 16px 44px',
+              color: C.text, fontSize: 14, fontFamily: fn, outline: 'none',
+            }}
+          />
+          <button style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', padding: 0, color: C.sub, display: 'flex' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Add Member Button */}
+      <div style={{ padding: '0 20px', marginBottom: 20 }}>
+        <button style={{
+          width: '100%', background: C.accent, borderRadius: 16, padding: '16px',
+          color: C.text, fontFamily: fb, fontSize: 16, fontWeight: 700, border: 'none',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer'
+        }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Add Member
+        </button>
+      </div>
+
+      {/* Filter Tabs */}
+      <div style={{ padding: '0 20px', marginBottom: 24, display: 'flex', gap: 24, borderBottom: `1px solid ${C.border}` }}>
+        {['All', 'Active', 'Inactive', 'Freeze'].map(t => (
+          <button key={t} onClick={() => setActiveTab(t)} style={{
+            background: activeTab === t ? 'rgba(229,57,53,0.15)' : 'none',
+            border: 'none', padding: '8px 16px', borderRadius: '8px 8px 0 0',
+            color: activeTab === t ? C.text : C.sub,
+            fontFamily: fb, fontSize: 13, fontWeight: activeTab === t ? 600 : 500,
+            cursor: 'pointer', position: 'relative'
+          }}>
+            {t}
+            {activeTab === t && <div style={{ position: 'absolute', bottom: -1, left: 0, right: 0, height: 2, background: C.accent }} />}
+          </button>
+        ))}
       </div>
 
       {/* Member List */}
-      <div style={{ padding: '0 16px' }}>
+      <div style={{ padding: '0 20px' }}>
         {filtered.length === 0 ? (
-          <div style={{ color: C.muted, fontSize: 13, textAlign: 'center', padding: '32px 0' }}>
-            {query ? 'No members match your search' : 'No members yet. Import via CSV or share your gym code.'}
+          <div style={{ color: C.muted, fontSize: 14, textAlign: 'center', padding: '32px 0' }}>
+            No members found.
           </div>
         ) : filtered.map(m => {
-          const status = computeStatus(m);
+          // Map real status to mockup labels. In mockup "Active" is red, "Freeze" is grey.
+          const statusText = computeStatus(m) === 'inactive' ? 'Inactive' : 'Active';
+          const statusColor = statusText === 'Active' ? C.accent : C.sub;
+          
           return (
             <button key={m.id} onClick={() => onViewMemberProfile ? onViewMemberProfile(m) : setSelected(m)} style={{
-              width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-              padding: '12px 14px',
-              background: !C.isLight ? 'rgba(26, 26, 26, 0.40)' : 'rgba(255, 255, 255, 0.45)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              border: `1px solid ${!C.isLight ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)'}`,
-              borderRadius: 14, marginBottom: 8, cursor: 'pointer', textAlign: 'left',
-              transition: 'border-color 0.2s, transform 0.15s',
-            }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = C.accent + '44'}
-              onMouseLeave={e => e.currentTarget.style.borderColor = C.border}
-            >
+              width: '100%', display: 'flex', alignItems: 'center', gap: 16,
+              padding: '12px 0', background: 'none', border: 'none', borderBottom: `1px solid ${C.border}`,
+              cursor: 'pointer', textAlign: 'left',
+            }}>
               {/* Avatar */}
               <div style={{
-                width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
-                background: C.accent + '20', border: `1px solid ${C.accent}33`,
+                width: 48, height: 48, borderRadius: '50%', flexShrink: 0,
+                background: C.s1, border: `1px solid ${C.border}`, overflow: 'hidden',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontFamily: fn, fontSize: 15, fontWeight: 800, color: C.accent,
+                fontFamily: fn, fontSize: 16, fontWeight: 700, color: C.text,
               }}>
                 {(m.name || '?').charAt(0).toUpperCase()}
               </div>
+              
               {/* Info */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 15, fontFamily: fb, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 4 }}>
                   {m.name || 'Unnamed Member'}
                 </div>
-                <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
-                  Last seen: {lastSeenText(m)}
+                <div style={{ fontSize: 13, fontFamily: fn, color: C.sub }}>
+                  Premium Plan {/* Mocked as per image, replace with real plan later */}
                 </div>
               </div>
-              {/* Score + Status */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
-                <StatusBadge status={status} />
-                <div style={{ fontSize: 11, color: C.sub, fontFamily: fb, fontWeight: 700 }}>
-                  Score: <span style={{ color: C.accent }}>{m.engagementScore ?? 0}</span>
+              
+              {/* Status */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
+                <div style={{ fontSize: 12, fontFamily: fb, color: statusColor, fontWeight: 600 }}>
+                  {statusText}
                 </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
               </div>
             </button>
           );

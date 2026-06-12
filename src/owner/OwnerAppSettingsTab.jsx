@@ -85,10 +85,17 @@ export default function OwnerAppSettingsTab({ darkMode, onToggleTheme }) {
   };
 
   return (
-    <div style={{ padding: '20px 16px 32px' }} className="msg-anim-fadein">
-      <div style={{ fontFamily: fn, fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: '-0.02em', marginBottom: 20 }}>{t('settings.title')}</div>
+    <div style={{ paddingBottom: 100, background: C.bg, minHeight: '100vh' }}>
+      {/* Header */}
+      <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 20px) 20px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <div style={{ fontFamily: fb, fontSize: 28, fontWeight: 800, color: C.text, letterSpacing: '-0.02em' }}>{t('settings.title')}</div>
+          <div style={{ fontSize: 13, color: C.sub, fontFamily: fn, marginTop: 4 }}>App Preferences</div>
+        </div>
+      </div>
 
-      <Card style={{ padding: '16px', marginBottom: 16 }}>
+      <div style={{ padding: '0 20px' }}>
+        <div style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: 24, padding: '24px', marginBottom: 24 }}>
         <Lbl text={t('settings.generalPreferences')} style={{ marginBottom: 10 }} />
         
         {/* Theme row */}
@@ -162,58 +169,65 @@ export default function OwnerAppSettingsTab({ darkMode, onToggleTheme }) {
             })}
           </div>
         </div>
-      </Card>
-
-      <Card style={{ padding: '16px', marginBottom: 16 }}>
-        <Lbl text={t('settings.ownerNotifications')} style={{ marginBottom: 10 }} />
-        
-        <SettingsRow
-          label={t('settings.pushNotifications')}
-          sub={t('settings.pushNotificationsDesc')}
-          on={settings.pushNotifications}
-          onTap={() => tog('pushNotifications')}
-        />
-
-        <SettingsRow
-          label={t('settings.attendanceAlerts')}
-          sub={t('settings.attendanceAlertsDesc')}
-          on={settings.attendanceAlerts}
-          onTap={() => tog('attendanceAlerts')}
-        />
-
-        <SettingsRow
-          label={t('settings.subscriptionAlerts')}
-          sub={t('settings.subscriptionAlertsDesc')}
-          on={settings.subReminders}
-          onTap={() => tog('subReminders')}
-        />
-      </Card>
-
-      <Card style={{ padding: '16px' }}>
-        <Lbl text={t('settings.languagePreference')} style={{ marginBottom: 10 }} />
-        <div style={{ fontSize: 12, color: C.sub, marginBottom: 12 }}>
-          {t('settings.languagePreferenceDesc')}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 180, overflowY: 'auto', paddingRight: 4 }} className="msg-scroll">
-          {LANGS.map(l => {
-            const active = selectedLang === l.code;
-            return (
-              <button key={l.code} onClick={() => saveLang(l.code)} style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', boxSizing: 'border-box',
-                padding: '10px 12px', background: active ? C.accent + '18' : C.s3,
-                border: `1px solid ${active ? C.accent : C.border}`,
-                borderRadius: 10, cursor: 'pointer', textAlign: 'left',
-              }}>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: active ? C.accent : C.text }}>{l.native}</div>
-                  <div style={{ fontSize: 10, color: C.muted, marginTop: 1 }}>{l.name}</div>
-                </div>
-                {active && <div style={{ width: 16, height: 16, borderRadius: '50%', background: C.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#000', fontWeight: 700, flexShrink: 0 }}>✓</div>}
-              </button>
-            );
-          })}
+      </div>
+
+      <div style={{ padding: '0 20px' }}>
+        <div style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: 24, padding: '24px', marginBottom: 24 }}>
+          <Lbl text={t('settings.ownerNotifications')} style={{ marginBottom: 10 }} />
+          
+          <SettingsRow
+            label={t('settings.pushNotifications')}
+            sub={t('settings.pushNotificationsDesc')}
+            on={settings.pushNotifications}
+            onTap={() => tog('pushNotifications')}
+          />
+
+          <SettingsRow
+            label={t('settings.attendanceAlerts')}
+            sub={t('settings.attendanceAlertsDesc')}
+            on={settings.attendanceAlerts}
+            onTap={() => tog('attendanceAlerts')}
+          />
+
+          <SettingsRow
+            label={t('settings.subscriptionAlerts')}
+            sub={t('settings.subscriptionAlertsDesc')}
+            on={settings.subReminders}
+            onTap={() => tog('subReminders')}
+          />
         </div>
-      </Card>
+      </div>
+
+      <div style={{ padding: '0 20px' }}>
+        <div style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: 24, padding: '24px' }}>
+          <Lbl text={t('settings.languagePreference')} style={{ marginBottom: 10 }} />
+          <div style={{ fontSize: 13, color: C.sub, marginBottom: 16, fontFamily: fn }}>
+            {t('settings.languagePreferenceDesc')}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 220, overflowY: 'auto', paddingRight: 4 }} className="msg-scroll">
+            {LANGS.map(l => {
+              const active = selectedLang === l.code;
+              return (
+                <button key={l.code} onClick={() => saveLang(l.code)} style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', boxSizing: 'border-box',
+                  padding: '14px 16px', background: active ? C.accent + '15' : C.bg,
+                  border: `1px solid ${active ? C.accent : C.border}`,
+                  borderRadius: 16, cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s ease'
+                }}>
+                  <div>
+                    <div style={{ fontSize: 15, fontFamily: fb, fontWeight: 700, color: active ? C.accent : C.text }}>{l.native}</div>
+                    <div style={{ fontSize: 12, fontFamily: fn, color: C.muted, marginTop: 2 }}>{l.name}</div>
+                  </div>
+                  {active && <div style={{ width: 24, height: 24, borderRadius: '50%', background: C.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#111' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </div>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -164,269 +164,281 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
   }, [gymId]);
 
   return (
-    <div style={{ padding: '20px 16px 32px' }}>
-      <div style={{ fontFamily: fn, fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: '-0.02em', marginBottom: 20 }}>Gym Settings</div>
-
-      <Card style={{ padding: '14px 16px', marginBottom: 16 }}>
-        <Lbl text="Gym Code & QR" style={{ marginBottom: 8 }} />
-        
-        {(!subData || !subData.active) ? (
-          <div style={{ textAlign: 'center', padding: '20px 10px', background: C.s3, borderRadius: 12, border: `1px dashed ${C.border}` }}>
-            <span style={{ fontSize: 24, display: 'block', marginBottom: 8 }}>🔒</span>
-            <div style={{ fontSize: 13, color: C.text, fontFamily: fb, fontWeight: 700 }}>Code Locked</div>
-            <div style={{ fontSize: 11, color: C.sub, marginTop: 4 }}>Activate your subscription below to view your gym code.</div>
-          </div>
-        ) : (
-          <>
-            {code && code !== '—' && (
-              <div style={{ background: '#fff', padding: 8, borderRadius: 8, display: 'inline-block', marginBottom: 12 }}>
-                <img 
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${code}`} 
-                  alt="Gym QR Code" 
-                  style={{ width: 120, height: 120, display: 'block' }}
-                />
-              </div>
-            )}
-
-            <div style={{ fontFamily: fn, fontSize: 32, fontWeight: 800, color: C.accent, letterSpacing: '0.3em' }}>
-              {code || '——'}
-            </div>
-            <div style={{ fontSize: 12, color: C.sub, marginTop: 6, lineHeight: 1.5 }}>
-              Share this code or QR with members. They scan/enter it in the app to join your gym.
-            </div>
-          </>
-        )}
-      </Card>
-
-      <Card style={{ padding: '14px 16px', marginBottom: 16, border: subData?.active ? `1px solid ${C.border}` : `2px solid ${C.accent}` }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <Lbl text="MSG App Subscription" />
-          <span style={{ 
-            fontSize: 10, padding: '2px 8px', borderRadius: 10, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase',
-            background: subData?.active ? C.green + '22' : C.red + '22',
-            color: subData?.active ? C.green : C.red
-          }}>
-            {subData?.active ? 'Active' : 'Inactive'}
-          </span>
+    <div style={{ paddingBottom: 100, background: C.bg, minHeight: '100vh' }}>
+      {/* Header */}
+      <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 20px) 20px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button onClick={() => {}} style={{ background: 'none', border: 'none', color: C.text, padding: 0, cursor: 'pointer', display: 'flex' }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <div style={{ fontFamily: fb, fontSize: 20, fontWeight: 700, color: C.text }}>Settings</div>
         </div>
-        
-        {subData && (
-          <div style={{ fontSize: 13, color: C.sub, lineHeight: 1.5, marginBottom: 12 }}>
-            {subData.active ? (
-              <>
-                Plan: <strong style={{ color: C.text, textTransform: 'capitalize' }}>{subData.plan}</strong> <br/>
-                Expires: {subData.expiresAt ? new Date(subData.expiresAt).toLocaleDateString('en-IN') : 'Forever'}
-              </>
-            ) : (
-              <span style={{ color: C.red }}>Your subscription has expired. Members cannot access the app.</span>
-            )}
-          </div>
-        )}
+      </div>
 
-        {paymentError && (
-          <div style={{ padding: '10px', background: C.red + '22', color: C.red, borderRadius: 8, fontSize: 12, marginBottom: 12 }}>
-            {paymentError}
-          </div>
-        )}
-
-        {!subData?.active && (
-          <div style={{ marginTop: 16 }}>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-              {['trial', 'monthly', 'yearly'].map(plan => (
-                <button key={plan} onClick={() => setSubPlan(plan)} style={{
-                  flex: 1, padding: '10px 4px',
-                  background: subPlan === plan ? C.accent + '18' : C.s3,
-                  border: `1px solid ${subPlan === plan ? C.accent : C.border}`,
-                  borderRadius: 10, color: subPlan === plan ? C.accent : C.sub,
-                  fontFamily: fn, fontWeight: 700, fontSize: 11, cursor: 'pointer',
-                  textTransform: 'capitalize'
-                }}>
-                  {plan}
-                  <div style={{ fontSize: 10, marginTop: 4, color: subPlan === plan ? C.accent : C.muted }}>
-                    {plan === 'trial' ? '₹149' : plan === 'monthly' ? '₹499' : '₹4,199'}
-                  </div>
-                </button>
-              ))}
+      <div style={{ padding: '0 20px' }}>
+        <div style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: 16, padding: '20px', marginBottom: 20 }}>
+          <div style={{ fontSize: 13, color: C.sub, fontFamily: fb, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>Gym Code & QR</div>
+          
+          {(!subData || !subData.active) ? (
+            <div style={{ textAlign: 'center', padding: '24px 16px', background: C.bg, borderRadius: 12, border: `1px dashed ${C.border}` }}>
+              <span style={{ fontSize: 32, display: 'block', marginBottom: 12 }}>🔒</span>
+              <div style={{ fontSize: 15, color: C.text, fontFamily: fb, fontWeight: 700, marginBottom: 4 }}>Code Locked</div>
+              <div style={{ fontSize: 13, color: C.sub, fontFamily: fn }}>Activate your subscription below to view your gym code.</div>
             </div>
-            <button onClick={handleActivate} disabled={loading} style={{
-              width: '100%', background: C.accent, border: 'none', borderRadius: 10,
-              padding: '12px 14px', color: '#111', fontFamily: fn, fontWeight: 800, fontSize: 14, cursor: loading ? 'wait' : 'pointer',
-            }}>
-              {loading ? 'Processing...' : `Activate ${subPlan} plan →`}
-            </button>
-          </div>
-        )}
-      </Card>
-
-      <Card style={{ padding: '14px 16px', marginBottom: 16 }}>
-        <Lbl text="Gym Name" style={{ marginBottom: 8 }} />
-        <input
-          value={name} onChange={e => setName(e.target.value)}
-          style={{
-            width: '100%', boxSizing: 'border-box', background: C.s3,
-            border: `1px solid ${C.border}`, borderRadius: 10, padding: '11px 13px',
-            color: C.text, fontSize: 14, fontFamily: fn, outline: 'none',
-          }}
-        />
-      </Card>
-
-      <Card style={{ padding: '14px 16px', marginBottom: 16 }}>
-        <Lbl text="Inactivity Alert Threshold" style={{ marginBottom: 10 }} />
-        <div style={{ display: 'flex', gap: 8 }}>
-          {[3, 5, 7].map(d => (
-            <button key={d} onClick={() => setThreshold(d)} style={{
-              flex: 1, padding: '10px',
-              background: threshold === d ? C.accent + '18' : C.s3,
-              border: `1px solid ${threshold === d ? C.accent : C.border}`,
-              borderRadius: 10, color: threshold === d ? C.accent : C.sub,
-              fontFamily: fn, fontWeight: 700, fontSize: 13, cursor: 'pointer',
-            }}>
-              {d} days
-            </button>
-          ))}
-        </div>
-        <div style={{ fontSize: 11, color: C.muted, marginTop: 8 }}>
-          Members inactive longer than this will appear in Alerts.
-        </div>
-      </Card>
-
-      {/* GPS Settings Card */}
-      <Card style={{ padding: '14px 16px', marginBottom: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <div>
-            <Lbl text="GPS Location Verification" />
-            <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
-              Restrict check-ins to members within 100 meters of the gym.
-            </div>
-          </div>
-          <SettingsToggle on={useGps} onTap={() => setUseGps(!useGps)} />
-        </div>
-        
-        {useGps && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 10, borderTop: `1px solid ${C.border}`, paddingTop: 12 }} className="msg-anim-fadein">
-            <div style={{ display: 'flex', gap: 10 }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 10, color: C.muted, marginBottom: 4, fontFamily: fb, fontWeight: 700 }}>LATITUDE</div>
-                <input
-                  type="number" step="any" value={latitude} onChange={e => setLatitude(e.target.value)} placeholder="e.g. 19.0760"
-                  style={{
-                    width: '100%', boxSizing: 'border-box', background: C.s3,
-                    border: `1px solid ${C.border}`, borderRadius: 10, padding: '10px 12px',
-                    color: C.text, fontSize: 13, fontFamily: fn, outline: 'none',
-                  }}
-                />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 10, color: C.muted, marginBottom: 4, fontFamily: fb, fontWeight: 700 }}>LONGITUDE</div>
-                <input
-                  type="number" step="any" value={longitude} onChange={e => setLongitude(e.target.value)} placeholder="e.g. 72.8777"
-                  style={{
-                    width: '100%', boxSizing: 'border-box', background: C.s3,
-                    border: `1px solid ${C.border}`, borderRadius: 10, padding: '10px 12px',
-                    color: C.text, fontSize: 13, fontFamily: fn, outline: 'none',
-                  }}
-                />
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                navigator.geolocation.getCurrentPosition(
-                  pos => {
-                    setLatitude(pos.coords.latitude.toFixed(6));
-                    setLongitude(pos.coords.longitude.toFixed(6));
-                  },
-                  err => alert(`Could not fetch location: ${err.message}`),
-                  { enableHighAccuracy: true }
-                );
-              }}
-              style={{
-                alignSelf: 'flex-start', background: C.s3, border: `1px solid ${C.border}`,
-                borderRadius: 8, padding: '6px 12px', fontSize: 11, color: C.text,
-                fontFamily: fn, fontWeight: 600, cursor: 'pointer',
-              }}
-            >
-              📍 Fetch Current Location
-            </button>
-          </div>
-        )}
-      </Card>
-
-      {/* QR Settings Card */}
-      <Card style={{ padding: '14px 16px', marginBottom: 20 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: useQr ? 12 : 0 }}>
-          <div>
-            <Lbl text="QR Code Scan Verification" />
-            <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
-              Require scanning the reception QR code to prevent remote check-ins.
-            </div>
-          </div>
-          <SettingsToggle on={useQr} onTap={() => setUseQr(!useQr)} />
-        </div>
-
-        {useQr && (
-          <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 12 }} className="msg-anim-fadein">
-            <Lbl text="QR Code Mode" />
-            <div style={{ display: 'flex', gap: 8 }}>
-              {[
-                { label: '⚡ Dynamic', val: false },
-                { label: '📄 Static (Printed)', val: true }
-              ].map(m => (
-                <button key={m.label} onClick={() => setUseStaticQr(m.val)} style={{
-                  flex: 1, padding: '10px',
-                  background: useStaticQr === m.val ? C.accent + '18' : C.s3,
-                  border: `1px solid ${useStaticQr === m.val ? C.accent : C.border}`,
-                  borderRadius: 10, color: useStaticQr === m.val ? C.accent : C.sub,
-                  fontFamily: fn, fontWeight: 700, fontSize: 12, cursor: 'pointer',
-                }}>
-                  {m.label}
-                </button>
-              ))}
-            </div>
-
-            {useStaticQr && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, marginTop: 10, background: C.s3, padding: 14, borderRadius: 14 }}>
-                <div style={{ fontSize: 11, color: C.sub, textAlign: 'center', lineHeight: 1.5 }}>
-                  Print this static QR code and display it at your gym's reception desk. Members scan this to check in.
-                </div>
-                <div onClick={() => setShowPreview(true)} style={{ background: '#fff', padding: 10, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'transform 0.2s' }} className="msg-clickable">
-                  <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=msg-checkin-static:${gymId}`}
-                    alt="Static QR Code"
-                    style={{ width: 150, height: 150 }}
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              {code && code !== '—' && (
+                <div style={{ background: '#fff', padding: 12, borderRadius: 16, marginBottom: 16 }}>
+                  <img 
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${code}`} 
+                    alt="Gym QR Code" 
+                    style={{ width: 140, height: 140, display: 'block' }}
                   />
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => setShowPreview(true)} style={{
-                    background: C.s2, border: `1px solid ${C.border}`, borderRadius: 8,
-                    padding: '6px 12px', fontSize: 11, color: C.text, fontFamily: fn, fontWeight: 600, cursor: 'pointer'
+              )}
+
+              <div style={{ fontFamily: fb, fontSize: 40, fontWeight: 800, color: C.accent, letterSpacing: '0.2em' }}>
+                {code || '——'}
+              </div>
+              <div style={{ fontSize: 13, color: C.sub, marginTop: 12, textAlign: 'center', fontFamily: fn, maxWidth: 280 }}>
+                Share this code or QR with members. They scan or enter it in the app to join your gym.
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div style={{ background: C.s1, border: subData?.active ? `1px solid ${C.border}` : `2px solid ${C.accent}`, borderRadius: 16, padding: '20px', marginBottom: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <div style={{ fontSize: 13, color: C.sub, fontFamily: fb, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Subscription</div>
+            <span style={{ 
+              fontSize: 11, padding: '4px 10px', borderRadius: 12, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase',
+              background: subData?.active ? C.green + '22' : C.red + '22',
+              color: subData?.active ? C.green : C.red
+            }}>
+              {subData?.active ? 'Active' : 'Inactive'}
+            </span>
+          </div>
+          
+          {subData && (
+            <div style={{ fontSize: 14, color: C.sub, fontFamily: fn, marginBottom: 16 }}>
+              {subData.active ? (
+                <>
+                  Plan: <strong style={{ color: C.text, textTransform: 'capitalize' }}>{subData.plan}</strong> <br/>
+                  Expires: {subData.expiresAt ? new Date(subData.expiresAt).toLocaleDateString('en-IN') : 'Forever'}
+                </>
+              ) : (
+                <span style={{ color: C.red }}>Your subscription has expired. Members cannot access the app.</span>
+              )}
+            </div>
+          )}
+
+          {paymentError && (
+            <div style={{ padding: '12px', background: C.red + '22', color: C.red, borderRadius: 12, fontSize: 13, marginBottom: 16, fontFamily: fn }}>
+              {paymentError}
+            </div>
+          )}
+
+          {!subData?.active && (
+            <div style={{ marginTop: 20 }}>
+              <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+                {['trial', 'monthly', 'yearly'].map(plan => (
+                  <button key={plan} onClick={() => setSubPlan(plan)} style={{
+                    flex: 1, padding: '12px 8px',
+                    background: subPlan === plan ? C.accent : 'none',
+                    border: `1px solid ${subPlan === plan ? C.accent : C.border}`,
+                    borderRadius: 12, color: subPlan === plan ? '#111' : C.text,
+                    fontFamily: fb, fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                    textTransform: 'capitalize', transition: 'all 0.2s ease'
                   }}>
-                    🔍 Preview
+                    {plan}
+                    <div style={{ fontSize: 11, marginTop: 6, color: subPlan === plan ? '#111' : C.sub, fontWeight: 600 }}>
+                      {plan === 'trial' ? '₹149' : plan === 'monthly' ? '₹499' : '₹4,199'}
+                    </div>
                   </button>
-                  <button onClick={() => {
-                    const win = window.open();
-                    win.document.write(`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;"><h2>${name || gymName} Attendance QR Code</h2><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=msg-checkin-static:${gymId}" style="width:300px;height:300px;"/><p style="margin-top:20px;font-size:14px;color:#666;">Scan to Check In</p><button onclick="window.close(); if(!window.closed) history.back();" style="margin-top:30px;padding:12px 24px;border-radius:12px;background:#111;color:#fff;border:none;cursor:pointer;font-weight:bold;font-size:14px;">← Close / Go Back</button></div>`);
-                    win.print();
-                  }} style={{
-                    background: C.s2, border: `1px solid ${C.border}`, borderRadius: 8,
-                    padding: '6px 12px', fontSize: 11, color: C.text, fontFamily: fn, fontWeight: 600, cursor: 'pointer'
-                  }}>
-                    🖨️ Print QR Code
-                  </button>
+                ))}
+              </div>
+              <button onClick={handleActivate} disabled={loading} style={{
+                width: '100%', background: C.accent, border: 'none', borderRadius: 12,
+                padding: '14px', color: '#111', fontFamily: fb, fontWeight: 700, fontSize: 15, cursor: loading ? 'wait' : 'pointer',
+              }}>
+                {loading ? 'Processing...' : `Activate ${subPlan} plan →`}
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: 16, padding: '20px', marginBottom: 20 }}>
+          <div style={{ fontSize: 13, color: C.sub, fontFamily: fb, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>Gym Name</div>
+          <input
+            value={name} onChange={e => setName(e.target.value)}
+            style={{
+              width: '100%', boxSizing: 'border-box', background: C.bg,
+              border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 16px',
+              color: C.text, fontSize: 15, fontFamily: fn, outline: 'none',
+            }}
+          />
+        </div>
+
+        <div style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: 16, padding: '20px', marginBottom: 20 }}>
+          <div style={{ fontSize: 13, color: C.sub, fontFamily: fb, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>Inactivity Alert Threshold</div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            {[3, 5, 7].map(d => (
+              <button key={d} onClick={() => setThreshold(d)} style={{
+                flex: 1, padding: '12px',
+                background: threshold === d ? C.accent : 'none',
+                border: `1px solid ${threshold === d ? C.accent : C.border}`,
+                borderRadius: 12, color: threshold === d ? '#111' : C.text,
+                fontFamily: fb, fontWeight: 600, fontSize: 14, cursor: 'pointer', transition: 'all 0.2s ease'
+              }}>
+                {d} days
+              </button>
+            ))}
+          </div>
+          <div style={{ fontSize: 12, color: C.sub, marginTop: 12, fontFamily: fn }}>
+            Members inactive longer than this will appear in Alerts.
+          </div>
+        </div>
+
+        {/* GPS Settings Card */}
+        <div style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: 16, padding: '20px', marginBottom: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <div>
+              <div style={{ fontSize: 15, color: C.text, fontFamily: fb, fontWeight: 700 }}>GPS Verification</div>
+              <div style={{ fontSize: 12, color: C.sub, marginTop: 4, fontFamily: fn }}>
+                Restrict check-ins to within 100m.
+              </div>
+            </div>
+            <SettingsToggle on={useGps} onTap={() => setUseGps(!useGps)} />
+          </div>
+          
+          {useGps && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16, borderTop: `1px solid ${C.border}`, paddingTop: 16 }} className="msg-anim-fadein">
+              <div style={{ display: 'flex', gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 11, color: C.sub, marginBottom: 6, fontFamily: fb, fontWeight: 700 }}>LATITUDE</div>
+                  <input
+                    type="number" step="any" value={latitude} onChange={e => setLatitude(e.target.value)} placeholder="e.g. 19.0760"
+                    style={{
+                      width: '100%', boxSizing: 'border-box', background: C.bg,
+                      border: `1px solid ${C.border}`, borderRadius: 12, padding: '12px 14px',
+                      color: C.text, fontSize: 14, fontFamily: fn, outline: 'none',
+                    }}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 11, color: C.sub, marginBottom: 6, fontFamily: fb, fontWeight: 700 }}>LONGITUDE</div>
+                  <input
+                    type="number" step="any" value={longitude} onChange={e => setLongitude(e.target.value)} placeholder="e.g. 72.8777"
+                    style={{
+                      width: '100%', boxSizing: 'border-box', background: C.bg,
+                      border: `1px solid ${C.border}`, borderRadius: 12, padding: '12px 14px',
+                      color: C.text, fontSize: 14, fontFamily: fn, outline: 'none',
+                    }}
+                  />
                 </div>
               </div>
-            )}
-          </div>
-        )}
-      </Card>
+              <button
+                onClick={() => {
+                  navigator.geolocation.getCurrentPosition(
+                    pos => {
+                      setLatitude(pos.coords.latitude.toFixed(6));
+                      setLongitude(pos.coords.longitude.toFixed(6));
+                    },
+                    err => alert(`Could not fetch location: ${err.message}`),
+                    { enableHighAccuracy: true }
+                  );
+                }}
+                style={{
+                  alignSelf: 'flex-start', background: C.bg, border: `1px solid ${C.border}`,
+                  borderRadius: 12, padding: '10px 16px', fontSize: 13, color: C.text,
+                  fontFamily: fb, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                Fetch Location
+              </button>
+            </div>
+          )}
+        </div>
 
-      <button onClick={handleSave} disabled={loading} style={{
-        width: '100%', padding: '14px', background: saved ? C.green : C.accent,
-        border: 'none', borderRadius: 14, color: '#111', fontFamily: fn, fontWeight: 800,
-        fontSize: 14, cursor: 'pointer', transition: 'background 0.3s',
-        boxShadow: C.accentShadow,
-      }}>
-        {loading ? 'Saving…' : saved ? '✓ Saved Settings!' : 'Save Settings'}
-      </button>
+        {/* QR Settings Card */}
+        <div style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: 16, padding: '20px', marginBottom: 24 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: useQr ? 16 : 0 }}>
+            <div>
+              <div style={{ fontSize: 15, color: C.text, fontFamily: fb, fontWeight: 700 }}>QR Verification</div>
+              <div style={{ fontSize: 12, color: C.sub, marginTop: 4, fontFamily: fn, maxWidth: 220 }}>
+                Require scanning the reception QR code.
+              </div>
+            </div>
+            <SettingsToggle on={useQr} onTap={() => setUseQr(!useQr)} />
+          </div>
+
+          {useQr && (
+            <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 16 }} className="msg-anim-fadein">
+              <div style={{ fontSize: 13, color: C.sub, fontFamily: fb, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>QR Code Mode</div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                {[
+                  { label: '⚡ Dynamic', val: false },
+                  { label: '📄 Static', val: true }
+                ].map(m => (
+                  <button key={m.label} onClick={() => setUseStaticQr(m.val)} style={{
+                    flex: 1, padding: '12px',
+                    background: useStaticQr === m.val ? C.accent : 'none',
+                    border: `1px solid ${useStaticQr === m.val ? C.accent : C.border}`,
+                    borderRadius: 12, color: useStaticQr === m.val ? '#111' : C.text,
+                    fontFamily: fb, fontWeight: 600, fontSize: 13, cursor: 'pointer', transition: 'all 0.2s ease'
+                  }}>
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+
+              {useStaticQr && (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, marginTop: 8, background: C.bg, padding: 20, borderRadius: 16 }}>
+                  <div style={{ fontSize: 12, color: C.sub, textAlign: 'center', lineHeight: 1.5, fontFamily: fn }}>
+                    Print this static QR code and display it at your gym's reception desk. Members scan this to check in.
+                  </div>
+                  <div onClick={() => setShowPreview(true)} style={{ background: '#fff', padding: 12, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'transform 0.2s' }} className="msg-clickable">
+                    <img
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=msg-checkin-static:${gymId}`}
+                      alt="Static QR Code"
+                      style={{ width: 140, height: 140 }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', gap: 10, width: '100%' }}>
+                    <button onClick={() => setShowPreview(true)} style={{
+                      flex: 1, background: C.s2, border: `1px solid ${C.border}`, borderRadius: 12,
+                      padding: '10px', fontSize: 13, color: C.text, fontFamily: fb, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
+                    }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                      Preview
+                    </button>
+                    <button onClick={() => {
+                      const win = window.open();
+                      win.document.write(`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;"><h2>${name || gymName} Attendance QR Code</h2><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=msg-checkin-static:${gymId}" style="width:300px;height:300px;"/><p style="margin-top:20px;font-size:14px;color:#666;">Scan to Check In</p><button onclick="window.close(); if(!window.closed) history.back();" style="margin-top:30px;padding:12px 24px;border-radius:12px;background:#111;color:#fff;border:none;cursor:pointer;font-weight:bold;font-size:14px;">← Close / Go Back</button></div>`);
+                      win.print();
+                    }} style={{
+                      flex: 1, background: C.s2, border: `1px solid ${C.border}`, borderRadius: 12,
+                      padding: '10px', fontSize: 13, color: C.text, fontFamily: fb, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
+                    }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                      Print
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <button onClick={handleSave} disabled={loading} style={{
+          width: '100%', padding: '16px', background: saved ? C.green : C.text,
+          border: 'none', borderRadius: 16, color: C.bg, fontFamily: fb, fontWeight: 700,
+          fontSize: 16, cursor: 'pointer', transition: 'all 0.3s',
+        }}>
+          {loading ? 'Saving…' : saved ? '✓ Saved Settings!' : 'Save Settings'}
+        </button>
+      </div>
 
       {/* In-app Fullscreen Static QR Preview Modal */}
       {showPreview && (

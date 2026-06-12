@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { C, fn, fb } from '../shared/theme.js';
 import { Card, Lbl, ScoreRing, Spinner, UserAvatar } from '../shared/primitives.jsx';
 import { getFBFirestore } from '../shared/firebase.js';
@@ -21,21 +21,21 @@ import AmbientBackground from '../shared/AmbientBackground.jsx';
 import { useTranslation } from 'react-i18next';
 
 const NAV = [
-  { key: 'overview',      label: 'Home',       icon: '🏠' },
+  { key: 'overview',      label: 'Dashboard',  icon: '🏠' },
   { key: 'members',       label: 'Members',    icon: '👥' },
-  { key: 'attendance',    label: 'Attend.',    icon: '📅' },
-  { key: 'store',         label: 'Store',      icon: '🛒' },
+  { key: 'attendance',    label: 'Attendance', icon: '📅' },
+  { key: 'analytics',     label: 'Analytics',  icon: '📈' },
   { key: 'more',          label: 'More',       icon: '⚙️' },
 ];
 
 // ─── SVG Nav Icons ─────────────────────────────────────────────────────────────
 function OwnerNavIcon({ id, active }) {
   const s = active ? C.accent : C.muted;
-  const p = { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: s, strokeWidth: '1.8', strokeLinecap: 'round', strokeLinejoin: 'round', style: { transition: 'stroke 0.2s' } };
+  const p = { width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none', stroke: s, strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', style: { transition: 'stroke 0.2s' } };
   if (id === 'overview') return <svg {...p}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>;
   if (id === 'members') return <svg {...p}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>;
   if (id === 'attendance') return <svg {...p}><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>;
-  if (id === 'store') return <svg {...p}><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>;
+  if (id === 'analytics') return <svg {...p}><path d="M3 3v18h18" /><path d="M18 9l-5 5-3-3-4 4" /></svg>;
   if (id === 'more') return <svg {...p}><circle cx="12" cy="5" r="1" fill={s} /><circle cx="12" cy="12" r="1" fill={s} /><circle cx="12" cy="19" r="1" fill={s} /></svg>;
   return null;
 }
@@ -179,6 +179,17 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
 
   const [pendingTrainersCount, setPendingTrainersCount] = useState(0);
 
+  const getGreeting = () => {
+    const hr = new Date().getHours();
+    if (hr < 12) return "Good Morning";
+    if (hr < 18) return "Good Afternoon";
+    return "Good Evening";
+  };
+  
+  const getFormattedDate = () => {
+    return new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  };
+
   // Load gym code and pending trainers
   useEffect(() => {
     if (!gymId || gymId === 'demo-gym') return;
@@ -266,44 +277,63 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
     }}>
       <AmbientBackground />
       {/* Header top bar */}
+      {/* Figma-style Header */}
       <div style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: 'calc(env(safe-area-inset-top, 0px) + 14px) 20px 0', flexShrink: 0,
+        padding: 'calc(env(safe-area-inset-top, 0px) + 20px) 20px 0', flexShrink: 0,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src={isDark ? appIconDark : appIconLight} alt="MSG" style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'cover' }} />
+        {/* Top Nav Row */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           {moreScreen ? (
             <button onClick={() => setMoreScreen(null)} style={{
               background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
-              color: C.accent, fontFamily: fn, fontSize: 14, fontWeight: 700, padding: 0,
+              color: C.text, fontFamily: fn, fontSize: 16, fontWeight: 700, padding: 0,
             }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
               Back
             </button>
           ) : (
-            <div style={{ height: 26, display: 'flex', alignItems: 'center' }}>
-              <div style={{
-                background: 'rgba(217,154,43,0.08)',
-                border: `1px solid rgba(217,154,43,0.3)`,
-                padding: '4px 10px', borderRadius: 20, fontSize: 10, fontFamily: fb,
-                fontWeight: 800, color: C.accent, letterSpacing: '0.06em',
-                display: 'flex', alignItems: 'center', gap: 6,
-              }}>
-                <span style={{ fontSize: 12 }}>👑</span> OWNER
+            <>
+              {/* Hamburger */}
+              <button onClick={() => setShowProfile(true)} style={{ background: 'none', border: 'none', color: C.text, padding: 0, cursor: 'pointer' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="15" y2="18"/></svg>
+              </button>
+              
+              {/* Title */}
+              <div style={{ fontSize: 16, fontFamily: fb, fontWeight: 600, color: C.text }}>
+                {tab === 'overview' ? 'Dashboard' : NAV.find(n => n.key === tab)?.label || 'Dashboard'}
               </div>
-            </div>
+
+              {/* Bell */}
+              <button onClick={() => setMoreScreen('alerts')} style={{ background: 'none', border: 'none', color: C.text, padding: 0, position: 'relative', cursor: 'pointer' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                <div style={{ position: 'absolute', top: 0, right: 2, width: 8, height: 8, background: C.accent, borderRadius: '50%', border: `2px solid ${C.bg}` }} />
+              </button>
+            </>
           )}
         </div>
 
-        {/* Profile avatar */}
-        <div className="msg-clickable" onClick={() => setShowProfile(true)} style={{
-          width: 36, height: 36, borderRadius: '50%', background: C.accent, flexShrink: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: fn, fontSize: 14, fontWeight: 800, color: '#111',
-          boxShadow: `0 0 15px ${C.accent}66, inset 0 2px 4px rgba(255,255,255,0.4)`, cursor: 'pointer', border: `2px solid ${!C.isLight ? '#111' : '#fff'}`
-        }}>
-          <UserAvatar user={user} size={36} fontSize={12} />
-        </div>
+        {/* Greeting Row (Only on Overview) */}
+        {!moreScreen && tab === 'overview' && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <div style={{ fontSize: 22, fontFamily: fn, fontWeight: 700, color: C.text, letterSpacing: '-0.02em', marginBottom: 4 }}>
+                Good Morning, {user?.displayName?.split(' ')[0] || 'Alex'} 👋
+              </div>
+              <div style={{ fontSize: 13, fontFamily: fb, color: C.sub, fontWeight: 500 }}>
+                Here's what's happening at {gymName || 'MSG Fitness'}
+              </div>
+            </div>
+            
+            <button style={{
+              background: C.s1, border: `1px solid ${C.border}`, borderRadius: 8, padding: '6px 12px',
+              color: C.text, fontSize: 12, fontFamily: fb, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6,
+              cursor: 'pointer'
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Today <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Profile Dropdown */}
@@ -333,7 +363,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
             {tab === 'overview'   && <OverviewTab gymId={gymId} user={user} onNavigate={handleMoreNavigate} onViewMemberProfile={setProfileMember} setTab={setTab} />}
             {tab === 'members'    && <MemberListTab gymId={gymId} setBackHandler={setChildBackHandler} onViewMemberProfile={setProfileMember} />}
             {tab === 'attendance' && <AttendanceTab gymId={gymId} onViewMemberProfile={setProfileMember} />}
-            {tab === 'store'      && <StoreTab gymId={gymId} setBackHandler={setChildBackHandler} />}
+            {tab === 'analytics'  && <StoreTab gymId={gymId} setBackHandler={setChildBackHandler} />}
           </div>
         </ErrorBoundary>
       </div>
@@ -341,18 +371,14 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
       {/* Bottom Nav — 5 tabs */}
       <div className="msg-bottom-nav" style={{
         position: 'absolute',
-        bottom: 'max(16px, env(safe-area-inset-bottom, 16px))',
-        left: 16,
-        right: 16,
+        bottom: 0,
+        left: 0,
+        right: 0,
         zIndex: 100,
-        borderRadius: 24,
-        background: !C.isLight ? 'rgba(20, 20, 20, 0.8)' : 'rgba(255, 255, 255, 0.8)',
-        backdropFilter: 'blur(20px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-        border: `1px solid ${!C.isLight ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)'}`,
-        boxShadow: !C.isLight ? '0 12px 40px rgba(0,0,0,0.5)' : '0 8px 32px rgba(0,0,0,0.1)',
+        background: C.bg,
+        borderTop: `1px solid ${C.border}`,
         display: 'flex',
-        padding: '6px 0 4px',
+        padding: '10px 0 calc(env(safe-area-inset-bottom, 20px) + 6px)',
       }}>
         {NAV.map(n => {
           const active = tab === n.key;
@@ -372,17 +398,12 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
                 )}
               </div>
               <span style={{
-                fontSize: 8, fontFamily: fb, fontWeight: active ? 700 : 500,
+                fontSize: 10, fontFamily: fb, fontWeight: active ? 600 : 500,
                 color: active ? C.accent : C.muted,
-                letterSpacing: '0.04em', textTransform: 'uppercase',
                 transition: 'color 0.2s',
               }}>
                 {t(`nav.${n.key}`, n.label)}
               </span>
-              <div style={{
-                width: active ? 18 : 0, height: 2, borderRadius: 1, background: C.accent,
-                transition: 'width 0.3s cubic-bezier(.22,.68,0,1.4)',
-              }} />
             </button>
           );
         })}
@@ -485,142 +506,117 @@ function OverviewTab({ gymId, user, onNavigate, onViewMemberProfile, setTab }) {
   };
 
   return (
-    <div style={{ paddingBottom: 16 }}>
-      <div style={{ padding: '20px 20px 12px' }}>
-        <div style={{ color: C.sub, fontSize: 12, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
-          Today's Check-ins
-        </div>
-        <div style={{ fontFamily: fn, fontSize: 64, fontWeight: 800, color: C.text, lineHeight: 1, letterSpacing: '-0.04em' }}>
-          {chartData[chartData.length - 1].visitors}
-        </div>
-        <div style={{ color: C.green, fontSize: 14, fontFamily: fb, fontWeight: 600, marginTop: 8 }}>
-          +14% from yesterday
-        </div>
-      </div>
-
-      {/* Stripe-like Chart */}
-      <div style={{ height: 160, marginTop: 16, marginBottom: 32 }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
-            <defs>
-              <linearGradient id="colorRed" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={C.accent} stopOpacity={0.3}/>
-                <stop offset="95%" stopColor={C.accent} stopOpacity={0}/>
-              </linearGradient>
-            </defs>
-            <Tooltip content={<CustomTooltip />} cursor={{ stroke: C.border, strokeWidth: 1, strokeDasharray: '4 4' }} />
-            <Area type="monotone" dataKey="visitors" stroke={C.accent} strokeWidth={3} fillOpacity={1} fill="url(#colorRed)" activeDot={{ r: 6, fill: C.bg, stroke: C.accent, strokeWidth: 3 }} />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Stat Grid */}
-      <div style={{ padding: '0 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-        {[
-          { label: 'Total Members', val: stats?.total ?? '—', color: C.text, icon: '👥', dest: 'members' },
-          { label: 'Active (5d)',    val: stats?.active ?? '—', color: C.text,  icon: '✅', dest: 'attendance' },
-          { label: 'At Risk',        val: stats?.atRisk ?? '—', color: C.orange, icon: '⚠️', dest: 'alerts' },
-          { label: 'New This Week',  val: stats?.newMembers ?? '—', color: C.text, icon: '🆕', dest: 'members' },
-        ].map((s, i) => (
-          <Card 
-            key={s.label} 
-            className={`msg-anim-fadeup msg-d${i + 1} msg-card-hover`} 
-            style={{ padding: '16px', cursor: 'pointer' }}
-            onClick={() => {
-              if (s.dest === 'alerts') onNavigate('alerts');
-              else if (setTab) setTab(s.dest);
-            }}
-          >
-            <Lbl text={s.label} style={{ marginBottom: 8 }} />
-            <div style={{ fontFamily: fn, fontSize: 32, fontWeight: 800, color: s.color, lineHeight: 1, letterSpacing: '-0.03em' }}>
-              {s.val}
-            </div>
-          </Card>
-        ))}
-      </div>
-
-      {/* Membership quick stats */}
-      {(stats?.liveCount > 0 || stats?.expiringCount > 0) && (
-        <div style={{ padding: '0 16px', marginBottom: 16 }}>
-          <Card style={{ padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <Lbl text="Active Memberships" style={{ marginBottom: 4 }} />
-                <div style={{ fontFamily: fn, fontSize: 24, fontWeight: 800, color: C.text }}>{stats?.liveCount}</div>
-              </div>
-              {stats?.expiringCount > 0 && (
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 10, color: C.orange, fontFamily: fb, fontWeight: 700, letterSpacing: '0.04em' }}>⚠️ EXPIRING SOON</div>
-                  <div style={{ fontFamily: fn, fontSize: 24, fontWeight: 800, color: C.orange }}>{stats.expiringCount}</div>
-                </div>
-              )}
-            </div>
-          </Card>
-        </div>
-      )}
-
-      {/* Engagement Score */}
-      <div style={{ padding: '0 16px', marginBottom: 16 }}>
-        <Card>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <ScoreRing score={stats?.avgScore ?? 0} size={72} />
-            <div>
-              <Lbl text="Gym Engagement Score" style={{ marginBottom: 4 }} />
-              <div style={{ fontFamily: fn, fontSize: 22, fontWeight: 800, color: C.text }}>{stats?.avgScore ?? 0} / 100</div>
-              <div style={{ fontSize: 12, color: C.sub, marginTop: 4, lineHeight: 1.5 }}>
-                Average across all {stats?.total ?? 0} members (last 30 days)
-              </div>
-            </div>
+    <div style={{ paddingBottom: 100 }}>
+      {/* 2x2 KPI Grid */}
+      <div style={{ padding: '0 20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+        {/* Card 1: Check-ins */}
+        <div style={{ background: C.s1, borderRadius: 16, padding: '16px', border: `1px solid ${C.border}` }}>
+          <div style={{ fontSize: 12, color: C.sub, fontFamily: fn, fontWeight: 500, marginBottom: 8 }}>Check-ins</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <div style={{ fontSize: 28, fontFamily: fb, fontWeight: 700, color: C.text, lineHeight: 1 }}>{chartData[chartData.length - 1].visitors}</div>
+            <svg width="40" height="16" viewBox="0 0 40 16" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M0 12 L8 8 L16 14 L24 4 L32 10 L40 2" /></svg>
           </div>
-        </Card>
+          <div style={{ fontSize: 10, fontFamily: fb, fontWeight: 600, color: C.green }}>↑ 12.5% vs yesterday</div>
+        </div>
+        
+        {/* Card 2: Active Members */}
+        <div style={{ background: C.s1, borderRadius: 16, padding: '16px', border: `1px solid ${C.border}` }}>
+          <div style={{ fontSize: 12, color: C.sub, fontFamily: fn, fontWeight: 500, marginBottom: 8 }}>Active Members</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <div style={{ fontSize: 28, fontFamily: fb, fontWeight: 700, color: C.text, lineHeight: 1 }}>{stats?.active ?? '1,128'}</div>
+            <svg width="40" height="16" viewBox="0 0 40 16" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M0 10 L8 14 L16 4 L24 8 L32 2 L40 12" /></svg>
+          </div>
+          <div style={{ fontSize: 10, fontFamily: fb, fontWeight: 600, color: C.green }}>↑ 8.3% vs last week</div>
+        </div>
+
+        {/* Card 3: Renewals Due */}
+        <div style={{ background: C.s1, borderRadius: 16, padding: '16px', border: `1px solid ${C.border}` }}>
+          <div style={{ fontSize: 12, color: C.sub, fontFamily: fn, fontWeight: 500, marginBottom: 8 }}>Renewals Due</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <div style={{ fontSize: 28, fontFamily: fb, fontWeight: 700, color: C.text, lineHeight: 1 }}>{stats?.atRisk ?? '28'}</div>
+            <svg width="40" height="16" viewBox="0 0 40 16" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M0 4 L8 10 L16 6 L24 14 L32 8 L40 12" /></svg>
+          </div>
+          <div style={{ fontSize: 10, fontFamily: fb, fontWeight: 600, color: C.accent }}>↑ 4 this week</div>
+        </div>
+
+        {/* Card 4: Monthly Revenue */}
+        <div style={{ background: C.s1, borderRadius: 16, padding: '16px', border: `1px solid ${C.border}` }}>
+          <div style={{ fontSize: 12, color: C.sub, fontFamily: fn, fontWeight: 500, marginBottom: 8 }}>Monthly Revenue</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <div style={{ fontSize: 28, fontFamily: fb, fontWeight: 700, color: C.text, lineHeight: 1 }}>₹84,250</div>
+            <svg width="40" height="16" viewBox="0 0 40 16" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M0 12 L8 2 L16 8 L24 4 L32 14 L40 6" /></svg>
+          </div>
+          <div style={{ fontSize: 10, fontFamily: fb, fontWeight: 600, color: C.green }}>↑ 16.7% vs last month</div>
+        </div>
       </div>
 
-      {/* Reception QR Code Quick Print */}
-      <div style={{ padding: '0 16px', marginBottom: 16 }}>
-        <Card style={{ padding: '14px 16px', background: `linear-gradient(135deg, ${C.accent}15, transparent)`, border: `1px solid ${C.accent}33` }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-            <div style={{ flex: 1 }}>
-              <Lbl text="Reception Check-In QR" style={{ marginBottom: 4 }} />
-              <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>Print Reception QR Code</div>
-              <div style={{ fontSize: 11, color: C.muted, marginTop: 4, lineHeight: 1.4 }}>
-                Display a printed QR code at your reception counter so members can check in without requiring you to keep your phone open.
-              </div>
-            </div>
-            {onNavigate && (
-              <button onClick={() => { onNavigate('settings'); }} style={{
-                background: `linear-gradient(135deg, ${C.accent}, #F2B94A)`, border: 'none', borderRadius: 10,
-                padding: '8px 14px', color: '#111', fontFamily: fn, fontWeight: 800, fontSize: 11,
-                cursor: 'pointer', boxShadow: `0 0 15px ${C.accent}66`, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6,
-              }}>
-                <span style={{ fontSize: 14 }}>🖨️</span> Print QR
-              </button>
-            )}
+      {/* Check-ins Overview Chart */}
+      <div style={{ padding: '0 20px', marginBottom: 32 }}>
+        <div style={{ background: C.s1, borderRadius: 16, border: `1px solid ${C.border}`, padding: '20px 0 10px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '0 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <div style={{ fontSize: 16, fontFamily: fb, fontWeight: 600, color: C.text }}>Check-ins Overview</div>
+            <div style={{ fontSize: 12, fontFamily: fn, color: C.sub, display: 'flex', alignItems: 'center', gap: 4 }}>This Week <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg></div>
           </div>
-        </Card>
+          
+          <div style={{ height: 160, padding: '0 10px' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorRedFigma" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={C.accent} stopOpacity={0.4}/>
+                    <stop offset="100%" stopColor={C.accent} stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={C.border} opacity={0.5} />
+                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: C.sub, fontFamily: fn }} dy={10} />
+                <Tooltip content={<CustomTooltip />} cursor={{ stroke: C.accent, strokeWidth: 1, strokeDasharray: '4 4' }} />
+                <Area type="monotone" dataKey="visitors" stroke={C.accent} strokeWidth={2.5} fillOpacity={1} fill="url(#colorRedFigma)" activeDot={{ r: 6, fill: C.bg, stroke: C.accent, strokeWidth: 2 }} dot={{ r: 4, fill: C.accent, strokeWidth: 0 }} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
       </div>
 
-      {/* Activity Feed */}
-      <div style={{ padding: '0 16px' }}>
-        <div style={{ fontFamily: fn, fontSize: 16, fontWeight: 800, color: C.text, letterSpacing: '-0.02em', marginBottom: 12 }}>Recent Activity</div>
-        {feed.length === 0 ? (
-          <div style={{ color: C.muted, fontSize: 13, textAlign: 'center', padding: '24px 0' }}>
-            No activity yet — members' actions will appear here.
-          </div>
-        ) : feed.map((item, i) => (
-          <div key={i} className="msg-anim-fadeup msg-clickable" onClick={() => onViewMemberProfile && onViewMemberProfile({ uid: item.uid, name: item.memberName })} style={{
-            animationDelay: `${i * 0.04}s`,
-            display: 'flex', gap: 12, alignItems: 'center',
-            padding: '10px 14px', background: C.s2, border: `1px solid ${C.border}`,
-            borderRadius: 12, marginBottom: 8, cursor: 'pointer',
-          }}>
-            <span style={{ fontSize: 20, flexShrink: 0 }}>{TYPE_ICONS[item.type] || '📌'}</span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.memberName}</div>
-              <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>{TYPE_LABELS[item.type] || item.type}</div>
+      {/* Quick Actions */}
+      <div style={{ padding: '0 20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <div style={{ fontSize: 16, fontFamily: fb, fontWeight: 600, color: C.text }}>Quick Actions</div>
+          <div style={{ fontSize: 12, fontFamily: fn, color: C.sub }}>View All</div>
+        </div>
+        
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+          {/* Add Member */}
+          <button onClick={() => setTab && setTab('members')} style={{ flex: 1, background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 64, height: 64, borderRadius: 16, background: C.s1, border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
             </div>
-            <div style={{ fontSize: 10, color: C.muted, fontFamily: fb, fontWeight: 600, flexShrink: 0 }}>{timeAgo(item.timestamp)}</div>
-          </div>
-        ))}
+            <div style={{ fontSize: 10, fontFamily: fn, color: C.text, textAlign: 'center', fontWeight: 500 }}>Add Member</div>
+          </button>
+
+          {/* Mark Attendance */}
+          <button onClick={() => setTab && setTab('attendance')} style={{ flex: 1, background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 64, height: 64, borderRadius: 16, background: C.s1, border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14v2a2 2 0 0 0 2 2h2"/><path d="M4 10V8a2 2 0 0 1 2-2h2"/><path d="M20 14v2a2 2 0 0 1-2 2h-2"/><path d="M20 10V8a2 2 0 0 0-2-2h-2"/><line x1="12" y1="11" x2="12" y2="17"/><polyline points="10 13 12 11 14 13"/></svg>
+            </div>
+            <div style={{ fontSize: 10, fontFamily: fn, color: C.text, textAlign: 'center', fontWeight: 500 }}>Mark<br/>Attendance</div>
+          </button>
+
+          {/* New Membership */}
+          <button onClick={() => onNavigate && onNavigate('memberships')} style={{ flex: 1, background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 64, height: 64, borderRadius: 16, background: C.s1, border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>
+            </div>
+            <div style={{ fontSize: 10, fontFamily: fn, color: C.text, textAlign: 'center', fontWeight: 500 }}>New<br/>Membership</div>
+          </button>
+
+          {/* Create Plan */}
+          <button onClick={() => {}} style={{ flex: 1, background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 64, height: 64, borderRadius: 16, background: C.s1, border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            </div>
+            <div style={{ fontSize: 10, fontFamily: fn, color: C.text, textAlign: 'center', fontWeight: 500 }}>Create<br/>Plan</div>
+          </button>
+        </div>
       </div>
     </div>
   );

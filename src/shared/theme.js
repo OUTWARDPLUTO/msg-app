@@ -2,14 +2,14 @@
 export const THEMES = {
   dark: {
     isLight: false,
-    bg: '#0B0B0B', s1: '#151515', s2: '#1C1C1C', s3: '#151515', s4: '#1C1C1C',
-    accent: '#FF4D4D', accentD: 'rgba(255,77,77,0.15)', darkAccent: '#E53935',
+    bg: '#080808', s1: '#141414', s2: '#1A1A1A', s3: '#141414', s4: '#1A1A1A',
+    accent: '#E53935', accentD: 'rgba(229,57,53,0.15)', darkAccent: '#C62828',
     orange: '#FF5C33', blue: '#3388FF', purple: '#9966FF', teal: '#2DD4BF', pink: '#FF4D94',
-    green: '#33D670', red: '#FF4D4D',
-    text: '#FFFFFF', sub: '#A0A0A0', muted: '#A0A0A0', border: 'rgba(255, 255, 255, 0.06)',
+    green: '#22C55E', red: '#E53935',
+    text: '#FFFFFF', sub: '#A3A3A3', muted: '#A3A3A3', border: 'rgba(255, 255, 255, 0.05)',
     cardShadow: '0 4px 20px rgba(0,0,0,0.5)', 
     elevShadow: '0 12px 40px rgba(0,0,0,0.8)',
-    accentShadow: '0 0 16px rgba(255,77,77,0.3)',
+    accentShadow: '0 0 16px rgba(229,57,53,0.3)',
   },
   light: {
     isLight: true,

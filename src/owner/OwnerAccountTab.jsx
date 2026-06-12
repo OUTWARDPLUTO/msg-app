@@ -54,90 +54,103 @@ export default function OwnerAccountTab({ user, onLogout }) {
   };
 
   return (
-    <div style={{ padding: '20px 16px 32px' }} className="msg-anim-fadein">
-      <div style={{ fontFamily: fn, fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: '-0.02em', marginBottom: 20 }}>My Account</div>
+    <div style={{ paddingBottom: 100, background: C.bg, minHeight: '100vh' }}>
+      {/* Header */}
+      <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 20px) 20px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button onClick={() => {}} style={{ background: 'none', border: 'none', color: C.text, padding: 0, cursor: 'pointer', display: 'flex' }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <div style={{ fontFamily: fb, fontSize: 20, fontWeight: 700, color: C.text }}>My Account</div>
+        </div>
+      </div>
 
-      <Card style={{ padding: '20px 16px', marginBottom: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-        <div style={{ position: 'relative', cursor: 'pointer' }} onClick={() => fileRef.current?.click()}>
-          <UserAvatar user={{ ...user, photo }} size={80} fontSize={24} />
-          <div style={{
-            position: 'absolute', bottom: 0, right: 0,
-            background: C.accent, borderRadius: '50%', width: 26, height: 26,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            border: `2px solid ${C.s1}`, boxShadow: C.accentShadow
-          }}>
-            <span style={{ fontSize: 13, color: '#111' }}>📷</span>
+      <div style={{ padding: '0 20px' }} className="msg-anim-fadein">
+        <div style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: 20, padding: '24px 20px', marginBottom: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+          <div style={{ position: 'relative', cursor: 'pointer' }} onClick={() => fileRef.current?.click()}>
+            <UserAvatar user={{ ...user, photo }} size={88} fontSize={28} />
+            <div style={{
+              position: 'absolute', bottom: 0, right: 0,
+              background: C.accent, borderRadius: '50%', width: 28, height: 28,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: `2px solid ${C.s1}`, boxShadow: C.accentShadow
+            }}>
+              <span style={{ fontSize: 13, color: '#111' }}>📷</span>
+            </div>
+          </div>
+          <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoChange} />
+          
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: C.text, fontFamily: fb }}>{name}</div>
+            <div style={{ fontSize: 13, color: C.sub, marginTop: 4, fontFamily: fn }}>{user?.email}</div>
           </div>
         </div>
-        <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoChange} />
-        
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 16, fontWeight: 800, color: C.text, fontFamily: fn }}>{name}</div>
-          <div style={{ fontSize: 12, color: C.muted, marginTop: 3 }}>{user?.email}</div>
-        </div>
-      </Card>
 
-      <Card style={{ padding: '16px', marginBottom: 20 }}>
-        <div style={{ marginBottom: 14 }}>
-          <Lbl text="Full Name" style={{ marginBottom: 6 }} />
-          <input
-            value={name} onChange={e => setName(e.target.value)}
-            style={{
-              width: '100%', boxSizing: 'border-box', background: C.s3,
-              border: `1px solid ${C.border}`, borderRadius: 10, padding: '11px 13px',
-              color: C.text, fontSize: 14, fontFamily: fn, outline: 'none',
-            }}
-            onFocus={e => e.target.style.borderColor = C.accent}
-            onBlur={e => e.target.style.borderColor = C.border}
-          />
-        </div>
+        <div style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: 16, padding: '20px', marginBottom: 24 }}>
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 13, color: C.sub, fontFamily: fb, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>Full Name</div>
+            <input
+              value={name} onChange={e => setName(e.target.value)}
+              style={{
+                width: '100%', boxSizing: 'border-box', background: C.bg,
+                border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 16px',
+                color: C.text, fontSize: 15, fontFamily: fn, outline: 'none', transition: 'border-color 0.2s'
+              }}
+              onFocus={e => e.target.style.borderColor = C.accent}
+              onBlur={e => e.target.style.borderColor = C.border}
+            />
+          </div>
 
-        <div style={{ marginBottom: 14 }}>
-          <Lbl text="Email Address" style={{ marginBottom: 6 }} />
-          <input
-            value={user?.email || ''} disabled
-            style={{
-              width: '100%', boxSizing: 'border-box', background: C.s4,
-              border: `1px solid ${C.border}`, borderRadius: 10, padding: '11px 13px',
-              color: C.muted, fontSize: 14, fontFamily: fn, outline: 'none',
-              cursor: 'not-allowed'
-            }}
-          />
-        </div>
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 13, color: C.sub, fontFamily: fb, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>Email Address</div>
+            <input
+              value={user?.email || ''} disabled
+              style={{
+                width: '100%', boxSizing: 'border-box', background: C.bg,
+                border: `1px dashed ${C.border}`, borderRadius: 12, padding: '14px 16px',
+                color: C.muted, fontSize: 15, fontFamily: fn, outline: 'none',
+                cursor: 'not-allowed', opacity: 0.7
+              }}
+            />
+          </div>
 
-        <div>
-          <Lbl text="Account Type" style={{ marginBottom: 6 }} />
-          <div style={{
-            background: C.s3, border: `1px solid ${C.border}`, borderRadius: 10,
-            padding: '11px 13px', fontSize: 14, color: C.accent, fontWeight: 700,
-            textTransform: 'uppercase', fontFamily: fb, letterSpacing: '0.04em'
-          }}>
-            👑 Gym Owner
+          <div>
+            <div style={{ fontSize: 13, color: C.sub, fontFamily: fb, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>Account Type</div>
+            <div style={{
+              background: C.bg, border: `1px solid ${C.border}`, borderRadius: 12,
+              padding: '14px 16px', fontSize: 14, color: C.accent, fontWeight: 700,
+              fontFamily: fb, display: 'flex', alignItems: 'center', gap: 8
+            }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"></path><line x1="2" y1="20" x2="2.01" y2="20"></line></svg>
+              Gym Owner
+            </div>
           </div>
         </div>
-      </Card>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <button onClick={handleSave} disabled={saving} style={{
-          width: '100%', padding: '14px', background: saved ? C.green : C.accent,
-          border: 'none', borderRadius: 14, color: '#111', fontFamily: fn, fontWeight: 800,
-          fontSize: 14, cursor: 'pointer', transition: 'background 0.3s',
-          boxShadow: C.accentShadow,
-        }}>
-          {saving ? 'Saving…' : saved ? '✓ Saved Profile' : 'Save Changes'}
-        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <button onClick={handleSave} disabled={saving} style={{
+            width: '100%', padding: '16px', background: saved ? C.green : C.text,
+            border: 'none', borderRadius: 16, color: C.bg, fontFamily: fb, fontWeight: 700,
+            fontSize: 16, cursor: 'pointer', transition: 'all 0.3s',
+            boxShadow: saved ? 'none' : '0 4px 12px rgba(0,0,0,0.1)',
+          }}>
+            {saving ? 'Saving…' : saved ? '✓ Saved Profile' : 'Save Changes'}
+          </button>
 
-        <button onClick={() => {
-          if (confirm('Are you sure you want to log out?')) {
-            onLogout();
-          }
-        }} style={{
-          width: '100%', padding: '14px', background: 'rgba(248, 113, 113, 0.15)',
-          border: `1px solid rgba(248, 113, 113, 0.3)`, borderRadius: 14, color: C.red,
-          fontFamily: fn, fontWeight: 700, fontSize: 14, cursor: 'pointer',
-        }}>
-          🚪 Log Out
-        </button>
+          <button onClick={() => {
+            if (confirm('Are you sure you want to log out?')) {
+              onLogout();
+            }
+          }} style={{
+            width: '100%', padding: '16px', background: 'rgba(248, 113, 113, 0.1)',
+            border: `1px solid rgba(248, 113, 113, 0.2)`, borderRadius: 16, color: C.red,
+            fontFamily: fb, fontWeight: 700, fontSize: 16, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            Log Out
+          </button>
+        </div>
       </div>
     </div>
   );

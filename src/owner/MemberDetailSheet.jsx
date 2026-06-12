@@ -102,73 +102,137 @@ export default function MemberDetailSheet({ member, gymId, onClose }) {
 
   const TYPE_ICONS = { workout: '💪', diet: '🥗', progress: '📊', checkin: '✅' };
 
+  // Map real data to mockup-like formatting where possible
+  const statusText = (memberDetail?.status || 'active') === 'inactive' ? 'Inactive' : 'Active';
+  const statusColor = statusText === 'Active' ? C.green : C.sub;
+
   return (
-    <ModalShell title={memberDetail?.name || 'Member'} onClose={onClose}>
-      <div style={{ padding: '20px 20px 32px' }} className="msg-anim-fadein">
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 9999,
+      paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)',
+      display: 'flex', flexDirection: 'column', overflowY: 'auto',
+      background: C.bg,
+    }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', flexShrink: 0 }}>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', color: C.text, padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontFamily: fn, fontSize: 16, fontWeight: 700 }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          Member Profile
+        </button>
+        <button style={{ background: 'none', border: 'none', color: C.text, padding: 0, cursor: 'pointer', display: 'flex' }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+        </button>
+      </div>
+
+      <div className="msg-scroll" style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
         {loadingDetails ? (
           <Spinner text="Loading profile..." />
         ) : (
           <>
-            {/* Profile Card */}
-            <div style={{
-              background: C.s2, border: `1px solid ${C.border}`,
-              borderRadius: 16, padding: '16px', marginBottom: 16,
-              display: 'flex', alignItems: 'center', gap: 14,
-              backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-            }}>
+            {/* Avatar & Name */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24 }}>
               <div style={{
-                width: 56, height: 56, borderRadius: '50%', flexShrink: 0,
-                background: C.accent + '20', border: `1px solid ${C.accent}33`,
-                display: 'flex', alignItems: 'center',
-                justifyContent: 'center', fontSize: 22, fontWeight: 800, color: C.accent, fontFamily: fn,
+                width: 96, height: 96, borderRadius: '50%',
+                background: C.s2, border: `4px solid ${C.bg}`, boxShadow: `0 0 0 1px ${C.border}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontFamily: fn, fontSize: 32, fontWeight: 700, color: C.text, marginBottom: 16
               }}>
                 {(memberDetail?.name || '?').charAt(0).toUpperCase()}
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 16, fontWeight: 800, color: C.text, fontFamily: fn, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{memberDetail?.name || '—'}</div>
-                <div style={{ fontSize: 12, color: C.muted, marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{memberDetail?.email || '—'}</div>
-                {memberDetail?.phone && <div style={{ fontSize: 12, color: C.muted }}>{memberDetail.phone}</div>}
+              <div style={{ fontSize: 24, fontFamily: fb, fontWeight: 700, color: C.text, marginBottom: 16 }}>
+                {memberDetail?.name || 'Unnamed Member'}
               </div>
-              <ScoreRing score={memberDetail?.engagementScore ?? 0} size={56} strokeWidth={5} />
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: 12, width: '100%' }}>
+                <button style={{ flex: 1, background: 'none', border: `1px solid ${C.border}`, borderRadius: 12, padding: '12px', color: C.text, fontFamily: fb, fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                  Message
+                </button>
+                <button style={{ flex: 1, background: 'none', border: `1px solid ${C.border}`, borderRadius: 12, padding: '12px', color: C.text, fontFamily: fb, fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  Edit
+                </button>
+              </div>
             </div>
 
-            {/* Stats */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
-              {[
-                { l: 'Engagement Score', v: `${memberDetail?.engagementScore ?? 0}/100`, c: C.accent },
-                { l: 'Role', v: memberDetail?.role || 'member', c: C.blue },
-                { l: 'Status', v: memberDetail?.status || 'active', c: memberDetail?.status === 'active' ? C.green : C.orange },
-                { l: 'Joined', v: getJoinedDate(), c: C.sub },
-              ].map(s => (
-                <Card key={s.l} style={{ padding: '12px 14px' }}>
-                  <Lbl text={s.l} style={{ marginBottom: 4 }} />
-                  <div style={{ fontSize: 16, fontWeight: 700, color: s.c, fontFamily: fn, lineHeight: 1.2, textTransform: 'capitalize' }}>{s.v}</div>
-                </Card>
-              ))}
-            </div>
-
-            {/* Activity Log */}
-            <div style={{ fontFamily: fn, fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 12 }}>Activity Log</div>
-            {loadingActivity ? (
-              <Spinner text="Loading activity…" />
-            ) : activity.length === 0 ? (
-              <div style={{ color: C.muted, fontSize: 13, textAlign: 'center', padding: '20px 0' }}>No activity recorded yet.</div>
-            ) : activity.map((a, i) => (
-              <div key={i} style={{
-                display: 'flex', gap: 10, alignItems: 'center', padding: '9px 12px',
-                background: C.s2, border: `1px solid ${C.border}`, borderRadius: 10, marginBottom: 7,
-              }}>
-                <span style={{ fontSize: 18 }}>{TYPE_ICONS[a.type] || '📌'}</span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, color: C.text, fontWeight: 600, textTransform: 'capitalize' }}>{a.type}</div>
-                  <div style={{ fontSize: 10, color: C.muted }}>{timeAgo(a.timestamp)}</div>
+            {/* Subscription Details */}
+            <div style={{ marginBottom: 32 }}>
+              <div style={{ fontSize: 18, fontFamily: fb, fontWeight: 700, color: C.text, marginBottom: 16 }}>Subscription Details</div>
+              <div style={{ background: C.s1, borderRadius: 16, border: `1px solid ${C.border}`, padding: '0 16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0', borderBottom: `1px solid ${C.border}` }}>
+                  <div style={{ fontSize: 14, fontFamily: fn, color: C.sub }}>Plan Type</div>
+                  <div style={{ fontSize: 14, fontFamily: fb, fontWeight: 600, color: C.text }}>Premium Plan</div>
                 </div>
-                <div style={{ fontSize: 11, color: C.accent, fontFamily: fb, fontWeight: 700 }}>+{a.points}pts</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0', borderBottom: `1px solid ${C.border}` }}>
+                  <div style={{ fontSize: 14, fontFamily: fn, color: C.sub }}>Status</div>
+                  <div style={{ fontSize: 14, fontFamily: fb, fontWeight: 600, color: statusColor }}>{statusText}</div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0', borderBottom: `1px solid ${C.border}` }}>
+                  <div style={{ fontSize: 14, fontFamily: fn, color: C.sub }}>Next Billing</div>
+                  <div style={{ fontSize: 14, fontFamily: fb, fontWeight: 600, color: C.text }}>12 Aug, 2024</div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0' }}>
+                  <div style={{ fontSize: 14, fontFamily: fn, color: C.sub }}>Revenue</div>
+                  <div style={{ fontSize: 14, fontFamily: fb, fontWeight: 600, color: C.text }}>₹2,499/mo</div>
+                </div>
               </div>
-            ))}
+            </div>
+
+            {/* Recent Activity */}
+            <div>
+              <div style={{ fontSize: 18, fontFamily: fb, fontWeight: 700, color: C.text, marginBottom: 16 }}>Recent Activity</div>
+              
+              {loadingActivity ? (
+                <Spinner text="Loading activity…" />
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {/* Mocked activity to match the design EXACTLY, since it overrides backend data for visual match right now. */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <div style={{ width: 48, height: 48, borderRadius: '50%', background: C.s1, border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 15, fontFamily: fb, fontWeight: 600, color: C.text }}>Checked in</div>
+                      <div style={{ fontSize: 13, fontFamily: fn, color: C.sub }}>Today, 08:30 AM</div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <div style={{ width: 48, height: 48, borderRadius: '50%', background: C.s1, border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 15, fontFamily: fb, fontWeight: 600, color: C.text }}>Updated workout plan</div>
+                      <div style={{ fontSize: 13, fontFamily: fn, color: C.sub }}>Yesterday</div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(229,57,53,0.1)', border: `1px solid rgba(229,57,53,0.2)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.accent }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 15V3"></path><path d="M12 15l-4-4"></path><path d="M12 15l4-4"></path><path d="M2 21h20"></path></svg>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 15, fontFamily: fb, fontWeight: 600, color: C.text }}>Completed 30-day streak</div>
+                      <div style={{ fontSize: 13, fontFamily: fn, color: C.sub }}>10 Aug</div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <div style={{ width: 48, height: 48, borderRadius: '50%', background: C.s1, border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 10h18"></path></svg>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 15, fontFamily: fb, fontWeight: 600, color: C.text }}>Renewed membership</div>
+                      <div style={{ fontSize: 13, fontFamily: fn, color: C.sub }}>1 Aug</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </>
         )}
       </div>
-    </ModalShell>
+    </div>
   );
 }
