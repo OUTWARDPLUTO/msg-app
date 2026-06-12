@@ -158,13 +158,12 @@ export async function getGymByCode(gymCode) {
 
 export async function createGym(ownerUid, gymName) {
   const db = await getFBFirestore();
-  const gymCode = generateGymCode();
   const ref = db.collection('gyms').doc();
   const gymData = {
     name: gymName,
     ownerUid,
-    gymCode,
-    plan: 'free',
+    gymCode: null, // Assigned after payment
+    plan: 'free', // Will be updated on payment
     createdAt: serverTimestamp(),
     settings: { inactivityThresholdDays: 5 },
   };
@@ -311,9 +310,15 @@ export async function getTodayCheckIn(uid, gymId) {
 export function parseCSV(text) {
   const lines = text.trim().split(/\r?\n/);
   if (lines.length < 2) return { headers: [], rows: [] };
-  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  
+  const parseLine = (line) => {
+    // Split by comma, ignoring commas inside double quotes
+    return line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.trim().replace(/^"|"$/g, ''));
+  };
+
+  const headers = parseLine(lines[0]);
   const rows = lines.slice(1).map(line => {
-    const cols = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+    const cols = parseLine(line);
     return Object.fromEntries(headers.map((h, i) => [h, cols[i] || '']));
   });
   return { headers, rows };

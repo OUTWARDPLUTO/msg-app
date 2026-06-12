@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
-import { Card, Lbl, SettingsToggle } from '../shared/primitives.jsx';
-import { getFBFirestore } from '../shared/firebase.js';
+import { Card, Lbl, SettingsToggle, Spinner } from '../shared/primitives.jsx';
+import { getFBFirestore, checkSubscription } from '../shared/firebase.js';
 
 export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
   const [name, setName]     = useState(gymName || '');
   const [threshold, setThreshold] = useState(5);
   const [saved, setSaved]   = useState(false);
   const [code, setCode]     = useState('');
+  const [qrToken, setQrToken] = useState('');
   const [loading, setLoading] = useState(false);
+  const [subData, setSubData] = useState(null);
 
   // GPS and QR settings states
   const [useGps, setUseGps] = useState(false);
@@ -48,6 +50,7 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
         const data = doc.data();
         if (data.name) setName(data.name);
         setCode(data.gymCode || '—');
+        setQrToken(data.qrToken || '');
         const s = data.settings || {};
         setThreshold(s.inactivityThresholdDays || 5);
         setUseGps(s.useGps || false);
@@ -55,6 +58,11 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
         setLongitude(s.longitude !== undefined && s.longitude !== null ? String(s.longitude) : '');
         setUseQr(s.useQr || false);
         setUseStaticQr(s.useStaticQr || false);
+      }
+      
+      if (ownerUid) {
+        const sub = await checkSubscription(ownerUid);
+        setSubData(sub);
       }
     } catch (e) { console.warn(e); }
   };
@@ -70,13 +78,59 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
       <div style={{ fontFamily: fn, fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: '-0.02em', marginBottom: 20 }}>Gym Settings</div>
 
       <Card style={{ padding: '14px 16px', marginBottom: 16 }}>
-        <Lbl text="Gym Code" style={{ marginBottom: 8 }} />
+        <Lbl text="Gym Code & QR" style={{ marginBottom: 8 }} />
+        
+        {code && code !== '—' && (
+          <div style={{ background: '#fff', padding: 8, borderRadius: 8, display: 'inline-block', marginBottom: 12 }}>
+            <img 
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${code}`} 
+              alt="Gym QR Code" 
+              style={{ width: 120, height: 120, display: 'block' }}
+            />
+          </div>
+        )}
+
         <div style={{ fontFamily: fn, fontSize: 32, fontWeight: 800, color: C.accent, letterSpacing: '0.3em' }}>
           {code || '——'}
         </div>
         <div style={{ fontSize: 12, color: C.sub, marginTop: 6, lineHeight: 1.5 }}>
-          Share this code with members. They enter it in the app to join your gym.
+          Share this code or QR with members. They scan/enter it in the app to join your gym.
         </div>
+      </Card>
+
+      <Card style={{ padding: '14px 16px', marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <Lbl text="MSG App Subscription" />
+          <span style={{ 
+            fontSize: 10, padding: '2px 8px', borderRadius: 10, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase',
+            background: subData?.active ? C.green + '22' : C.red + '22',
+            color: subData?.active ? C.green : C.red
+          }}>
+            {subData?.active ? 'Active' : 'Inactive'}
+          </span>
+        </div>
+        
+        {subData && (
+          <div style={{ fontSize: 13, color: C.sub, lineHeight: 1.5, marginBottom: 12 }}>
+            {subData.active ? (
+              <>
+                Plan: <strong style={{ color: C.text, textTransform: 'capitalize' }}>{subData.plan}</strong> <br/>
+                Expires: {subData.expiresAt ? new Date(subData.expiresAt).toLocaleDateString('en-IN') : 'Forever'}
+              </>
+            ) : (
+              <>Your subscription has expired. Members cannot access the app.</>
+            )}
+          </div>
+        )}
+        
+        <button onClick={() => {
+            alert('To manage your subscription, please login to the MSG Web Portal.');
+        }} style={{
+          background: C.s3, border: `1px solid ${C.border}`, borderRadius: 10,
+          padding: '8px 14px', color: C.text, fontFamily: fn, fontWeight: 700, fontSize: 12, cursor: 'pointer',
+        }}>
+          Manage Billing
+        </button>
       </Card>
 
       <Card style={{ padding: '14px 16px', marginBottom: 16 }}>

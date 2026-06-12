@@ -65,3 +65,8 @@
 .msg-root {
   perspective: 1000px;
 }
+
+/* Hide bottom nav when typing (keyboard open) */
+.msg-root:has(input:focus, textarea:focus) .msg-bottom-nav {
+  display: none !important;
+}

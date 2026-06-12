@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { Card, Lbl, ScoreRing, Spinner, UserAvatar } from '../shared/primitives.jsx';
 import { getFBFirestore } from '../shared/firebase.js';
+import appIconDark from '../assets/app-icon-dark.png';
 import MemberListTab from './MemberListTab.jsx';
 import AlertsTab from './AlertsTab.jsx';
 import AttendanceTab from './AttendanceTab.jsx';
@@ -9,8 +10,6 @@ import CSVImport from './CSVImport.jsx';
 import GymSettingsTab from './GymSettingsTab.jsx';
 import StoreTab from './StoreTab.jsx';
 import MembershipsTab from './MembershipsTab.jsx';
-import appIconLight from '../assets/app-icon-light.png';
-import appIconDark from '../assets/app-icon-dark.png';
 import OwnerAccountTab from './OwnerAccountTab.jsx';
 import OwnerAppSettingsTab from './OwnerAppSettingsTab.jsx';
 import MemberDetailSheet from './MemberDetailSheet.jsx';
@@ -243,7 +242,8 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         padding: 'calc(env(safe-area-inset-top, 0px) + 14px) 20px 0', flexShrink: 0,
       }}>
-        <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <img src={appIconDark} alt="MSG" style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'cover' }} />
           {moreScreen ? (
             <button onClick={() => setMoreScreen(null)} style={{
               background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
@@ -301,7 +301,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
             <MoreTab gymId={gymId} gymName={gymName} ownerUid={user?.uid} onNavigate={handleMoreNavigate} />
           )}
           {/* Main tabs */}
-          {tab === 'overview'   && <OverviewTab gymId={gymId} user={user} onNavigate={handleMoreNavigate} onViewMemberProfile={setProfileMember} />}
+          {tab === 'overview'   && <OverviewTab gymId={gymId} user={user} onNavigate={handleMoreNavigate} onViewMemberProfile={setProfileMember} setTab={setTab} />}
           {tab === 'members'    && <MemberListTab gymId={gymId} setBackHandler={setChildBackHandler} onViewMemberProfile={setProfileMember} />}
           {tab === 'attendance' && <AttendanceTab gymId={gymId} onViewMemberProfile={setProfileMember} />}
           {tab === 'store'      && <StoreTab gymId={gymId} setBackHandler={setChildBackHandler} />}
@@ -367,7 +367,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
 }
 
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
-function OverviewTab({ gymId, user, onNavigate, onViewMemberProfile }) {
+function OverviewTab({ gymId, user, onNavigate, onViewMemberProfile, setTab }) {
   const [stats, setStats] = useState(null);
   const [feed, setFeed]   = useState([]);
   const [loading, setLoading] = useState(true);
@@ -438,12 +438,20 @@ function OverviewTab({ gymId, user, onNavigate, onViewMemberProfile }) {
       {/* Stat Grid */}
       <div style={{ padding: '0 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
         {[
-          { label: 'Total Members', val: stats?.total ?? '—', color: C.accent, icon: '👥' },
-          { label: 'Active (5d)',    val: stats?.active ?? '—', color: C.green,  icon: '✅' },
-          { label: 'At Risk',        val: stats?.atRisk ?? '—', color: C.orange, icon: '⚠️' },
-          { label: 'New This Week',  val: stats?.newMembers ?? '—', color: C.blue, icon: '🆕' },
+          { label: 'Total Members', val: stats?.total ?? '—', color: C.accent, icon: '👥', dest: 'members' },
+          { label: 'Active (5d)',    val: stats?.active ?? '—', color: C.green,  icon: '✅', dest: 'attendance' },
+          { label: 'At Risk',        val: stats?.atRisk ?? '—', color: C.orange, icon: '⚠️', dest: 'alerts' },
+          { label: 'New This Week',  val: stats?.newMembers ?? '—', color: C.blue, icon: '🆕', dest: 'members' },
         ].map((s, i) => (
-          <Card key={s.label} className={`msg-anim-fadeup msg-d${i + 1} msg-card-hover`} style={{ padding: '14px 16px' }}>
+          <Card 
+            key={s.label} 
+            className={`msg-anim-fadeup msg-d${i + 1} msg-card-hover`} 
+            style={{ padding: '14px 16px', cursor: 'pointer' }}
+            onClick={() => {
+              if (s.dest === 'alerts') onNavigate('alerts');
+              else if (setTab) setTab(s.dest);
+            }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
               <Lbl text={s.label} />
               <span style={{ fontSize: 18 }}>{s.icon}</span>

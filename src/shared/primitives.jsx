@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { C, fn, fb } from './theme.js';
 
 // ─── UserAvatar ───────────────────────────────────────────────────────────────
@@ -104,9 +105,9 @@ export const Hd = ({ t, s: sub }) => (
 
 // ─── Modal Shell ──────────────────────────────────────────────────────────────
 export function ModalShell({ title, onClose, children }) {
-  return (
+  const content = (
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 999,
+      position: 'fixed', inset: 0, zIndex: 9999,
       paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)',
       display: 'flex', flexDirection: 'column', overflowY: 'auto',
       background: C.bg,
@@ -132,6 +133,7 @@ export function ModalShell({ title, onClose, children }) {
       </div>
     </div>
   );
+  return createPortal(content, document.body);
 }
 
 // ─── Spinner ──────────────────────────────────────────────────────────────────

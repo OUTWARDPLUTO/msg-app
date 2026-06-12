@@ -43,8 +43,10 @@ export default function CSVImport({ gymId }) {
     const errs = [];
     const emails = new Set();
     rows.forEach((row, i) => {
-      const name = row[mapping.name]?.trim();
-      const email = row[mapping.email]?.trim();
+      const name = mapping.name ? row[mapping.name]?.trim() : '';
+      const email = mapping.email ? row[mapping.email]?.trim() : '';
+      const phone = mapping.phone ? row[mapping.phone]?.trim() : '';
+
       if (!name) errs.push({ row: i + 2, field: 'name', msg: 'Missing name' });
       if (email) {
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.push({ row: i + 2, field: 'email', msg: 'Invalid email' });
@@ -62,9 +64,9 @@ export default function CSVImport({ gymId }) {
     const validRows = rows
       .filter((_, i) => !errorRows.has(i))
       .map(row => ({
-        name:  row[mapping.name]?.trim() || 'Unknown',
-        email: row[mapping.email]?.trim() || '',
-        phone: row[mapping.phone]?.trim() || '',
+        name:  (mapping.name ? row[mapping.name]?.trim() : '') || 'Unknown',
+        email: mapping.email ? row[mapping.email]?.trim() : '',
+        phone: mapping.phone ? row[mapping.phone]?.trim() : '',
       }));
     await importMembersFromCSV(gymId, validRows);
     setImported(validRows.length);

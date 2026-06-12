@@ -125,7 +125,8 @@ app.post('/api/create-order', async (req, res) => {
     const { plan, gymId } = req.body;
     // Hardcode pricing on server to prevent spoofing
     let amount = 0;
-    if (plan === 'monthly') amount = 49900; // ₹499 in paise
+    if (plan === 'trial') amount = 14900; // ₹149 in paise
+    else if (plan === 'monthly') amount = 49900; // ₹499 in paise
     else if (plan === 'yearly') amount = 419900; // ₹4199 in paise
     else return res.status(400).json({ error: 'Invalid plan' });
 
@@ -145,7 +146,7 @@ app.post('/api/create-order', async (req, res) => {
 
 app.post('/api/verify-payment', async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, uid, plan } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, uid, plan, gymId } = req.body;
     
     // Cryptographically verify the signature
     const text = razorpay_order_id + "|" + razorpay_payment_id;
@@ -164,7 +165,10 @@ app.post('/api/verify-payment', async (req, res) => {
 
     // Signature is valid. Upgrade the user's plan in Firestore securely!
     const now = Date.now();
-    const expiresAt = plan === 'yearly' ? now + 365 * 86400000 : now + 30 * 86400000;
+    let expiresAt = now;
+    if (plan === 'trial') expiresAt = now + 7 * 86400000;
+    else if (plan === 'monthly') expiresAt = now + 30 * 86400000;
+    else if (plan === 'yearly') expiresAt = now + 365 * 86400000;
     
     await db.collection("users").doc(uid).set({
       subscription: {
@@ -176,7 +180,19 @@ app.post('/api/verify-payment', async (req, res) => {
       }
     }, { merge: true });
 
-    res.json({ success: true, message: "Payment verified and subscription activated securely." });
+    // Generate gymCode and update gym doc
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const gymCode = Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+    
+    if (gymId) {
+      await db.collection("gyms").doc(gymId).update({
+        gymCode: gymCode,
+        plan: plan,
+        qrToken: `join_${gymCode}_${Date.now()}`
+      });
+    }
+
+    res.json({ success: true, message: "Payment verified and subscription activated securely.", gymCode });
   } catch (err) {
     console.error("Verification error:", err);
     res.status(500).json({ error: 'Verification failed' });

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { Spinner } from '../shared/primitives.jsx';
 import {
@@ -41,12 +41,20 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
   const [copied, setCopied]     = useState(false);
   const [subPlan, setSubPlan]   = useState(null); // 'monthly'|'yearly'
 
+  // Scanner States for QR Join
+  const [showScanner, setShowScanner] = useState(false);
+  const [scannerError, setScannerError] = useState('');
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const streamRef = useRef(null);
+  const animationFrameRef = useRef(null);
+
   // Pre-warm Firestore so scripts are loaded before user submits gym code
   useEffect(() => { getFBFirestore().catch(() => {}); }, []);
 
   // ── Join gym by code (members) ─────────────────────────────────────────────
-  const handleJoin = async () => {
-    const code = gymCode.trim().toUpperCase();
+  const handleJoin = async (overrideCode = null) => {
+    const code = (overrideCode || gymCode).trim().toUpperCase();
     if (code.length !== 6) { setError('Please enter a valid 6-character gym code.'); return; }
     setScreen('loading'); setError('');
     try {
@@ -99,6 +107,102 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
         : `Error: ${e?.message || 'Could not create gym. Please try again.'}`;
       setError(msg);
       console.error('[MSG] handleCreate:', e);
+    }
+  };
+
+    }
+  };
+
+  // ── QR Scanner Logic ───────────────────────────────────────────────────────
+  const loadJsQR = () => {
+    return new Promise((resolve, reject) => {
+      if (window.jsQR) { resolve(window.jsQR); return; }
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js';
+      script.async = true;
+      script.onload = () => resolve(window.jsQR);
+      script.onerror = () => reject(new Error('Failed to load QR scanner library.'));
+      document.body.appendChild(script);
+    });
+  };
+
+  const startScanner = async () => {
+    setScannerError('');
+    setShowScanner(true);
+    
+    try {
+      await loadJsQR();
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
+      });
+      streamRef.current = stream;
+      
+      setTimeout(async () => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.setAttribute("playsinline", "true");
+          try {
+            await videoRef.current.play();
+            animationFrameRef.current = requestAnimationFrame(tickScanner);
+          } catch (e) {
+            setScannerError("Could not start video stream playback.");
+          }
+        }
+      }, 300);
+    } catch (err) {
+      setScannerError(err.message || 'Camera permission denied or device not supported.');
+    }
+  };
+
+  const closeScanner = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop());
+      streamRef.current = null;
+    }
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    setShowScanner(false);
+  };
+
+  const tickScanner = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    
+    if (video && video.readyState === video.HAVE_ENOUGH_DATA && canvas) {
+      const ctx = canvas.getContext('2d');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code = window.jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: "dontInvert"
+      });
+      
+      if (code && code.data) {
+        // We expect the QR to be something like `join_ABCDEF_timestamp` or just `ABCDEF` or URL
+        let scannedCode = code.data;
+        if (scannedCode.includes('join_')) {
+          scannedCode = scannedCode.split('join_')[1].split('_')[0];
+        } else if (scannedCode.length > 6) {
+          // try to parse if it's a URL like msg://join?code=ABCDEF
+          const match = scannedCode.match(/code=([A-Z0-9]{6})/i);
+          if (match) scannedCode = match[1];
+        }
+
+        if (scannedCode && scannedCode.length === 6) {
+          closeScanner();
+          setGymCode(scannedCode);
+          handleJoin(scannedCode);
+          return;
+        }
+      }
+    }
+    
+    if (streamRef.current) {
+      animationFrameRef.current = requestAnimationFrame(tickScanner);
     }
   };
 
@@ -155,13 +259,15 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
                 uid: user.uid,
-                plan: subPlan
+                plan: subPlan,
+                gymId: createdGym.id
               })
             });
             const verifyData = await verifyRes.json();
             if (!verifyRes.ok) throw new Error(verifyData.error || "Verification failed");
             
             // Payment successful and verified!
+            setCreatedGym(prev => ({ ...prev, gymCode: verifyData.gymCode }));
             setScreen('success');
           } catch (e) {
             console.error("Verification Error:", e);
@@ -260,13 +366,24 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
         padding: '24px 20px', textAlign: 'center', marginBottom: 16,
       }}>
         <div style={{ fontSize: 10, fontFamily: fb, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>
-          Your Gym Code
+          Your Gym Code & QR
         </div>
+        
+        {createdGym?.gymCode && (
+          <div style={{ background: '#fff', padding: 12, borderRadius: 12, display: 'inline-block', marginBottom: 16 }}>
+            <img 
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${createdGym.gymCode}`} 
+              alt="Gym QR Code" 
+              style={{ width: 150, height: 150, display: 'block' }}
+            />
+          </div>
+        )}
+
         <div style={{ fontFamily: fn, fontSize: 42, fontWeight: 800, color: C.accent, letterSpacing: '0.4em', lineHeight: 1 }}>
           {createdGym?.gymCode}
         </div>
         <div style={{ fontSize: 12, color: C.sub, marginTop: 10, lineHeight: 1.5 }}>
-          Only 1 code per gym. Find it anytime in Settings.
+          Share this code or QR so members can join. Find it anytime in Settings.
         </div>
       </div>
 
@@ -318,6 +435,39 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
           <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>Lock in 50% off before prices go up. Forever.</div>
         </div>
       </div>
+
+      {/* 7-Day Trial Plan */}
+      <button
+        className={`ob-choice ob-card-2 ob-btn`}
+        onClick={() => setSubPlan('trial')}
+        style={{
+          width: '100%', padding: '16px 20px', marginBottom: 12, textAlign: 'left',
+          background: subPlan === 'trial'
+            ? `linear-gradient(135deg, ${C.accent}22, ${C.accent}0A)`
+            : C.s2,
+          border: `2px solid ${subPlan === 'trial' ? C.accent : C.border}`,
+          borderRadius: 18, cursor: 'pointer',
+          boxShadow: subPlan === 'trial' ? `0 0 0 3px ${C.accent}22, ${C.cardShadow}` : C.cardShadow,
+          transition: 'all 0.25s',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <span style={{ fontSize: 20 }}>⏱️</span>
+              <span style={{ fontFamily: fn, fontSize: 16, fontWeight: 800, color: subPlan === 'trial' ? C.accent : C.text }}>7-Day Trial</span>
+              {subPlan === 'trial' && <span style={{ fontSize: 12, color: C.accent }}>✓</span>}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+              <span style={{ fontFamily: fn, fontSize: 28, fontWeight: 800, color: C.accent }}>₹149</span>
+            </div>
+          </div>
+          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+            <div style={{ fontSize: 10, fontFamily: fb, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>1 Week Access</div>
+            <div style={{ fontSize: 11, color: C.sub, marginTop: 4 }}>Test it out</div>
+          </div>
+        </div>
+      </button>
 
       {/* Monthly Plan */}
       <button
@@ -437,7 +587,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
           transition: 'all 0.2s', marginBottom: 10,
         }}
       >
-        {subPlan ? `Activate ${subPlan === 'monthly' ? 'Monthly' : 'Yearly'} Plan →` : 'Select a Plan to Continue'}
+        {subPlan ? `Activate ${subPlan === 'monthly' ? 'Monthly' : subPlan === 'yearly' ? 'Yearly' : 'Trial'} Plan →` : 'Select a Plan to Continue'}
       </button>
 
       <div style={{ fontSize: 10, color: C.muted, textAlign: 'center', lineHeight: 1.6 }}>
@@ -488,20 +638,29 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
         Ask your gym owner for the 6-character code. Without a valid code, access is not possible.
       </div>
 
-      <input
-        value={gymCode}
-        onChange={e => { setGymCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')); setError(''); }}
-        placeholder="e.g. GYM123"
-        maxLength={6}
-        style={{
-          width: '100%', boxSizing: 'border-box', background: C.s2,
-          border: `2px solid ${gymCode.length === 6 ? C.accent : C.border}`,
-          borderRadius: 14, padding: '16px', color: C.text, fontSize: 24,
-          fontFamily: fn, fontWeight: 800, outline: 'none', letterSpacing: '0.3em',
-          textAlign: 'center', marginBottom: 14, textTransform: 'uppercase',
-          transition: 'border-color 0.2s',
-        }}
-      />
+      <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
+        <input
+          value={gymCode}
+          onChange={e => { setGymCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')); setError(''); }}
+          placeholder="e.g. GYM123"
+          maxLength={6}
+          style={{
+            flex: 1, boxSizing: 'border-box', background: C.s2,
+            border: `2px solid ${gymCode.length === 6 ? C.accent : C.border}`,
+            borderRadius: 14, padding: '16px', color: C.text, fontSize: 24,
+            fontFamily: fn, fontWeight: 800, outline: 'none', letterSpacing: '0.3em',
+            textAlign: 'center', textTransform: 'uppercase',
+            transition: 'border-color 0.2s',
+          }}
+        />
+        <button onClick={startScanner} style={{
+          background: C.s3, border: `1px solid ${C.border}`, borderRadius: 14,
+          padding: '0 20px', color: C.text, fontSize: 24, cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center'
+        }}>
+          📷
+        </button>
+      </div>
       {errorBox}
 
       {/* Code dots indicator */}
@@ -528,6 +687,59 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
       <div style={{ marginTop: 16, fontSize: 12, color: C.muted, textAlign: 'center', lineHeight: 1.6, padding: '10px 14px', background: C.s2, borderRadius: 12, border: `1px solid ${C.border}` }}>
         🔐 A valid gym code is required to access MSG as a member. Contact your gym owner if you don't have one.
       </div>
+
+      {showScanner && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 1000,
+          background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          padding: 24, boxSizing: 'border-box', fontFamily: fn
+        }}>
+          <div style={{ textAlign: 'center', marginBottom: 20 }}>
+            <div style={{ fontSize: 20, fontWeight: 800, color: C.accent, marginBottom: 6 }}>Scan Gym QR Code</div>
+            <div style={{ fontSize: 12, color: C.sub }}>Point your camera at the gym's code</div>
+          </div>
+          
+          <div style={{
+            position: 'relative', width: 280, height: 280, borderRadius: 20,
+            overflow: 'hidden', background: '#000', border: `2px solid ${C.border}`,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>
+            {scannerError ? (
+              <div style={{ padding: 20, color: C.red, fontSize: 13, textAlign: 'center' }}>
+                ⚠️ Camera Error: {scannerError}
+              </div>
+            ) : (
+              <>
+                <video
+                  ref={videoRef}
+                  playsInline
+                  muted
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+                <div style={{
+                  position: 'absolute', width: 180, height: 180,
+                  border: `3px solid ${C.accent}`, borderRadius: 16,
+                  boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)', pointerEvents: 'none'
+                }} />
+              </>
+            )}
+          </div>
+
+          <button
+            onClick={closeScanner}
+            style={{
+              marginTop: 24, background: C.s2, border: `1px solid ${C.border}`,
+              borderRadius: 12, padding: '12px 28px', color: C.text,
+              fontSize: 13, fontFamily: fn, fontWeight: 700, cursor: 'pointer'
+            }}
+          >
+            Cancel
+          </button>
+          
+          <canvas ref={canvasRef} style={{ display: 'none' }} />
+        </div>
+      )}
     </>
   );
 

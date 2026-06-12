@@ -70,6 +70,7 @@ export default function MSG() {
   const [gymName, setGymName]   = useState(() => load('msg_gym_name', ''));
   const [role, setRole]         = useState(() => load('msg_role', 'member'));
   const [gymLoading, setGymLoading] = useState(false);
+  const [gymSubscriptionExpired, setGymSubscriptionExpired] = useState(false);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const gymResolvedRef = useRef(false); // prevents double-resolveGym from onAuthStateChanged race
 
@@ -253,12 +254,29 @@ export default function MSG() {
           try {
             const db = await getFBFirestore();
             const gymDoc = await db.doc(`gyms/${doc.gymId}`).get();
-            if (gymDoc.exists) { const n = gymDoc.data().name; setGymName(n); save('msg_gym_name', n); }
+            if (gymDoc.exists) { 
+              const data = gymDoc.data();
+              setGymName(data.name); save('msg_gym_name', data.name); 
+              
+              // Member Access Restriction Check
+              if (doc.role === 'member' || !doc.role) {
+                if (data.ownerUid) {
+                  const subDoc = await db.doc(`users/${data.ownerUid}`).get();
+                  const subData = subDoc.data()?.subscription;
+                  if (!subData || subData.status !== 'active' || (subData.expiresAt && subData.expiresAt < Date.now())) {
+                    setGymSubscriptionExpired(true);
+                  } else {
+                    setGymSubscriptionExpired(false);
+                  }
+                }
+              }
+            }
           } catch(_) {}
         } else {
           setGymId(null); save('msg_gym_id', null);
           setRole('member'); save('msg_role', 'member');
           setGymName(''); save('msg_gym_name', '');
+          setGymSubscriptionExpired(false);
         }
       } else {
         // User doc is missing/deleted from Firestore: Self-healing
@@ -399,7 +417,23 @@ export default function MSG() {
     />
   );
 
-  // 5. Role-based routing
+  // 5. Subscription check
+  if (gymSubscriptionExpired) return (
+    <div style={{ background: C.bg, height: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', textAlign: 'center' }}>
+      <div style={{ fontSize: 64, marginBottom: 16 }}>🔒</div>
+      <div style={{ fontFamily: fn, fontSize: 24, fontWeight: 800, color: C.text, marginBottom: 12 }}>Gym Subscription Inactive</div>
+      <div style={{ fontSize: 14, color: C.sub, lineHeight: 1.6, marginBottom: 32 }}>
+        Your gym owner's MSG subscription has expired. <br/>
+        Please contact them to renew it so you can continue training.
+      </div>
+      <button onClick={handleLogout} style={{
+        background: C.s2, border: `1px solid ${C.border}`, borderRadius: 12,
+        padding: '12px 24px', color: C.text, fontFamily: fn, fontWeight: 700, fontSize: 13, cursor: 'pointer'
+      }}>Logout</button>
+    </div>
+  );
+
+  // 6. Role-based routing
   if (role === 'owner') return (
     <ErrorBoundary C={C} fn={fn} onRetry={() => { setGymId(null); save('msg_gym_id', null); }}>
       <OwnerDashboard

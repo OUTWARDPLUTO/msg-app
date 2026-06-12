@@ -2644,53 +2644,64 @@ function DietSection({ dietGoal, setDietGoal, mealLog, setMealLog }) {
       1089: 'iron', 1106: 'vitaminA', 1178: 'vitaminB12', 1162: 'vitaminC',
       1114: 'vitaminD', 1109: 'vitaminE', 1090: 'magnesium', 1095: 'zinc',
     };
-    if (USDA_KEY) {
-      try {
-        const gramsMatch = q.match(/(\d+\.?\d*)\s*g(?:ram)?s?\b/i);
-        const scaleFactor = gramsMatch ? parseFloat(gramsMatch[1]) / 100 : 1;
-        const searchTerm = q.replace(/\d+\.?\d*\s*g(?:ram)?s?\b/gi, '').trim() || q;
+    // ── OpenFoodFacts API lookup (Free, no key needed) ───────────────────────
+    try {
+      const gramsMatch = q.match(/(\d+\.?\d*)\s*g(?:ram)?s?\b/i);
+      const scaleFactor = gramsMatch ? parseFloat(gramsMatch[1]) / 100 : 1;
+      const searchTerm = q.replace(/\d+\.?\d*\s*g(?:ram)?s?\b/gi, '').trim() || q;
 
-        const resp = await fetch(
-          `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(searchTerm)}&api_key=${USDA_KEY}&dataType=Foundation,SR%20Legacy&pageSize=1`
-        );
-        if (resp.ok) {
-          const data = await resp.json();
-          const food = data.foods?.[0];
-          if (food) {
-            const nutrients = {};
-            (food.foodNutrients || []).forEach(n => {
-              const key = USDA_NUTRIENT_MAP[n.nutrientId];
-              if (key) nutrients[key] = Math.round((n.value || 0) * scaleFactor * 10) / 10;
-            });
-            if (nutrients.calories) {
-              const item = {
-                name: `${food.description}${gramsMatch ? ` (${gramsMatch[1]}g)` : ''}`,
-                calories: Math.round(nutrients.calories || 0),
-                protein: nutrients.protein || 0,
-                carbs: nutrients.carbs || 0,
-                fat: nutrients.fat || 0,
-                fiber: nutrients.fiber || 0,
-                sodium: nutrients.sodium || 0,
-                potassium: nutrients.potassium || 0,
-                calcium: nutrients.calcium || 0,
-                iron: nutrients.iron || 0,
-                vitaminA: nutrients.vitaminA || 0,
-                vitaminB12: nutrients.vitaminB12 || 0,
-                vitaminC: nutrients.vitaminC || 0,
-                vitaminD: nutrients.vitaminD || 0,
-                vitaminE: nutrients.vitaminE || 0,
-                magnesium: nutrients.magnesium || 0,
-                zinc: nutrients.zinc || 0,
-                source: 'USDA',
-              };
-              setMealLog(p => [item, ...p]);
-              setLoading(false);
-              return;
-            }
+      let fetchUrl = '';
+      if (USDA_KEY) {
+        fetchUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(searchTerm)}&api_key=${USDA_KEY}&dataType=Foundation,SR%20Legacy,Branded&pageSize=1`;
+      } else {
+        fetchUrl = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(searchTerm)}&search_simple=1&action=process&json=1&page_size=1`;
+      }
+
+      const resp = await fetch(fetchUrl);
+      if (resp.ok) {
+        const data = await resp.json();
+        
+        if (USDA_KEY && data.foods?.[0]) {
+          const food = data.foods[0];
+          const nutrients = {};
+          (food.foodNutrients || []).forEach(n => {
+            const key = USDA_NUTRIENT_MAP[n.nutrientId];
+            if (key) nutrients[key] = Math.round((n.value || 0) * scaleFactor * 10) / 10;
+          });
+          if (nutrients.calories) {
+            setMealLog(p => [{
+              name: `${food.description}${gramsMatch ? ` (${gramsMatch[1]}g)` : ''}`,
+              calories: Math.round(nutrients.calories || 0),
+              protein: nutrients.protein || 0,
+              carbs: nutrients.carbs || 0,
+              fat: nutrients.fat || 0,
+              fiber: nutrients.fiber || 0,
+              sodium: nutrients.sodium || 0,
+              source: 'USDA',
+            }, ...p]);
+            setLoading(false);
+            return;
+          }
+        } else if (!USDA_KEY && data.products?.[0]) {
+          const product = data.products[0];
+          const nut = product.nutriments || {};
+          if (nut['energy-kcal_100g']) {
+            setMealLog(p => [{
+              name: `${product.product_name || searchTerm}${gramsMatch ? ` (${gramsMatch[1]}g)` : ''}`,
+              calories: Math.round((nut['energy-kcal_100g'] || 0) * scaleFactor),
+              protein: Math.round((nut['proteins_100g'] || 0) * scaleFactor * 10) / 10,
+              carbs: Math.round((nut['carbohydrates_100g'] || 0) * scaleFactor * 10) / 10,
+              fat: Math.round((nut['fat_100g'] || 0) * scaleFactor * 10) / 10,
+              fiber: Math.round((nut['fiber_100g'] || 0) * scaleFactor * 10) / 10,
+              sodium: Math.round((nut['sodium_100g'] || 0) * 1000 * scaleFactor), // OpenFoodFacts is in g, convert to mg
+              source: 'OpenFoodFacts',
+            }, ...p]);
+            setLoading(false);
+            return;
           }
         }
-      } catch (_) { }
-    }
+      }
+    } catch (_) { }
 
     // ── Absolute Fallback ─────────────────────────────────────────────────────
     setMealLog(p => [{
@@ -3823,7 +3834,7 @@ function ModalShell({ title, onClose, children }) {
 }
 
 // ─── Profile Screen ───────────────────────────────────────────────────────────
-function ProfileScreen({ onClose, progressLogs, dietGoal, mealLog = [], weekPlan, user }) {
+function ProfileScreen({ onClose, progressLogs, dietGoal, mealLog = [], weekPlan, user, gymId }) {
   const [editing, setEditing] = useState(false);
   const initials = (user?.name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   const [photo, setPhoto] = useState(() => {
@@ -3868,6 +3879,21 @@ function ProfileScreen({ onClose, progressLogs, dietGoal, mealLog = [], weekPlan
   const [draft, setDraft] = useState({ ...profile });
   const sp = (k, v) => setDraft(p => ({ ...p, [k]: v }));
 
+  const [score, setScore] = useState(0);
+  useEffect(() => {
+    if (user?.uid && gymId && user.uid !== 'demo') {
+      import('./shared/firebase.js').then(async (f) => {
+        try {
+          const db = await f.getFBFirestore();
+          const doc = await db.doc(`members/${gymId}_${user.uid}`).get();
+          if (doc.exists) {
+            setScore(doc.data().engagementScore || 0);
+          }
+        } catch (err) { console.warn('Failed to fetch engagement score:', err); }
+      });
+    }
+  }, [user?.uid, gymId]);
+
   const last = progressLogs[progressLogs.length - 1];
   const first = progressLogs[0];
   const realStreak = calcStreak(progressLogs); // weeks
@@ -3878,11 +3904,11 @@ function ProfileScreen({ onClose, progressLogs, dietGoal, mealLog = [], weekPlan
 
   const stats = [
     { label: 'Current Weight', val: last ? `${last.weight} kg` : '—', color: C.accent },
-    { label: 'Body Fat', val: last ? `${last.bodyFat}%` : '—', color: C.orange },
-    { label: 'Height', val: last && last.height > 0 ? `${last.height} cm` : '—', color: C.teal },
+    { label: 'Engagement Score', val: `${score} / 100`, color: C.blue },
+    { label: 'Check-in Streak', val: realStreak > 0 ? `${realStreak} day${realStreak !== 1 ? 's' : ''} 🔥` : '—', color: C.orange },
     { label: 'Weight Change', val: weightChange !== null ? `${weightChange.toFixed(1)} kg` : '—', color: weightChange < 0 ? C.green : C.orange },
     { label: 'Entries Logged', val: `${progressLogs.length}`, color: C.purple },
-    { label: 'Check-in Streak', val: realStreak > 0 ? `${realStreak} day${realStreak !== 1 ? 's' : ''} 🔥` : '—', color: C.accent },
+    { label: 'Body Fat', val: last ? `${last.bodyFat}%` : '—', color: C.accent },
   ];
 
   // ── Achievement definitions (20 total) ───────────────────────────────────
@@ -5183,7 +5209,7 @@ export default function MemberApp({
       )}
 
       {showLogModal && <LogProgressModal onSave={handleSaveProgress} onClose={() => setShowLogModal(false)} darkMode={darkMode} />}
-      {profileScreen === 'profile'  && <ProfileScreen  onClose={() => setProfileScreen(null)} progressLogs={progressLogs} dietGoal={dietGoal} mealLog={mealLog} weekPlan={weekPlan} user={user} />}
+      {profileScreen === 'profile'  && <ProfileScreen  onClose={() => setProfileScreen(null)} progressLogs={progressLogs} dietGoal={dietGoal} mealLog={mealLog} weekPlan={weekPlan} user={user} gymId={gymId} />}
       {profileScreen === 'settings' && <SettingsScreen onClose={() => setProfileScreen(null)} onResetDiet={() => setDietGoal(null)} onResetWorkout={() => setWeekPlan(null)} darkMode={darkMode} onToggleTheme={onToggleTheme} />}
       {profileScreen === 'language' && <LanguageScreen onClose={() => setProfileScreen(null)} />}
 

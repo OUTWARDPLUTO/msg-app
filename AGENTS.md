@@ -26,15 +26,15 @@ activityLogs/{gymId}/events → uid, gymId, type, points, timestamp
 - Firestore multi-tenant security rules
 - MemberApp: workout (WGER), nutrition (USDA), progress, check-in
 - Android Capacitor build with ErrorBoundary + back nav
+- Razorpay payment integration (subscription screen is mocked)
+- Member profile/stats page (own score, streak, history)
+- QR code gym join
+- BUG: GymSettingsTab.jsx line 33 — useState used instead of useEffect
 
 ## What's MISSING ❌ (in priority order)
 1. Engagement score engine — scores exist in Firestore but are NEVER computed
    Formula: workout+10, diet+5, progress+8, checkin+3 | cap=100 | 30-day rolling
-2. Razorpay payment integration (subscription screen is mocked)
-3. TrainerView.jsx — empty stub, needs building
-4. Member profile/stats page (own score, streak, history)
-5. QR code gym join
-6. BUG: GymSettingsTab.jsx line 33 — useState used instead of useEffect
+2. TrainerView.jsx — empty stub, needs building
 
 ## Known Technical Debt
 - MemberApp.jsx is 221KB single file — needs splitting
