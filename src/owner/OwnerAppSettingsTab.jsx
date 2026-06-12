@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { Card, Lbl, SettingsRow } from '../shared/primitives.jsx';
+import { useTranslation } from 'react-i18next';
 
 const LANGS = [
   { code: 'en-IN', name: 'English', region: 'India', native: 'English' },
@@ -21,6 +22,8 @@ const LANGS = [
 ];
 
 export default function OwnerAppSettingsTab({ darkMode, onToggleTheme }) {
+  const { t, i18n } = useTranslation();
+  
   const [selectedLang, setSelectedLang] = useState(() => {
     try {
       return localStorage.getItem('msg_lang') || 'en-IN';
@@ -51,6 +54,7 @@ export default function OwnerAppSettingsTab({ darkMode, onToggleTheme }) {
 
   const saveLang = (code) => {
     setSelectedLang(code);
+    i18n.changeLanguage(code);
     try {
       localStorage.setItem('msg_lang', code);
     } catch {}
@@ -82,10 +86,10 @@ export default function OwnerAppSettingsTab({ darkMode, onToggleTheme }) {
 
   return (
     <div style={{ padding: '20px 16px 32px' }} className="msg-anim-fadein">
-      <div style={{ fontFamily: fn, fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: '-0.02em', marginBottom: 20 }}>App Settings</div>
+      <div style={{ fontFamily: fn, fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: '-0.02em', marginBottom: 20 }}>{t('settings.title')}</div>
 
       <Card style={{ padding: '16px', marginBottom: 16 }}>
-        <Lbl text="General Preferences" style={{ marginBottom: 10 }} />
+        <Lbl text={t('settings.generalPreferences')} style={{ marginBottom: 10 }} />
         
         {/* Theme row */}
         <div style={{
@@ -93,9 +97,9 @@ export default function OwnerAppSettingsTab({ darkMode, onToggleTheme }) {
           padding: '14px 0', borderBottom: `1px solid ${C.border}`,
         }}>
           <div>
-            <div style={{ fontSize: 14, color: C.text, fontWeight: 500 }}>App Theme</div>
+            <div style={{ fontSize: 14, color: C.text, fontWeight: 500 }}>{t('settings.appTheme')}</div>
             <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
-              {darkMode ? 'Dark mode enabled' : 'Light mode enabled'}
+              {darkMode ? t('settings.darkModeEnabled') : t('settings.lightModeEnabled')}
             </div>
           </div>
           <button onClick={onToggleTheme} style={{
@@ -103,7 +107,7 @@ export default function OwnerAppSettingsTab({ darkMode, onToggleTheme }) {
             color: '#111', border: 'none', fontFamily: fb, fontWeight: 700,
             fontSize: 11, cursor: 'pointer', boxShadow: C.accentShadow
           }}>
-            {darkMode ? '☀️ Light' : '🌙 Dark'}
+            {darkMode ? t('settings.btnLight') : t('settings.btnDark')}
           </button>
         </div>
 
@@ -113,8 +117,8 @@ export default function OwnerAppSettingsTab({ darkMode, onToggleTheme }) {
           padding: '14px 0', borderBottom: `1px solid ${C.border}`,
         }}>
           <div>
-            <div style={{ fontSize: 14, color: C.text, fontWeight: 500 }}>Weight Units</div>
-            <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>Units for products and records</div>
+            <div style={{ fontSize: 14, color: C.text, fontWeight: 500 }}>{t('settings.weightUnits')}</div>
+            <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{t('settings.weightUnitsDesc')}</div>
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
             {['kg', 'lbs'].map(u => {
@@ -139,8 +143,8 @@ export default function OwnerAppSettingsTab({ darkMode, onToggleTheme }) {
           padding: '14px 0',
         }}>
           <div>
-            <div style={{ fontSize: 14, color: C.text, fontWeight: 500 }}>Week Starts On</div>
-            <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>Calendar and reports layout</div>
+            <div style={{ fontSize: 14, color: C.text, fontWeight: 500 }}>{t('settings.weekStartsOn')}</div>
+            <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{t('settings.weekStartsOnDesc')}</div>
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
             {['Mon', 'Sun'].map(d => {
@@ -161,34 +165,34 @@ export default function OwnerAppSettingsTab({ darkMode, onToggleTheme }) {
       </Card>
 
       <Card style={{ padding: '16px', marginBottom: 16 }}>
-        <Lbl text="Owner Notifications" style={{ marginBottom: 10 }} />
+        <Lbl text={t('settings.ownerNotifications')} style={{ marginBottom: 10 }} />
         
         <SettingsRow
-          label="Push Notifications"
-          sub="Receive alerts on device"
+          label={t('settings.pushNotifications')}
+          sub={t('settings.pushNotificationsDesc')}
           on={settings.pushNotifications}
           onTap={() => tog('pushNotifications')}
         />
 
         <SettingsRow
-          label="Attendance Alerts"
-          sub="When members check in"
+          label={t('settings.attendanceAlerts')}
+          sub={t('settings.attendanceAlertsDesc')}
           on={settings.attendanceAlerts}
           onTap={() => tog('attendanceAlerts')}
         />
 
         <SettingsRow
-          label="Subscription Alerts"
-          sub="Notify when memberships are expiring"
+          label={t('settings.subscriptionAlerts')}
+          sub={t('settings.subscriptionAlertsDesc')}
           on={settings.subReminders}
           onTap={() => tog('subReminders')}
         />
       </Card>
 
       <Card style={{ padding: '16px' }}>
-        <Lbl text="Language Preference" style={{ marginBottom: 10 }} />
+        <Lbl text={t('settings.languagePreference')} style={{ marginBottom: 10 }} />
         <div style={{ fontSize: 12, color: C.sub, marginBottom: 12 }}>
-          Select the language for reports and the app interface.
+          {t('settings.languagePreferenceDesc')}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 180, overflowY: 'auto', paddingRight: 4 }} className="msg-scroll">
           {LANGS.map(l => {

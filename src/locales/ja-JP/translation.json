@@ -1,0 +1,31 @@
+{
+  "nav": {
+    "overview": "概要",
+    "members": "メンバー",
+    "attendance": "出席",
+    "store": "ストア",
+    "more": "もっと"
+  },
+  "settings": {
+    "title": "設定",
+    "generalPreferences": "一般設定",
+    "appTheme": "テーマ",
+    "darkModeEnabled": "ダークモード",
+    "lightModeEnabled": "ライトモード",
+    "btnLight": "☀️ ライト",
+    "btnDark": "🌙 ダーク",
+    "weightUnits": "重量単位",
+    "weightUnitsDesc": "製品の単位",
+    "weekStartsOn": "週の始まり",
+    "weekStartsOnDesc": "カレンダー",
+    "ownerNotifications": "通知",
+    "pushNotifications": "プッシュ通知",
+    "pushNotificationsDesc": "デバイスで受信",
+    "attendanceAlerts": "出席アラート",
+    "attendanceAlertsDesc": "チェックイン時",
+    "subscriptionAlerts": "サブスクリプション通知",
+    "subscriptionAlertsDesc": "期限切れ時",
+    "languagePreference": "言語",
+    "languagePreferenceDesc": "言語を選択"
+  }
+}

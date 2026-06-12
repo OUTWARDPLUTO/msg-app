@@ -1,0 +1,31 @@
+{
+  "nav": {
+    "overview": "अवलोकन",
+    "members": "सदस्य",
+    "attendance": "उपस्थिति",
+    "store": "स्टोर",
+    "more": "अधिक"
+  },
+  "settings": {
+    "title": "ऐप सेटिंग्स",
+    "generalPreferences": "सामान्य प्राथमिकताएं",
+    "appTheme": "ऐप थीम",
+    "darkModeEnabled": "डार्क मोड सक्षम है",
+    "lightModeEnabled": "लाइट मोड सक्षम है",
+    "btnLight": "☀️ लाइट",
+    "btnDark": "🌙 डार्क",
+    "weightUnits": "वजन इकाइयां",
+    "weightUnitsDesc": "उत्पादों और रिकॉर्ड के लिए इकाइयां",
+    "weekStartsOn": "सप्ताह शुरू होता है",
+    "weekStartsOnDesc": "कैलेंडर और रिपोर्ट लेआउट",
+    "ownerNotifications": "मालिक सूचनाएं",
+    "pushNotifications": "पुश सूचनाएं",
+    "pushNotificationsDesc": "डिवाइस पर अलर्ट प्राप्त करें",
+    "attendanceAlerts": "उपस्थिति अलर्ट",
+    "attendanceAlertsDesc": "जब सदस्य चेक-इन करते हैं",
+    "subscriptionAlerts": "सदस्यता अलर्ट",
+    "subscriptionAlertsDesc": "सदस्यता समाप्त होने पर सूचित करें",
+    "languagePreference": "भाषा प्राथमिकता",
+    "languagePreferenceDesc": "रिपोर्ट और ऐप इंटरफ़ेस के लिए भाषा चुनें।"
+  }
+}

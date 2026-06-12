@@ -1,0 +1,31 @@
+{
+  "nav": {
+    "overview": "ਸੰਖੇਪ",
+    "members": "ਮੈਂਬਰ",
+    "attendance": "ਹਾਜ਼ਰੀ",
+    "store": "ਸਟੋਰ",
+    "more": "ਹੋਰ"
+  },
+  "settings": {
+    "title": "ਐਪ ਸੈਟਿੰਗਜ਼",
+    "generalPreferences": "ਆਮ ਤਰਜੀਹਾਂ",
+    "appTheme": "ਥੀਮ",
+    "darkModeEnabled": "ਡਾਰਕ ਮੋਡ",
+    "lightModeEnabled": "ਲਾਈਟ ਮੋਡ",
+    "btnLight": "☀️ ਲਾਈਟ",
+    "btnDark": "🌙 ਡਾਰਕ",
+    "weightUnits": "ਵਜ਼ਨ ਇਕਾਈਆਂ",
+    "weightUnitsDesc": "ਉਤਪਾਦਾਂ ਲਈ",
+    "weekStartsOn": "ਹਫ਼ਤਾ ਸ਼ੁਰੂ",
+    "weekStartsOnDesc": "ਕੈਲੰਡਰ",
+    "ownerNotifications": "ਮਾਲਕ ਸੂਚਨਾਵਾਂ",
+    "pushNotifications": "ਪੁਸ਼ ਸੂਚਨਾਵਾਂ",
+    "pushNotificationsDesc": "ਅਲਰਟ ਪ੍ਰਾਪਤ ਕਰੋ",
+    "attendanceAlerts": "ਹਾਜ਼ਰੀ ਅਲਰਟ",
+    "attendanceAlertsDesc": "ਚੈੱਕ-ਇਨ ਵੇਲੇ",
+    "subscriptionAlerts": "ਮੈਂਬਰਸ਼ਿਪ ਅਲਰਟ",
+    "subscriptionAlertsDesc": "ਸਮਾਪਤੀ ਵੇਲੇ",
+    "languagePreference": "ਭਾਸ਼ਾ",
+    "languagePreferenceDesc": "ਭਾਸ਼ਾ ਚੁਣੋ"
+  }
+}

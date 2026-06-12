@@ -1,0 +1,31 @@
+{
+  "nav": {
+    "overview": "கண்ணோட்டம்",
+    "members": "உறுப்பினர்கள்",
+    "attendance": "வருகை",
+    "store": "கடை",
+    "more": "மேலும்"
+  },
+  "settings": {
+    "title": "பயன்பாட்டு அமைப்புகள்",
+    "generalPreferences": "பொது விருப்பங்கள்",
+    "appTheme": "தீம்",
+    "darkModeEnabled": "டார்க் மோட்",
+    "lightModeEnabled": "லைட் மோட்",
+    "btnLight": "☀️ லைட்",
+    "btnDark": "🌙 டார்க்",
+    "weightUnits": "எடை அலகுகள்",
+    "weightUnitsDesc": "அலகுகள்",
+    "weekStartsOn": "வாரம் தொடங்கும்",
+    "weekStartsOnDesc": "நாள்காட்டி",
+    "ownerNotifications": "அறிவிப்புகள்",
+    "pushNotifications": "புஷ் அறிவிப்புகள்",
+    "pushNotificationsDesc": "அறிவிப்புகளைப் பெறு",
+    "attendanceAlerts": "வருகை அறிவிப்புகள்",
+    "attendanceAlertsDesc": "செக்-இன் செய்யும் போது",
+    "subscriptionAlerts": "சந்தா அறிவிப்புகள்",
+    "subscriptionAlertsDesc": "காலாவதியாகும் போது",
+    "languagePreference": "மொழி விருப்பம்",
+    "languagePreferenceDesc": "மொழியைத் தேர்ந்தெடுக்கவும்"
+  }
+}

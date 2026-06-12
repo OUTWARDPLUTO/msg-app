@@ -18,6 +18,7 @@ import OwnerAccountTab from './OwnerAccountTab.jsx';
 import OwnerAppSettingsTab from './OwnerAppSettingsTab.jsx';
 import MemberDetailSheet from './MemberDetailSheet.jsx';
 import AmbientBackground from '../shared/AmbientBackground.jsx';
+import { useTranslation } from 'react-i18next';
 
 const NAV = [
   { key: 'overview',      label: 'Home',       icon: '🏠' },
@@ -164,6 +165,7 @@ function OwnerProfileDropdown({ user, gymName, gymCode, onLogout, onClose, onSet
 
 // ─── Owner Dashboard ──────────────────────────────────────────────────────────
 export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMode, onToggleTheme }) {
+  const { t } = useTranslation();
   const isDark = !C.isLight;
   const [tab, setTab]           = useState('overview');
   const [prevTab, setPrevTab]   = useState(null);
@@ -375,7 +377,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
                 letterSpacing: '0.04em', textTransform: 'uppercase',
                 transition: 'color 0.2s',
               }}>
-                {n.label}
+                {t(`nav.${n.key}`, n.label)}
               </span>
               <div style={{
                 width: active ? 18 : 0, height: 2, borderRadius: 1, background: C.accent,

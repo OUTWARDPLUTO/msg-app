@@ -1,0 +1,31 @@
+{
+  "nav": {
+    "overview": "Overview",
+    "members": "Members",
+    "attendance": "Attend.",
+    "store": "Store",
+    "more": "More"
+  },
+  "settings": {
+    "title": "App Settings",
+    "generalPreferences": "General Preferences",
+    "appTheme": "App Theme",
+    "darkModeEnabled": "Dark mode enabled",
+    "lightModeEnabled": "Light mode enabled",
+    "btnLight": "☀️ Light",
+    "btnDark": "🌙 Dark",
+    "weightUnits": "Weight Units",
+    "weightUnitsDesc": "Units for products and records",
+    "weekStartsOn": "Week Starts On",
+    "weekStartsOnDesc": "Calendar and reports layout",
+    "ownerNotifications": "Owner Notifications",
+    "pushNotifications": "Push Notifications",
+    "pushNotificationsDesc": "Receive alerts on device",
+    "attendanceAlerts": "Attendance Alerts",
+    "attendanceAlertsDesc": "When members check in",
+    "subscriptionAlerts": "Subscription Alerts",
+    "subscriptionAlertsDesc": "Notify when memberships are expiring",
+    "languagePreference": "Language Preference",
+    "languagePreferenceDesc": "Select the language for reports and the app interface."
+  }
+}

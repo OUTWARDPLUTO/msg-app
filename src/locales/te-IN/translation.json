@@ -1,0 +1,31 @@
+{
+  "nav": {
+    "overview": "అవలోకనం",
+    "members": "సభ్యులు",
+    "attendance": "హాజరు",
+    "store": "స్టోర్",
+    "more": "మరింత"
+  },
+  "settings": {
+    "title": "యాప్ సెట్టింగ్‌లు",
+    "generalPreferences": "సాధారణ ప్రాధాన్యతలు",
+    "appTheme": "థీమ్",
+    "darkModeEnabled": "డార్క్ మోడ్",
+    "lightModeEnabled": "లైట్ మోడ్",
+    "btnLight": "☀️ లైట్",
+    "btnDark": "🌙 డార్క్",
+    "weightUnits": "బరువు యూనిట్లు",
+    "weightUnitsDesc": "యూనిట్లు",
+    "weekStartsOn": "వారం ప్రారంభం",
+    "weekStartsOnDesc": "క్యాలెండర్",
+    "ownerNotifications": "నోటిఫికేషన్లు",
+    "pushNotifications": "పుష్ నోటిఫికేషన్లు",
+    "pushNotificationsDesc": "అలర్ట్‌లను పొందండి",
+    "attendanceAlerts": "హాజరు అలర్ట్‌లు",
+    "attendanceAlertsDesc": "చెక్-ఇన్ చేసినప్పుడు",
+    "subscriptionAlerts": "సబ్‌స్క్రిప్షన్ అలర్ట్‌లు",
+    "subscriptionAlertsDesc": "గడువు ముగిసినప్పుడు",
+    "languagePreference": "భాష",
+    "languagePreferenceDesc": "భాషను ఎంచుకోండి"
+  }
+}

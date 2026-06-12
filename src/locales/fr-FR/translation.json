@@ -1,0 +1,31 @@
+{
+  "nav": {
+    "overview": "Aperçu",
+    "members": "Membres",
+    "attendance": "Présence",
+    "store": "Boutique",
+    "more": "Plus"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "generalPreferences": "Préférences générales",
+    "appTheme": "Thème",
+    "darkModeEnabled": "Mode sombre activé",
+    "lightModeEnabled": "Mode clair activé",
+    "btnLight": "☀️ Clair",
+    "btnDark": "🌙 Sombre",
+    "weightUnits": "Unités de poids",
+    "weightUnitsDesc": "Unités pour les produits",
+    "weekStartsOn": "La semaine commence",
+    "weekStartsOnDesc": "Calendrier et rapports",
+    "ownerNotifications": "Notifications",
+    "pushNotifications": "Notifications push",
+    "pushNotificationsDesc": "Recevoir des alertes",
+    "attendanceAlerts": "Alertes de présence",
+    "attendanceAlertsDesc": "Quand les membres pointent",
+    "subscriptionAlerts": "Alertes d'abonnement",
+    "subscriptionAlertsDesc": "Notifier l'expiration",
+    "languagePreference": "Préférence de langue",
+    "languagePreferenceDesc": "Sélectionnez la langue de l'application."
+  }
+}

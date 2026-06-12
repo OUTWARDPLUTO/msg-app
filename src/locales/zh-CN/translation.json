@@ -1,0 +1,31 @@
+{
+  "nav": {
+    "overview": "概览",
+    "members": "会员",
+    "attendance": "出勤",
+    "store": "商店",
+    "more": "更多"
+  },
+  "settings": {
+    "title": "设置",
+    "generalPreferences": "常规设置",
+    "appTheme": "主题",
+    "darkModeEnabled": "深色模式",
+    "lightModeEnabled": "浅色模式",
+    "btnLight": "☀️ 浅色",
+    "btnDark": "🌙 深色",
+    "weightUnits": "重量单位",
+    "weightUnitsDesc": "产品单位",
+    "weekStartsOn": "每周开始于",
+    "weekStartsOnDesc": "日历",
+    "ownerNotifications": "通知",
+    "pushNotifications": "推送通知",
+    "pushNotificationsDesc": "在设备上接收",
+    "attendanceAlerts": "出勤提醒",
+    "attendanceAlertsDesc": "签到时",
+    "subscriptionAlerts": "订阅提醒",
+    "subscriptionAlertsDesc": "到期时",
+    "languagePreference": "语言",
+    "languagePreferenceDesc": "选择语言"
+  }
+}

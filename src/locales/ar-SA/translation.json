@@ -1,0 +1,31 @@
+{
+  "nav": {
+    "overview": "ملخص",
+    "members": "الأعضاء",
+    "attendance": "حضور",
+    "store": "متجر",
+    "more": "المزيد"
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "generalPreferences": "تفضيلات عامة",
+    "appTheme": "المظهر",
+    "darkModeEnabled": "الوضع الداكن",
+    "lightModeEnabled": "الوضع الفاتح",
+    "btnLight": "☀️ فاتح",
+    "btnDark": "🌙 داكن",
+    "weightUnits": "وحدات الوزن",
+    "weightUnitsDesc": "وحدات",
+    "weekStartsOn": "يبدأ الأسبوع",
+    "weekStartsOnDesc": "التقويم",
+    "ownerNotifications": "إشعارات",
+    "pushNotifications": "إشعارات الدفع",
+    "pushNotificationsDesc": "استلام التنبيهات",
+    "attendanceAlerts": "تنبيهات الحضور",
+    "attendanceAlertsDesc": "عند تسجيل الدخول",
+    "subscriptionAlerts": "تنبيهات الاشتراك",
+    "subscriptionAlertsDesc": "عند انتهاء الصلاحية",
+    "languagePreference": "اللغة",
+    "languagePreferenceDesc": "اختر لغة"
+  }
+}

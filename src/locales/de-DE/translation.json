@@ -1,0 +1,31 @@
+{
+  "nav": {
+    "overview": "Übersicht",
+    "members": "Mitglieder",
+    "attendance": "Anwesenheit",
+    "store": "Laden",
+    "more": "Mehr"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "generalPreferences": "Allgemeine Einstellungen",
+    "appTheme": "App-Design",
+    "darkModeEnabled": "Dunkelmodus aktiv",
+    "lightModeEnabled": "Heller Modus aktiv",
+    "btnLight": "☀️ Hell",
+    "btnDark": "🌙 Dunkel",
+    "weightUnits": "Gewichtseinheiten",
+    "weightUnitsDesc": "Einheiten für Produkte",
+    "weekStartsOn": "Wochenstart",
+    "weekStartsOnDesc": "Kalender- und Berichtslayout",
+    "ownerNotifications": "Benachrichtigungen",
+    "pushNotifications": "Push-Benachrichtigungen",
+    "pushNotificationsDesc": "Benachrichtigungen auf dem Gerät empfangen",
+    "attendanceAlerts": "Anwesenheitsalarme",
+    "attendanceAlertsDesc": "Wenn Mitglieder einchecken",
+    "subscriptionAlerts": "Abo-Benachrichtigungen",
+    "subscriptionAlertsDesc": "Bei Ablauf benachrichtigen",
+    "languagePreference": "Spracheinstellungen",
+    "languagePreferenceDesc": "Wählen Sie die Sprache für die App."
+  }
+}

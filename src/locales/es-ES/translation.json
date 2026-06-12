@@ -1,0 +1,31 @@
+{
+  "nav": {
+    "overview": "Resumen",
+    "members": "Miembros",
+    "attendance": "Asistencia",
+    "store": "Tienda",
+    "more": "Más"
+  },
+  "settings": {
+    "title": "Ajustes de la aplicación",
+    "generalPreferences": "Preferencias generales",
+    "appTheme": "Tema",
+    "darkModeEnabled": "Modo oscuro activado",
+    "lightModeEnabled": "Modo claro activado",
+    "btnLight": "☀️ Claro",
+    "btnDark": "🌙 Oscuro",
+    "weightUnits": "Unidades de peso",
+    "weightUnitsDesc": "Unidades para productos",
+    "weekStartsOn": "Semana empieza el",
+    "weekStartsOnDesc": "Calendario y reportes",
+    "ownerNotifications": "Notificaciones del propietario",
+    "pushNotifications": "Notificaciones push",
+    "pushNotificationsDesc": "Recibir alertas en el dispositivo",
+    "attendanceAlerts": "Alertas de asistencia",
+    "attendanceAlertsDesc": "Cuando los miembros registran su entrada",
+    "subscriptionAlerts": "Alertas de suscripción",
+    "subscriptionAlertsDesc": "Avisar cuando expiren",
+    "languagePreference": "Preferencia de idioma",
+    "languagePreferenceDesc": "Seleccione el idioma de la aplicación."
+  }
+}

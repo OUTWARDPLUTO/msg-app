@@ -1,0 +1,31 @@
+{
+  "nav": {
+    "overview": "ઝાંખી",
+    "members": "સભ્યો",
+    "attendance": "હાજરી",
+    "store": "સ્ટોર",
+    "more": "વધુ"
+  },
+  "settings": {
+    "title": "એપ્લિકેશન સેટિંગ્સ",
+    "generalPreferences": "સામાન્ય પસંદગીઓ",
+    "appTheme": "થીમ",
+    "darkModeEnabled": "ડાર્ક મોડ ચાલુ",
+    "lightModeEnabled": "લાઇટ મોડ ચાલુ",
+    "btnLight": "☀️ લાઇટ",
+    "btnDark": "🌙 ડાર્ક",
+    "weightUnits": "વજન એકમો",
+    "weightUnitsDesc": "એકમો",
+    "weekStartsOn": "અઠવાડિયું શરૂ થાય છે",
+    "weekStartsOnDesc": "કૅલેન્ડર",
+    "ownerNotifications": "માલિક સૂચનાઓ",
+    "pushNotifications": "પુશ સૂચનાઓ",
+    "pushNotificationsDesc": "ચેતવણીઓ મેળવો",
+    "attendanceAlerts": "હાજરી ચેતવણીઓ",
+    "attendanceAlertsDesc": "ચેક-ઇન પર",
+    "subscriptionAlerts": "સબ્સ્ક્રિપ્શન ચેતવણીઓ",
+    "subscriptionAlertsDesc": "સમાપ્તિ પર સૂચના",
+    "languagePreference": "ભાષા પસંદગી",
+    "languagePreferenceDesc": "ભાષા પસંદ કરો."
+  }
+}
