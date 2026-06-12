@@ -17,6 +17,7 @@ export default function MemberListTab({ gymId, setBackHandler, onViewMemberProfi
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(null); // member for detail sheet
+  const [activeTab, setActiveTab] = useState('All');
 
   useEffect(() => {
     if (selected && setBackHandler) {
@@ -76,8 +77,6 @@ export default function MemberListTab({ gymId, setBackHandler, onViewMemberProfi
   if (selected) {
     return <MemberDetailSheet member={selected} gymId={gymId} onClose={() => setSelected(null)} />;
   }
-
-  const [activeTab, setActiveTab] = useState('All');
 
   return (
     <div style={{ paddingBottom: 100, background: C.bg, minHeight: '100vh' }}>
