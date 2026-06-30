@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { C, fn, fb, MC } from '../shared/theme.js';
 import { AnatomicalFigure } from '../AnatomicalFigure';
-import { Card, Tag, Lbl } from './primitives.jsx';
+import { Card, Tag, Lbl, Hd, ExCard } from './primitives.jsx';
 import { EX } from './constants.js';
 // ─── Attendance Heat Map (30-Day Grid) ─────────────────────────────────────────
 // Renders a static, non-scrollable 10 columns × 3 rows grid representing the last 30 days
