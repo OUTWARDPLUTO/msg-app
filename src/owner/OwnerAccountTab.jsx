@@ -3,7 +3,7 @@ import { C, fn, fb } from '../shared/theme.js';
 import { Card, Lbl, UserAvatar } from '../shared/primitives.jsx';
 import { updateUserDoc } from '../shared/firebase.js';
 
-export default function OwnerAccountTab({ user, onLogout }) {
+export default function OwnerAccountTab({ user, onLogout, onBack }) {
   const [name, setName] = useState(user?.name || 'Owner');
   const [photo, setPhoto] = useState(() => {
     try { return localStorage.getItem('msg_profile_photo') || user?.photo || null; } catch { return user?.photo || null; }
@@ -58,7 +58,7 @@ export default function OwnerAccountTab({ user, onLogout }) {
       {/* Header */}
       <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 20px) 20px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => {}} style={{ background: 'none', border: 'none', color: C.text, padding: 0, cursor: 'pointer', display: 'flex' }}>
+          <button onClick={onBack} style={{ background: 'none', border: 'none', color: C.text, padding: 0, cursor: 'pointer', display: 'flex' }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
           </button>
           <div style={{ fontFamily: fb, fontSize: 20, fontWeight: 700, color: C.text }}>My Account</div>

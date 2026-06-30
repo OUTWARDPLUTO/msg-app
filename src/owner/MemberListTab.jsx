@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
-import { Card, Lbl, ScoreRing, StatusBadge, ModalShell, Spinner } from '../shared/primitives.jsx';
+import { Card, Lbl, ScoreRing, StatusBadge, ModalShell, Spinner, Skeleton } from '../shared/primitives.jsx';
 import { getFBFirestore } from '../shared/firebase.js';
 import MemberDetailSheet from './MemberDetailSheet.jsx';
+import AlertsTab from './AlertsTab.jsx';
+import RevenueDetail from './RevenueDetail.jsx';
 
 function getJsDate(field) {
   if (!field) return null;
@@ -12,7 +14,9 @@ function getJsDate(field) {
   return isNaN(d.getTime()) ? null : d;
 }
 
-export default function MemberListTab({ gymId, setBackHandler, onViewMemberProfile }) {
+export default function MemberListTab({ gymId, setBackHandler, onViewMemberProfile, subTab, setSubTab }) {
+  const _subTab = subTab || 'directory';
+  const _setSubTab = setSubTab || (() => {});
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
@@ -72,7 +76,7 @@ export default function MemberListTab({ gymId, setBackHandler, onViewMemberProfi
     return (m.name || '').toLowerCase().includes(q) || (m.email || '').toLowerCase().includes(q) || (m.phone || '').includes(q);
   });
 
-  if (loading) return <Spinner text="Loading members…" />;
+  // remove early return for loading
 
   if (selected) {
     return <MemberDetailSheet member={selected} gymId={gymId} onClose={() => setSelected(null)} />;
@@ -80,20 +84,31 @@ export default function MemberListTab({ gymId, setBackHandler, onViewMemberProfi
 
   return (
     <div style={{ paddingBottom: 100, background: C.bg, minHeight: '100vh' }}>
-      {/* Header */}
-      <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 20px) 20px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button style={{ background: 'none', border: 'none', color: C.text, padding: 0, cursor: 'pointer', display: 'flex' }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      {/* Sub-Nav */}
+      <div style={{ padding: '0 20px', marginBottom: 16, display: 'flex', gap: 12, overflowX: 'auto' }} className="msg-scroll">
+        {[
+          { id: 'directory', label: 'Directory' },
+          { id: 'alerts', label: 'At-Risk Alerts' },
+          { id: 'stats', label: 'Revenue Stats' }
+        ].map(t => (
+          <button key={t.id} onClick={() => _setSubTab(t.id)} style={{
+            background: _subTab === t.id ? C.text : C.s1,
+            color: _subTab === t.id ? C.bg : C.text,
+            border: `1px solid ${_subTab === t.id ? C.text : C.border}`,
+            padding: '8px 16px', borderRadius: 20, fontFamily: fb, fontSize: 13,
+            cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0
+          }}>
+            {t.label}
           </button>
-          <div style={{ fontFamily: fb, fontSize: 20, fontWeight: 700, color: C.text }}>Members</div>
-        </div>
-        <button style={{ background: 'none', border: 'none', color: C.text, padding: 0, cursor: 'pointer', display: 'flex' }}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
-        </button>
+        ))}
       </div>
 
-      {/* Search */}
+      {_subTab === 'alerts' && <AlertsTab gymId={gymId} onViewMemberProfile={onViewMemberProfile} hideHeader={true} />}
+      {_subTab === 'stats' && <RevenueDetail gymId={gymId} hideHeader={true} />}
+
+      {_subTab === 'directory' && (
+        <>
+          {/* Search */}
       <div style={{ padding: '0 20px', marginBottom: 16 }}>
         <div style={{ position: 'relative' }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)' }}>
@@ -143,15 +158,27 @@ export default function MemberListTab({ gymId, setBackHandler, onViewMemberProfi
         ))}
       </div>
 
-      {/* Member List */}
-      <div style={{ padding: '0 20px' }}>
-        {filtered.length === 0 ? (
+          {/* Member List */}
+          <div style={{ padding: '0 20px' }}>
+            {loading ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {[1, 2, 3, 4, 5].map(i => (
+                  <div key={i} style={{ display: 'flex', gap: 16, alignItems: 'center', padding: '16px 0', borderBottom: `1px solid ${C.border}` }}>
+                    <Skeleton circle size={48} stagger={i} />
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <Skeleton width="60%" height={16} stagger={i} />
+                      <Skeleton width="40%" height={12} stagger={i} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filtered.length === 0 ? (
           <div style={{ color: C.muted, fontSize: 14, textAlign: 'center', padding: '32px 0' }}>
             No members found.
           </div>
         ) : filtered.map(m => {
-          // Map real status to mockup labels. In mockup "Active" is red, "Freeze" is grey.
-          const statusText = computeStatus(m) === 'inactive' ? 'Inactive' : 'Active';
+          // Use the actual subscription status to match MemberDetailSheet
+          const statusText = (m.status || 'active') === 'inactive' ? 'Inactive' : 'Active';
           const statusColor = statusText === 'Active' ? C.accent : C.sub;
           
           return (
@@ -190,9 +217,9 @@ export default function MemberListTab({ gymId, setBackHandler, onViewMemberProfi
             </button>
           );
         })}
-      </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
-
-// Extracted to separate file MemberDetailSheet.jsx

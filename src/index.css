@@ -24,3 +24,67 @@
     display: none !important;
   }
 }
+
+/* ─── Premium Aesthetics (Glassmorphism, Animations, Skeletons) ─── */
+
+.msg-glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.msg-glass-light {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.msg-hover-ring:hover {
+  box-shadow: 0 0 0 2px rgba(229, 57, 53, 0.4);
+  transform: translateY(-2px);
+  transition: all 0.2s ease-out;
+}
+
+@keyframes skeletonShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.msg-skeleton {
+  background: linear-gradient(90deg, rgba(163, 163, 163, 0.1) 25%, rgba(163, 163, 163, 0.2) 50%, rgba(163, 163, 163, 0.1) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s infinite linear;
+  border-radius: 8px;
+}
+
+.msg-skeleton-dark {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 25%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.05) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s infinite linear;
+  border-radius: 8px;
+}
+
+.msg-fadein-up {
+  animation: fadeinup 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeinup {
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Stagger delays */
+.msg-stagger-1 { animation-delay: 0.05s; }
+.msg-stagger-2 { animation-delay: 0.10s; }
+.msg-stagger-3 { animation-delay: 0.15s; }
+.msg-stagger-4 { animation-delay: 0.20s; }
+
+@keyframes msg-scale-up {
+  0% { opacity: 0; transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.msg-scale-up {
+  animation: msg-scale-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

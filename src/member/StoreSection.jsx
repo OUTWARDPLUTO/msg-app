@@ -235,7 +235,7 @@ export default function StoreSection({ gymId, setBackHandler }) {
                 </div>
                 <div style={{
                   display: 'inline-flex', padding: '2px 7px', borderRadius: 5, fontSize: 8,
-                  fontFamily: fb, fontWeight: 700,
+                  fontFamily: fb, fontWeight: 700, whiteSpace: 'nowrap',
                   background: p.inStock ? C.green + '18' : C.red + '18',
                   color: p.inStock ? C.green : C.red,
                   border: `1px solid ${p.inStock ? C.green + '33' : C.red + '33'}`,

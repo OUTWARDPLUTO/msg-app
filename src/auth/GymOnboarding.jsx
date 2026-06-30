@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
-import { Spinner } from '../shared/primitives.jsx';
+import { Spinner, Skeleton } from '../shared/primitives.jsx';
 import {
   getGymByCode, createGym, createMemberDoc,
   setUserDoc, serverTimestamp, saveSubscription, getFBFirestore,
@@ -40,6 +40,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
   const [createdGym, setCreatedGym] = useState(null);
   const [copied, setCopied]     = useState(false);
   const [subPlan, setSubPlan]   = useState(null); // 'monthly'|'yearly'
+  const [showClose, setShowClose] = useState(false);
 
   // Scanner States for QR Join
   const [showScanner, setShowScanner] = useState(false);
@@ -52,9 +53,19 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
   // Pre-warm Firestore so scripts are loaded before user submits gym code
   useEffect(() => { getFBFirestore().catch(() => {}); }, []);
 
+  useEffect(() => {
+    if (screen === 'subscription') {
+      const t = setTimeout(() => setShowClose(true), 5000);
+      return () => clearTimeout(t);
+    } else {
+      setShowClose(false);
+    }
+  }, [screen]);
+
   // ── Join gym by code (members) ─────────────────────────────────────────────
   const handleJoin = async (overrideCode = null, overrideRole = 'member') => {
-    const code = (overrideCode || gymCode).trim().toUpperCase();
+    const codeStr = typeof overrideCode === 'string' ? overrideCode : gymCode;
+    const code = codeStr.trim().toUpperCase();
     if (code.length !== 6) { setError('Please enter a valid 6-character gym code.'); return; }
     setScreen('loading'); setError('');
     try {
@@ -360,7 +371,14 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
     </div>
   );
 
-  if (screen === 'loading') return wrap(<Spinner text="Setting up your gym…" />);
+  if (screen === 'loading') return wrap(
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, marginTop: 40 }}>
+      <Skeleton width="100%" height={120} borderRadius={20} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {[1, 2, 3].map(i => <Skeleton key={i} height={80} borderRadius={16} stagger={i} />)}
+      </div>
+    </div>
+  );
 
   // ── Success: show gym code ─────────────────────────────────────────────────
   if (screen === 'success') return wrap(
@@ -439,6 +457,21 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
         </div>
       </div>
 
+      {showClose && (
+        <button
+          onClick={() => setScreen('success')}
+          style={{
+            position: 'absolute', top: 20, right: 20,
+            background: C.bg, border: `1px solid ${C.border}`,
+            borderRadius: '50%', width: 36, height: 36,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', color: C.text, zIndex: 10
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      )}
+
       {/* Early adopter banner */}
       <div className="ob-card-2" style={{
         background: `linear-gradient(135deg, ${C.accent}22, ${C.orange}18)`,
@@ -475,7 +508,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
               {subPlan === 'trial' && <span style={{ fontSize: 12, color: C.accent }}>✓</span>}
             </div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-              <span style={{ fontFamily: fn, fontSize: 28, fontWeight: 800, color: C.accent }}>₹149</span>
+              <span style={{ fontFamily: fn, fontSize: 28, fontWeight: 800, color: C.accent }}>₹249</span>
             </div>
           </div>
           <div style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -508,12 +541,8 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
               {subPlan === 'monthly' && <span style={{ fontSize: 12, color: C.accent }}>✓</span>}
             </div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-              <span style={{ fontFamily: fn, fontSize: 28, fontWeight: 800, color: C.accent }}>₹499</span>
+              <span style={{ fontFamily: fn, fontSize: 28, fontWeight: 800, color: C.accent }}>₹999</span>
               <span style={{ fontSize: 13, color: C.muted }}>/month</span>
-            </div>
-            <div style={{ marginTop: 4 }}>
-              <span style={{ fontSize: 12, color: C.muted, textDecoration: 'line-through', marginRight: 6 }}>₹999/month</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: C.green, background: C.green + '20', padding: '1px 7px', borderRadius: 4 }}>50% OFF</span>
             </div>
           </div>
           <div style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -554,17 +583,17 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
               {subPlan === 'yearly' && <span style={{ fontSize: 12, color: C.accent }}>✓</span>}
             </div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-              <span style={{ fontFamily: fn, fontSize: 28, fontWeight: 800, color: C.accent }}>₹4,199</span>
+              <span style={{ fontFamily: fn, fontSize: 28, fontWeight: 800, color: C.accent }}>₹7,999</span>
               <span style={{ fontSize: 13, color: C.muted }}>/year</span>
             </div>
             <div style={{ marginTop: 4 }}>
               <span style={{ fontSize: 12, color: C.muted, textDecoration: 'line-through', marginRight: 6 }}>₹11,988/year</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: C.green, background: C.green + '20', padding: '1px 7px', borderRadius: 4 }}>65% OFF</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: C.green, background: C.green + '20', padding: '1px 7px', borderRadius: 4 }}>33% OFF</span>
             </div>
           </div>
           <div style={{ textAlign: 'right', flexShrink: 0 }}>
-            <div style={{ fontSize: 10, fontFamily: fb, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Just ₹350/mo</div>
-            <div style={{ fontSize: 11, color: C.sub, marginTop: 4 }}>Save ₹7,789</div>
+            <div style={{ fontSize: 10, fontFamily: fb, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Just ₹666/mo</div>
+            <div style={{ fontSize: 11, color: C.sub, marginTop: 4 }}>Save ₹3,989</div>
           </div>
         </div>
       </button>
@@ -674,7 +703,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
             flex: 1, boxSizing: 'border-box', background: C.s2,
             border: `2px solid ${gymCode.length === 6 ? C.accent : C.border}`,
             borderRadius: 14, padding: '16px', color: C.text, fontSize: 24,
-            fontFamily: fn, fontWeight: 800, outline: 'none', letterSpacing: '0.3em',
+            fontFamily: fn, fontWeight: 800, outline: 'none', letterSpacing: '0.1em',
             textAlign: 'center', textTransform: 'uppercase',
             transition: 'border-color 0.2s',
           }}

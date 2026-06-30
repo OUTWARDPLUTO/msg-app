@@ -1,6 +1,7 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { Card } from './primitives.jsx';
+import { sanitizeString, validateNumber } from '../shared/security.js';
 // ─── Profile Setup Screen (shown once after first signup) ─────────────────────
 export default function ProfileSetupScreen({ user, onComplete }) {
   const [form, setForm] = useState({
@@ -93,8 +94,18 @@ export default function ProfileSetupScreen({ user, onComplete }) {
           <button onClick={() => setStep(s => s - 1)} style={{ flex: 1, padding: '14px', background: C.s2, border: `1px solid ${C.border}`, borderRadius: 14, color: C.sub, fontFamily: fn, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>← Back</button>
         )}
         <button onClick={() => {
-          if (isLast) onComplete({ ...user, name: form.name || user?.name, profile: form });
-          else setStep(s => s + 1);
+          if (isLast) {
+            const safeForm = {
+              ...form,
+              name: sanitizeString(form.name, 100),
+              city: sanitizeString(form.city, 100),
+              age: validateNumber(form.age, 10, 120, 20),
+              height: validateNumber(form.height, 50, 300, 170),
+              currentWeight: validateNumber(form.currentWeight, 20, 500, 70),
+              targetWeight: validateNumber(form.targetWeight, 20, 500, 70),
+            };
+            onComplete({ ...user, name: safeForm.name || user?.name, profile: safeForm });
+          } else setStep(s => s + 1);
         }} disabled={!canNext} style={{
           flex: 2, padding: '14px', background: canNext ? C.accent : C.s4, color: canNext ? '#111' : C.muted,
           border: 'none', borderRadius: 14, fontFamily: fn, fontWeight: 800, fontSize: 14,

@@ -47,7 +47,7 @@ import TrainerView      from './owner/TrainerView.jsx';
 
 // ── Member App (lazy — bundles all existing sections)
 const MemberApp = lazy(() => import('./MemberApp.jsx'));
-import { Spinner } from './shared/primitives.jsx';
+import { Spinner, Skeleton } from './shared/primitives.jsx';
 
 // ────────────────────────────────────────────────────────────────────────────
 // Persistence helpers
@@ -306,6 +306,9 @@ export default function MSG() {
       setDietGoal(null); setMealLog([]); setWeekPlan(null); setProgressLogs([]);
       setGymId(null); setRole('member');
       save('msg_gym_id', null); save('msg_role', 'member');
+      localStorage.removeItem('msg_setup_done');
+      localStorage.removeItem('msg_profile_details');
+      localStorage.removeItem('msg_profile_photo');
     }
     // Normalise name — Google displayName can be null
     const safeUser = { ...u, name: u.name || u.email?.split('@')[0] || 'User' };
@@ -327,6 +330,9 @@ export default function MSG() {
     setRole('member');      save('msg_role', 'member');
     setGymName('');         save('msg_gym_name', '');
     setMealLog([]);         setProgressLogs([]);  setDietGoal(null);  setWeekPlan(null);
+    localStorage.removeItem('msg_setup_done');
+    localStorage.removeItem('msg_profile_details');
+    localStorage.removeItem('msg_profile_photo');
     gymResolvedRef.current = false;
     // Background cleanup (fire-and-forget — errors are swallowed intentionally)
     try {
@@ -342,7 +348,7 @@ export default function MSG() {
     }
     try {
       GoogleAuth.initialize({
-        clientId: '924373588150-g5hhp1hiu6db6tduir3fr9ekfqkavhir.apps.googleusercontent.com',
+        clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
         scopes: ['profile', 'email'],
         grantOfflineAccess: true,
       }).then(() => {
@@ -391,8 +397,22 @@ export default function MSG() {
   // ─────────────────────────────────────────────────────────────────────────
 
   const fullPageLoader = (
-    <div style={{ background: C.bg, height: '100dvh', maxWidth: 430, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <Spinner text="Loading MSG…" />
+    <div style={{ background: C.bg, height: '100dvh', maxWidth: 430, margin: '0 auto', padding: 'env(safe-area-inset-top) 20px 20px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 20 }}>
+        <div>
+          <Skeleton width={160} height={28} style={{ marginBottom: 8 }} />
+          <Skeleton width={100} height={16} />
+        </div>
+        <Skeleton circle width={44} height={44} />
+      </div>
+      <Skeleton width="100%" height={160} borderRadius={24} />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <Skeleton height={140} borderRadius={20} />
+        <Skeleton height={140} borderRadius={20} />
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {[1, 2, 3].map(i => <Skeleton key={i} height={80} borderRadius={16} stagger={i} />)}
+      </div>
     </div>
   );
 

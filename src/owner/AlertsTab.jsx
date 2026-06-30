@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
-import { Card, Lbl, StatusBadge, Spinner } from '../shared/primitives.jsx';
+import { Card, Lbl, StatusBadge, Spinner, Skeleton } from '../shared/primitives.jsx';
 import { getFBFirestore } from '../shared/firebase.js';
 
-export default function AlertsTab({ gymId, onViewMemberProfile }) {
+export default function AlertsTab({ gymId, onViewMemberProfile, onBack, hideHeader }) {
   const [inactive, setInactive] = useState([]);   // 5+ days
   const [atRisk, setAtRisk]     = useState([]);   // 3-5 days
   const [loading, setLoading]   = useState(true);
@@ -38,14 +38,16 @@ export default function AlertsTab({ gymId, onViewMemberProfile }) {
   return (
     <div style={{ paddingBottom: 100, background: C.bg, minHeight: '100vh' }}>
       {/* Header */}
-      <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 20px) 20px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => {}} style={{ background: 'none', border: 'none', color: C.text, padding: 0, cursor: 'pointer', display: 'flex' }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-          </button>
-          <div style={{ fontFamily: fb, fontSize: 20, fontWeight: 700, color: C.text }}>Alerts</div>
+      {!hideHeader && (
+        <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 20px) 20px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button onClick={onBack} style={{ background: 'none', border: 'none', color: C.text, padding: 0, cursor: 'pointer', display: 'flex' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+            <div style={{ fontFamily: fb, fontSize: 20, fontWeight: 700, color: C.text }}>Alerts</div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Threshold selector */}
       <div style={{ padding: '0 20px', marginBottom: 24 }}>
@@ -68,7 +70,20 @@ export default function AlertsTab({ gymId, onViewMemberProfile }) {
         </div>
       </div>
 
-      {loading ? <Spinner text="Checking members…" /> : (
+      {loading ? (
+        <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {[1, 2, 3].map(i => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px', background: C.s1, border: `1px solid ${C.border}`, borderRadius: 16 }}>
+              <Skeleton circle width={40} height={40} stagger={i} />
+              <div style={{ flex: 1 }}>
+                <Skeleton width={120} height={16} stagger={i} style={{ marginBottom: 6 }} />
+                <Skeleton width={80} height={12} stagger={i} />
+              </div>
+              <Skeleton width={64} height={24} borderRadius={8} stagger={i} />
+            </div>
+          ))}
+        </div>
+      ) : (
         <>
           {/* At-Risk Section */}
           <Section

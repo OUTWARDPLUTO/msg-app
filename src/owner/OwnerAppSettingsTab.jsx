@@ -21,7 +21,7 @@ const LANGS = [
   { code: 'ar-SA', name: 'Arabic', region: 'Saudi Arabia', native: 'العربية' },
 ];
 
-export default function OwnerAppSettingsTab({ darkMode, onToggleTheme }) {
+export default function OwnerAppSettingsTab({ darkMode, onToggleTheme, onBack, onShowTutorial }) {
   const { t, i18n } = useTranslation();
   
   const [selectedLang, setSelectedLang] = useState(() => {
@@ -87,11 +87,24 @@ export default function OwnerAppSettingsTab({ darkMode, onToggleTheme }) {
   return (
     <div style={{ paddingBottom: 100, background: C.bg, minHeight: '100vh' }}>
       {/* Header */}
-      <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 20px) 20px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <div style={{ fontFamily: fb, fontSize: 28, fontWeight: 800, color: C.text, letterSpacing: '-0.02em' }}>{t('settings.title')}</div>
-          <div style={{ fontSize: 13, color: C.sub, fontFamily: fn, marginTop: 4 }}>App Preferences</div>
+      <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 20px) 20px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button onClick={onBack} style={{ background: 'none', border: 'none', color: C.text, padding: 0, cursor: 'pointer', display: 'flex' }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <div>
+            <div style={{ fontFamily: fb, fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: '-0.02em' }}>{t('settings.title')}</div>
+          </div>
         </div>
+        {onShowTutorial && (
+          <button onClick={onShowTutorial} style={{
+            background: C.accent + '20', border: `1px solid ${C.accent}40`,
+            borderRadius: 12, padding: '6px 12px', color: C.accent,
+            fontFamily: fb, fontSize: 11, fontWeight: 700, cursor: 'pointer',
+          }}>
+            ? Tutorial
+          </button>
+        )}
       </div>
 
       <div style={{ padding: '0 20px' }}>
@@ -201,7 +214,9 @@ export default function OwnerAppSettingsTab({ darkMode, onToggleTheme }) {
 
       <div style={{ padding: '0 20px' }}>
         <div style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: 24, padding: '24px' }}>
+          <button onClick={onBack} style={{ background: 'none', border: 'none', color: C.text, padding: 0, cursor: 'pointer', display: 'flex' }}>
           <Lbl text={t('settings.languagePreference')} style={{ marginBottom: 10 }} />
+          </button>
           <div style={{ fontSize: 13, color: C.sub, marginBottom: 16, fontFamily: fn }}>
             {t('settings.languagePreferenceDesc')}
           </div>

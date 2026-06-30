@@ -1,8 +1,12 @@
+import { useState } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { UserAvatar } from '../shared/primitives.jsx';
+import { sanitizeString, validateNumber } from '../shared/security.js';
+import { Lbl } from './primitives.jsx';
 // ─── Profile Dropdown ────────────────────────────────────────────────────────
 export function ProfileDropdown({ onClose, onNavigate, onLogout, user, darkMode }) {
   const items = [
+    { icon: '💎', label: 'MSG Premium', sub: 'Unlock advanced AI & analytics', action: 'premium' },
     { icon: '👤', label: 'View Profile', sub: 'Stats, achievements & goals', action: 'profile' },
     { icon: '⚙️', label: 'Settings', sub: 'Units, notifications, preferences', action: 'settings' },
     { icon: '🌐', label: 'Language', sub: 'English (IN) · change anytime', action: 'language' },
@@ -58,14 +62,14 @@ export function LogProgressModal({ onSave, onClose, darkMode }) {
   const save = () => {
     const entry = {
       date: new Date().toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }),
-      weight: parseFloat(form.weight) || 0,
-      height: parseFloat(form.height) || 0,
-      bodyFat: parseFloat(form.bodyFat) || 0,
-      chest: parseFloat(form.chest) || 0,
-      waist: parseFloat(form.waist) || 0,
-      arms: parseFloat(form.arms) || 0,
-      legs: parseFloat(form.legs) || 0,
-      notes: form.notes,
+      weight: validateNumber(form.weight, 20, 500, 0),
+      height: validateNumber(form.height, 50, 300, 0),
+      bodyFat: validateNumber(form.bodyFat, 0, 100, 0),
+      chest: validateNumber(form.chest, 0, 300, 0),
+      waist: validateNumber(form.waist, 0, 300, 0),
+      arms: validateNumber(form.arms, 0, 150, 0),
+      legs: validateNumber(form.legs, 0, 150, 0),
+      notes: sanitizeString(form.notes, 500),
     };
     onSave(entry);
     onClose();

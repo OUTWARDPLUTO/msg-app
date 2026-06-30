@@ -32,7 +32,7 @@ export default function MemberApp({
   const [profileScreen, setProfileScreen] = useState(null);
   const [childBackHandler, setChildBackHandler] = useState(null);
 
-  const [setupDone, setSetupDone] = useState(() => !!localStorage.getItem('msg_setup_done'));
+  const [setupDone, setSetupDone] = useState(() => !!localStorage.getItem('msg_setup_done') || !!user?.profile);
   const [showTutorial, setShowTutorial] = useState(false);
 
   // Register push notifications via Capacitor

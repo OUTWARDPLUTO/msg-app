@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
-import { Card, Lbl, Spinner } from '../shared/primitives.jsx';
+import { Card, Lbl, Spinner, Skeleton } from '../shared/primitives.jsx';
 import { getFBFirestore, serverTimestamp } from '../shared/firebase.js';
 
-export default function AttendanceTab({ gymId, onViewMemberProfile }) {
+export default function AttendanceTab({ gymId, onViewMemberProfile, onBack }) {
   const [logs, setLogs]         = useState([]);
   const [members, setMembers]   = useState({});
   const [allMembers, setAllMembers] = useState([]);
@@ -150,7 +150,7 @@ export default function AttendanceTab({ gymId, onViewMemberProfile }) {
     return Object.entries(grouped).sort(([a], [b]) => b.localeCompare(a));
   }
 
-  if (loading) return <Spinner text="Loading attendance…" />;
+  // removed early return
 
   const daily = buildDailyChart();
   const maxCount = Math.max(...daily.map(d => d.count), 1);
@@ -176,9 +176,16 @@ export default function AttendanceTab({ gymId, onViewMemberProfile }) {
   return (    <div style={{ paddingBottom: 100, background: C.bg, minHeight: '100vh' }}>
       {/* Header */}
       <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 20px) 20px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <div style={{ fontFamily: fb, fontSize: 28, fontWeight: 800, color: C.text, letterSpacing: '-0.02em' }}>Attendance</div>
-          <div style={{ fontSize: 13, color: C.sub, fontFamily: fn, marginTop: 4 }}>Check-ins & QR</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {onBack && (
+            <button onClick={onBack} style={{ background: 'none', border: 'none', color: C.text, padding: 0, cursor: 'pointer', display: 'flex' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+          )}
+          <div>
+            <div style={{ fontFamily: fb, fontSize: 28, fontWeight: 800, color: C.text, letterSpacing: '-0.02em' }}>Attendance</div>
+            <div style={{ fontSize: 13, color: C.sub, fontFamily: fn, marginTop: 4 }}>Check-ins & QR</div>
+          </div>
         </div>
         <div style={{ display: 'flex', gap: 12 }}>
           <button onClick={() => setQrModal(true)} style={{
@@ -197,50 +204,60 @@ export default function AttendanceTab({ gymId, onViewMemberProfile }) {
         </div>
       </div>
 
-      {/* Today's quick stat */}
-      <div style={{ padding: '0 20px', marginBottom: 24 }}>
-        <div style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: 20, padding: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
-              <div style={{ fontSize: 13, color: C.sub, fontFamily: fb, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>Today's Check-ins</div>
-              <div style={{ fontFamily: fb, fontSize: 48, fontWeight: 800, color: C.text, lineHeight: 1 }}>{todayCount}</div>
-            </div>
-            <div style={{ width: 48, height: 48, borderRadius: 16, background: C.bg, border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.accent }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            </div>
+      {loading ? (
+        <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <Skeleton height={120} borderRadius={20} />
+          <Skeleton height={180} borderRadius={20} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {[1, 2, 3, 4].map(i => <Skeleton key={i} height={80} borderRadius={16} stagger={i} />)}
           </div>
         </div>
-      </div>
-
-      {/* 30-day bar chart */}
-      <div style={{ padding: '0 20px', marginBottom: 32 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div style={{ fontFamily: fb, fontSize: 18, fontWeight: 700, color: C.text }}>Last 30 Days</div>
-          <div style={{ fontSize: 13, fontFamily: fn, color: C.sub }}>Avg {Math.round(daily.reduce((acc, d) => acc + d.count, 0) / 30)}/day</div>
-        </div>
-        <div style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: 20, padding: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: 100, gap: 4 }}>
-            {daily.map(d => (
-              <div key={d.date} title={`${d.label}: ${d.count} check-ins`} style={{ flex: 1, display: 'flex', justifyContent: 'center', height: '100%', position: 'relative', group: 'bar' }}>
-                <div style={{
-                  width: '100%', maxWidth: 6, borderRadius: 4,
-                  height: `${Math.max((d.count / maxCount) * 100, d.count > 0 ? 8 : 0)}%`,
-                  background: d.date === todayKey ? C.accent : C.s4,
-                  transition: 'height 0.4s ease',
-                  position: 'absolute', bottom: 0
-                }} />
+      ) : (
+        <>
+          {/* Today's quick stat */}
+          <div style={{ padding: '0 20px', marginBottom: 24 }}>
+            <div style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: 20, padding: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <div style={{ fontSize: 13, color: C.sub, fontFamily: fb, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>Today's Check-ins</div>
+                  <div style={{ fontFamily: fb, fontSize: 48, fontWeight: 800, color: C.text, lineHeight: 1 }}>{todayCount}</div>
+                </div>
+                <div style={{ width: 48, height: 48, borderRadius: 16, background: C.bg, border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.accent }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
               </div>
-            ))}
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Search */}
-      <div style={{ padding: '0 20px', marginBottom: 24 }}>
-        <div style={{ position: 'relative' }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)' }}>
-            <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
+          {/* 30-day bar chart */}
+          <div style={{ padding: '0 20px', marginBottom: 32 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div style={{ fontFamily: fb, fontSize: 18, fontWeight: 700, color: C.text }}>Last 30 Days</div>
+              <div style={{ fontSize: 13, fontFamily: fn, color: C.sub }}>Avg {Math.round(daily.reduce((acc, d) => acc + d.count, 0) / 30)}/day</div>
+            </div>
+            <div style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: 20, padding: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: 100, gap: 4 }}>
+                {daily.map(d => (
+                  <div key={d.date} title={`${d.label}: ${d.count} check-ins`} style={{ flex: 1, display: 'flex', justifyContent: 'center', height: '100%', position: 'relative', group: 'bar' }}>
+                    <div style={{
+                      width: '100%', maxWidth: 6, borderRadius: 4,
+                      height: `${Math.max((d.count / maxCount) * 100, d.count > 0 ? 8 : 0)}%`,
+                      background: d.date === todayKey ? C.accent : C.s4,
+                      transition: 'height 0.4s ease',
+                      position: 'absolute', bottom: 0
+                    }} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Search */}
+          <div style={{ padding: '0 20px', marginBottom: 24 }}>
+            <div style={{ position: 'relative' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)' }}>
+                <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
           <input
             value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Search check-ins..."
@@ -302,6 +319,8 @@ export default function AttendanceTab({ gymId, onViewMemberProfile }) {
           </div>
         ))}
       </div>
+      </>
+      )}
 
       {/* Manual Check-in Modal */}
       {manualModal && (

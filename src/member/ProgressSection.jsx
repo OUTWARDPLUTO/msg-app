@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { C, fn, fb } from '../shared/theme.js';
-import { ChartTip } from './utils.jsx';
-import { Card, Tag } from './primitives.jsx';
+import { ChartTip, getThisWeekActivity, getTodayDowIndex } from './utils.jsx';
+import { Card, Tag, Lbl } from './primitives.jsx';
 export default function ProgressSection({ logs, onLogClick, onDelete }) {
   const [metric, setMetric] = useState('weight');
   const metrics = [

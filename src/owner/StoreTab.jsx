@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
-import { Card, Lbl, Spinner, ModalShell } from '../shared/primitives.jsx';
+import { Card, Lbl, Spinner, ModalShell, Skeleton } from '../shared/primitives.jsx';
 import { getFBFirestore, serverTimestamp, uploadFile } from '../shared/firebase.js';
 
 const CATS = ['Protein', 'Creatine', 'Vitamins', 'Pre-Workout', 'BCAA', 'Fat Burner', 'Accessories', 'Other'];
@@ -99,7 +99,7 @@ function ProductModal({ gymId, initial, onSave, onClose }) {
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 600, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'flex-end', animation: 'msg-fadein 0.2s ease-out' }}>
-      <div style={{ background: C.s1, borderRadius: '32px 32px 0 0', width: '100%', padding: '32px 20px calc(env(safe-area-inset-bottom,0) + 24px)', borderTop: `1px solid ${C.border}`, maxHeight: '90vh', overflowY: 'auto' }} className="msg-scroll">
+      <div style={{ background: C.s1, borderRadius: '32px 32px 0 0', width: '100%', padding: '32px 20px calc(env(safe-area-inset-bottom,0px) + 80px)', borderTop: `1px solid ${C.border}`, maxHeight: '85vh', overflowY: 'auto' }} className="msg-scroll">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <div style={{ fontFamily: fb, fontSize: 24, fontWeight: 800, color: C.text }}>{initial ? 'Edit Product' : 'New Product'}</div>
           <button onClick={onClose} style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.text }}>
@@ -314,7 +314,27 @@ export default function StoreTab({ gymId, setBackHandler }) {
       )}
 
       {loading ? (
-        <div style={{ padding: '40px 0' }}><Spinner text="Loading products…" /></div>
+        <div className="msg-scroll" style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '0 20px', paddingBottom: 120 }}>
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} style={{
+              background: C.s1, border: `1px solid ${C.border}`, borderRadius: 20, padding: 16,
+              display: 'flex', gap: 16, alignItems: 'stretch'
+            }}>
+              <Skeleton width={88} height={88} borderRadius={12} stagger={i} />
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <Skeleton width="70%" height={20} stagger={i} />
+                <Skeleton width="40%" height={16} stagger={i} />
+                <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between' }}>
+                  <Skeleton width={60} height={24} borderRadius={6} stagger={i} />
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <Skeleton width={48} height={28} borderRadius={10} stagger={i} />
+                    <Skeleton width={32} height={28} borderRadius={10} stagger={i} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       ) : filtered.length === 0 ? (
         <div style={{ padding: '40px 20px', textAlign: 'center' }}>
           <div style={{ background: C.s1, border: `1px dashed ${C.border}`, borderRadius: 24, padding: '48px 24px' }}>
@@ -331,10 +351,12 @@ export default function StoreTab({ gymId, setBackHandler }) {
           </div>
         </div>
       ) : (
-        <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div className="msg-scroll" style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '0 20px', paddingBottom: 120, height: '100%', overflowY: 'auto' }}>
           {filtered.map(p => (
-            <div key={p.id} style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: 20, padding: 16, display: 'flex', gap: 16 }}>
-              {/* Image */}
+            <div key={p.id} className="msg-anim-fadein" style={{
+              background: C.s1, border: `1px solid ${C.border}`, borderRadius: 20, padding: 16,
+              display: 'flex', gap: 16, alignItems: 'stretch'
+            }}>  {/* Image */}
               <div style={{
                 width: 88, height: 88, borderRadius: 12,
                 background: C.bg, border: `1px solid ${C.border}`,

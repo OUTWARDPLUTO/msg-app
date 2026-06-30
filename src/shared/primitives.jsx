@@ -135,6 +135,22 @@ export function ModalShell({ title, onClose, children }) {
   return createPortal(content, document.body);
 }
 
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+export function Skeleton({ width = '100%', height = 20, borderRadius = 8, style = {}, stagger = 0, circle = false }) {
+  return (
+    <div 
+      className={`msg-skeleton-dark ${stagger ? `msg-stagger-${stagger}` : ''}`} 
+      style={{ 
+        width, 
+        height, 
+        borderRadius: circle ? '50%' : borderRadius, 
+        flexShrink: 0,
+        ...style 
+      }} 
+    />
+  );
+}
+
 // ─── Spinner ──────────────────────────────────────────────────────────────────
 export function Spinner({ text = 'Loading…' }) {
   return (

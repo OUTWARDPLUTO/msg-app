@@ -1,6 +1,7 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { Card, Lbl } from './primitives.jsx';
+import { ModalShell } from './ProfileScreen.jsx';
 // ─── Settings helpers (must be top-level, never inside render) ───────────────
 function SettingsToggle({ on, onTap }) {
   return (

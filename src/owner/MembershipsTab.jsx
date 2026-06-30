@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
-import { Card, Lbl, Spinner } from '../shared/primitives.jsx';
+import { Card, Lbl, Skeleton } from '../shared/primitives.jsx';
 import { getFBFirestore, serverTimestamp } from '../shared/firebase.js';
 
 // ─── Membership Plans Sub-Tab ─────────────────────────────────────────────────
@@ -64,7 +64,11 @@ function PlansView({ gymId }) {
         </button>
       </div>
 
-      {loading ? <div style={{ padding: '40px 0' }}><Spinner text="Loading plans…" /></div> : plans.length === 0 ? (
+      {loading ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {[1, 2, 3].map(i => <Skeleton key={i} height={160} borderRadius={16} stagger={i} />)}
+        </div>
+      ) : plans.length === 0 ? (
         <div style={{ background: C.s1, border: `1px dashed ${C.border}`, borderRadius: 20, padding: '40px 20px', textAlign: 'center' }}>
           <div style={{ fontSize: 40, marginBottom: 16, opacity: 0.8 }}>📋</div>
           <div style={{ fontFamily: fb, fontSize: 16, color: C.text, marginBottom: 8 }}>No Plans Created</div>
@@ -330,7 +334,11 @@ function MembersView({ gymId }) {
         ))}
       </div>
 
-      {loading ? <div style={{ padding: '40px 0' }}><Spinner text="Loading members…" /></div> : filtered.length === 0 ? (
+      {loading ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} height={120} borderRadius={16} stagger={i} />)}
+        </div>
+      ) : filtered.length === 0 ? (
         <div style={{ background: C.s1, border: `1px dashed ${C.border}`, borderRadius: 20, padding: '40px 20px', textAlign: 'center' }}>
           <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.5 }}>👥</div>
           <div style={{ fontFamily: fb, fontSize: 16, color: C.text, marginBottom: 4 }}>No Members Found</div>
@@ -496,7 +504,7 @@ function AssignPlanModal({ gymId, member, plans, onSave, onClose }) {
 }
 
 // ─── Main Memberships Tab ─────────────────────────────────────────────────────
-export default function MembershipsTab({ gymId }) {
+export default function MembershipsTab({ gymId, onBack }) {
   const [subTab, setSubTab] = useState('members');
 
   // Quick stats
@@ -526,9 +534,14 @@ export default function MembershipsTab({ gymId }) {
   return (
     <div style={{ paddingBottom: 100, background: C.bg, minHeight: '100vh' }}>
       {/* Header */}
-      <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 20px) 20px 20px' }}>
-        <div style={{ fontFamily: fb, fontSize: 28, fontWeight: 800, color: C.text, letterSpacing: '-0.02em' }}>Memberships</div>
-        <div style={{ fontSize: 13, color: C.sub, fontFamily: fn, marginTop: 4 }}>Plans & subscriptions</div>
+      <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 20px) 20px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button onClick={onBack} style={{ background: 'none', border: 'none', color: C.text, padding: 0, cursor: 'pointer', display: 'flex' }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <div>
+          <div style={{ fontFamily: fb, fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: '-0.02em' }}>Memberships</div>
+          <div style={{ fontSize: 13, color: C.sub, fontFamily: fn, marginTop: 4 }}>Plans & subscriptions</div>
+        </div>
       </div>
 
       {/* Quick stats */}

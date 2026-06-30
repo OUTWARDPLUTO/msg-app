@@ -30,17 +30,15 @@ activityLogs/{gymId}/events → uid, gymId, type, points, timestamp
 - Member profile/stats page (own score, streak, history)
 - QR code gym join
 - BUG: GymSettingsTab.jsx line 33 — useState used instead of useEffect
+- Engagement score engine (workout+10, diet+5, progress+8, checkin+3 | cap=100 | 30-day rolling)
 
 ## What's MISSING ❌ (in priority order)
-1. Engagement score engine — scores exist in Firestore but are NEVER computed
-   Formula: workout+10, diet+5, progress+8, checkin+3 | cap=100 | 30-day rolling
-2. TrainerView.jsx — empty stub, needs building
+1. TrainerView.jsx — empty stub, needs building
 
 ## Known Technical Debt
 - MemberApp.jsx is 221KB single file — needs splitting
 - No loading states on tab switch in OwnerDashboard
 - No error handling UI in owner tabs
-- No Firestore composite index for activityLogs queries
 
 ## Agent Rules
 - Always git pull before starting work

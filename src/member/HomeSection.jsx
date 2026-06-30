@@ -107,24 +107,60 @@ export default function HomeSection({ mealLog, progressLogs, dietGoal, onLogClic
           </button>
         </div>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <Card style={{ padding: '12px 14px' }}>
-            <Lbl text="Calories Today" style={{ marginBottom: 4 }} />
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-              <span style={{ fontFamily: fn, fontSize: 28, fontWeight: 800, color: C.text, lineHeight: 1 }}>{Math.round(tot.cal)}</span>
-              <span style={{ color: C.muted, fontSize: 11 }}>/ {dri.calories} kcal</span>
+          <Card style={{ padding: '12px 14px', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'relative', zIndex: 2 }}>
+              <Lbl text="Calories Today" style={{ marginBottom: 4 }} />
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                <span style={{ fontFamily: fn, fontSize: 28, fontWeight: 800, color: C.text, lineHeight: 1 }}>{Math.round(tot.cal)}</span>
+                <span style={{ color: C.muted, fontSize: 11 }}>/ {dri.calories} kcal</span>
+              </div>
             </div>
-            <div style={{ height: 4, background: C.s4, borderRadius: 2, marginTop: 7 }}>
-              <div style={{ height: '100%', width: `${Math.min(Math.round((tot.cal / dri.calories) * 100), 100)}%`, background: tot.cal > dri.calories ? C.red : C.accent, borderRadius: 2 }} />
-            </div>
+            {mealLog.length > 0 ? (
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '50%', zIndex: 1, opacity: 0.25 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={[{ cal: 0 }, ...mealLog.reduce((acc, curr) => { acc.push({ cal: (acc.length ? acc[acc.length - 1].cal : 0) + curr.calories }); return acc; }, [])]}>
+                    <defs>
+                      <linearGradient id="colorCal" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={tot.cal > dri.calories ? C.red : C.accent} stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor={tot.cal > dri.calories ? C.red : C.accent} stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <Area type="stepAfter" dataKey="cal" stroke={tot.cal > dri.calories ? C.red : C.accent} strokeWidth={2} fillOpacity={1} fill="url(#colorCal)" isAnimationActive={false} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div style={{ height: 4, background: C.s4, borderRadius: 2, marginTop: 7, position: 'relative', zIndex: 2 }}>
+                <div style={{ height: '100%', width: `${Math.min(Math.round((tot.cal / dri.calories) * 100), 100)}%`, background: tot.cal > dri.calories ? C.red : C.accent, borderRadius: 2 }} />
+              </div>
+            )}
           </Card>
           {last && (
-            <Card style={{ padding: '12px 14px' }}>
-              <Lbl text="Body Weight" style={{ marginBottom: 4 }} />
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                <span style={{ fontFamily: fn, fontSize: 28, fontWeight: 800, color: C.text, lineHeight: 1 }}>{last.weight}</span>
-                <span style={{ color: C.muted, fontSize: 11 }}>kg</span>
-                {wDiff && <span style={{ color: parseFloat(wDiff) < 0 ? C.green : C.orange, fontSize: 11, fontFamily: fb, fontWeight: 700 }}>{parseFloat(wDiff) < 0 ? wDiff : '+' + wDiff}</span>}
+            <Card style={{ padding: '12px 14px', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'relative', zIndex: 2 }}>
+                <Lbl text="Body Weight" style={{ marginBottom: 4 }} />
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                  <span style={{ fontFamily: fn, fontSize: 28, fontWeight: 800, color: C.text, lineHeight: 1 }}>{last.weight}</span>
+                  <span style={{ color: C.muted, fontSize: 11 }}>kg</span>
+                  {wDiff && <span style={{ color: parseFloat(wDiff) < 0 ? C.green : C.orange, fontSize: 11, fontFamily: fb, fontWeight: 700 }}>{parseFloat(wDiff) < 0 ? wDiff : '+' + wDiff}</span>}
+                </div>
               </div>
+              {progressLogs.length > 1 && (
+                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '60%', zIndex: 1, opacity: 0.35 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={progressLogs.slice(-7)}>
+                      <defs>
+                        <linearGradient id="colorWeight" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={C.green} stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor={C.green} stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <Area type="monotone" dataKey="weight" stroke={C.green} strokeWidth={2} fillOpacity={1} fill="url(#colorWeight)" isAnimationActive={false} />
+                      <YAxis domain={['dataMin - 1', 'dataMax + 1']} hide />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </Card>
           )}
         </div>

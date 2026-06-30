@@ -20,10 +20,29 @@ export default function LoginScreen({ onLogin, darkMode }) {
       .catch(() => setFbStatus('error'));
   }, []);
 
+  const checkRateLimit = () => {
+    try {
+      const now = Date.now();
+      let attempts = JSON.parse(localStorage.getItem('msg_login_attempts') || '[]');
+      attempts = attempts.filter(t => now - t < 15 * 60 * 1000); // last 15 mins
+      if (attempts.length >= 10) {
+        return false;
+      }
+      attempts.push(now);
+      localStorage.setItem('msg_login_attempts', JSON.stringify(attempts));
+      return true;
+    } catch { return true; }
+  };
+
   const handleEmail = async () => {
     if (!email.trim() || !pass.trim()) { setError('Please fill in all fields'); return; }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email.trim())) { setError('Please enter a valid email address'); return; }
+    
     if (mode === 'signup' && !name.trim()) { setError('Please enter your name'); return; }
     if (fbStatus !== 'ready') { setError('Firebase not loaded. Check your connection.'); return; }
+    if (!checkRateLimit()) { setError('Too many attempts. Try again in 15 minutes.'); return; }
     setLoading(true); setError('');
     try {
       const auth = await getFBAuth();
@@ -58,15 +77,11 @@ export default function LoginScreen({ onLogin, darkMode }) {
 
   const handleGoogle = async () => {
     if (fbStatus !== 'ready') { setError('Firebase not loaded yet.'); return; }
+    if (!checkRateLimit()) { setError('Too many attempts. Try again in 15 minutes.'); return; }
     setLoading(true); setError('');
     try {
-      // Initialize the native Google Auth plugin before attempting sign-in.
-      // Required by capacitor-google-auth v3+ — without this call the Android
-      // native bridge is null and crashes with a NullPointerException.
       await GoogleAuth.initialize({
-        // Must be the Web (server) client ID — not the Android client ID.
-        // Google uses this as the token audience to produce an idToken for Firebase.
-        clientId: '924373588150-g5hhp1hiu6db6tduir3fr9ekfqkavhir.apps.googleusercontent.com',
+        clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
         scopes: ['profile', 'email'],
         grantOfflineAccess: true,
       });
@@ -83,7 +98,6 @@ export default function LoginScreen({ onLogin, darkMode }) {
         photo: cred.user.photoURL,
       }, cred.additionalUserInfo?.isNewUser);
     } catch (e) {
-      // Ignore user-cancelled flows silently
       const cancelled = e.code === 'auth/popup-closed-by-user'
         || e.message === 'The user canceled the sign-in flow.'
         || e.message === 'The user canceled the Google sign-in flow.';

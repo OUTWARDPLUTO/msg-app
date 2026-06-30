@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { UserAvatar } from '../shared/primitives.jsx';
 import { Card, Lbl, Hd } from './primitives.jsx';
+import { sanitizeString, validateNumber } from '../shared/security.js';
+import { calcStreak } from './utils.jsx';
 // ─── Modal Shell ─────────────────────────────────────────────────────────────
 export function ModalShell({ title, onClose, children }) {
   return (
@@ -210,15 +212,23 @@ export default function ProfileScreen({ onClose, progressLogs, dietGoal, mealLog
           <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
             <button onClick={() => setEditing(false)} style={{ flex: 1, background: C.s3, border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, color: C.sub, fontFamily: fn, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
             <button onClick={() => {
-              setProfile({ ...draft });
+              const safeDraft = {
+                ...draft,
+                name: sanitizeString(draft.name, 100),
+                initials: sanitizeString(draft.initials, 3).toUpperCase(),
+                bio: sanitizeString(draft.bio, 250),
+                city: sanitizeString(draft.city, 100),
+                age: draft.age ? validateNumber(draft.age, 10, 120, 20) : '',
+              };
+              setProfile({ ...safeDraft });
               try {
-                localStorage.setItem('msg_profile_details', JSON.stringify(draft));
-                user.name = draft.name;
-                user.profile = draft;
+                localStorage.setItem('msg_profile_details', JSON.stringify(safeDraft));
+                user.name = safeDraft.name;
+                user.profile = safeDraft;
                 localStorage.setItem('msg_user', JSON.stringify(user));
                 if (user.uid && user.uid !== 'demo') {
                   import('../shared/firebase.js').then(f => {
-                    f.updateUserDoc(user.uid, { name: draft.name.trim(), profile: draft }).catch(() => {});
+                    f.updateUserDoc(user.uid, { name: safeDraft.name.trim(), profile: safeDraft }).catch(() => {});
                   });
                 }
               } catch {}

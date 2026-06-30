@@ -1,13 +1,13 @@
 import { useState, useRef } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
-import { Card, Lbl, Spinner } from '../shared/primitives.jsx';
+import { Card, Lbl, Spinner, Skeleton } from '../shared/primitives.jsx';
 import { parseCSV, importMembersFromCSV } from '../shared/firebase.js';
 
 const REQUIRED_FIELDS = ['name'];
 const OPTIONAL_FIELDS = ['email', 'phone'];
 const ALL_FIELDS = [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS];
 
-export default function CSVImport({ gymId }) {
+export default function CSVImport({ gymId, onBack }) {
   const fileRef = useRef();
   const [step, setStep]       = useState('upload'); // upload | map | validate | importing | done
   const [headers, setHeaders] = useState([]);
@@ -85,7 +85,7 @@ export default function CSVImport({ gymId }) {
       {/* Header */}
       <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 20px) 20px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => {}} style={{ background: 'none', border: 'none', color: C.text, padding: 0, cursor: 'pointer', display: 'flex' }}>
+          <button onClick={onBack} style={{ background: 'none', border: 'none', color: C.text, padding: 0, cursor: 'pointer', display: 'flex' }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
           </button>
           <div style={{ fontFamily: fb, fontSize: 20, fontWeight: 700, color: C.text }}>Import CSV</div>
@@ -241,8 +241,21 @@ export default function CSVImport({ gymId }) {
 
         {/* ── Step 4: Importing ───────────────────────────────────── */}
         {step === 'importing' && (
-          <div style={{ padding: '40px 0' }} className="msg-anim-fadein">
-            <Spinner text={`Importing ${rows.length} members…`} />
+          <div style={{ padding: '20px 0' }} className="msg-anim-fadein">
+            <div style={{ fontSize: 16, fontFamily: fb, color: C.text, textAlign: 'center', marginBottom: 24 }}>
+              Importing {rows.length} members…
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {[1, 2, 3].map(i => (
+                <div key={i} style={{ display: 'flex', gap: 16, alignItems: 'center', padding: '16px', background: C.s1, border: `1px solid ${C.border}`, borderRadius: 12 }}>
+                  <Skeleton circle width={32} height={32} stagger={i} />
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <Skeleton width="60%" height={14} stagger={i} />
+                    <Skeleton width="30%" height={10} stagger={i} />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

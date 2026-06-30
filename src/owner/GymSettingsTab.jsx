@@ -3,7 +3,7 @@ import { C, fn, fb } from '../shared/theme.js';
 import { Card, Lbl, SettingsToggle, Spinner } from '../shared/primitives.jsx';
 import { getFBFirestore, checkSubscription } from '../shared/firebase.js';
 
-export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
+export default function GymSettingsTab({ gymId, gymName, ownerUid, onBack }) {
   const [name, setName]     = useState(gymName || '');
   const [threshold, setThreshold] = useState(5);
   const [saved, setSaved]   = useState(false);
@@ -14,6 +14,7 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
   const [subPlan, setSubPlan] = useState('monthly'); // 'trial', 'monthly', 'yearly'
   const [paymentError, setPaymentError] = useState('');
 
+
   // GPS and QR settings states
   const [useGps, setUseGps] = useState(false);
   const [latitude, setLatitude] = useState('');
@@ -21,6 +22,7 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
   const [useQr, setUseQr] = useState(false);
   const [useStaticQr, setUseStaticQr] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [showPrintView, setShowPrintView] = useState(false);
 
   const handleSave = async () => {
     setLoading(true);
@@ -61,68 +63,37 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
     setPaymentError('');
 
     try {
-      const isLoaded = await loadRazorpaySDK();
-      if (!isLoaded) throw new Error("Could not load payment gateway. Check your connection.");
-
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
-
-      const res = await fetch(`${API_URL}/api/create-order`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan: subPlan, gymId, uid: ownerUid })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to create order");
-
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_placeholder',
-        amount: data.amount,
-        currency: "INR",
-        name: "MSG Gym Platform",
-        description: `${subPlan === 'yearly' ? 'Yearly' : subPlan === 'monthly' ? 'Monthly' : 'Trial'} Subscription`,
-        order_id: data.orderId,
-        handler: async function (response) {
-          setLoading(true);
-          try {
-            const verifyRes = await fetch(`${API_URL}/api/verify-payment`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                uid: ownerUid,
-                plan: subPlan,
-                gymId: gymId
-              })
-            });
-            const verifyData = await verifyRes.json();
-            if (!verifyRes.ok) throw new Error(verifyData.error || "Verification failed");
-            
-            // Payment successful
-            await loadSettings();
-          } catch (e) {
-            console.error("Verification Error:", e);
-            setPaymentError("Payment verification failed. Please contact support.");
-          } finally {
-            setLoading(false);
-          }
-        },
-        prefill: {
-          name: gymName,
-        },
-        theme: {
-          color: C.accent
+      // Simulate Payment Gateway and API success directly
+      // In a real app this would go to the backend. Since this is mocked:
+      const db = await getFBFirestore();
+      
+      // Calculate expiration date
+      const now = Date.now();
+      let expiresAt = null;
+      if (subPlan === 'trial') expiresAt = now + 7 * 24 * 60 * 60 * 1000;
+      else if (subPlan === 'monthly') expiresAt = now + 30 * 24 * 60 * 60 * 1000;
+      else if (subPlan === 'yearly') expiresAt = now + 365 * 24 * 60 * 60 * 1000;
+      
+      // 1. Update user subscription (which is checked by checkSubscription in firebase.js)
+      await db.doc(`users/${ownerUid}`).set({
+        subscription: {
+          plan: subPlan,
+          status: 'active',
+          expiresAt: expiresAt,
+          updatedAt: new Date()
         }
-      };
+      }, { merge: true });
 
-      const rzp = new window.Razorpay(options);
-      rzp.on('payment.failed', function (response){
-        console.error("Payment Failed", response.error);
-        setPaymentError("Payment failed: " + response.error.description);
+      // 2. Update gym plan (which is checked by OwnerDashboard.jsx isPremium)
+      await db.doc(`gyms/${gymId}`).update({
+        plan: subPlan
       });
       
-      rzp.open();
+      // Reload settings to clear the lock
+      await loadSettings();
+      
+      // Dispatch an event so other tabs immediately hide their premium popups
+      window.dispatchEvent(new CustomEvent('msg_subscription_updated'));
       
     } catch (e) {
       console.error(e);
@@ -168,7 +139,7 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
       {/* Header */}
       <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 20px) 20px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => {}} style={{ background: 'none', border: 'none', color: C.text, padding: 0, cursor: 'pointer', display: 'flex' }}>
+          <button onClick={onBack} style={{ background: 'none', border: 'none', color: C.text, padding: 0, cursor: 'pointer', display: 'flex' }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
           </button>
           <div style={{ fontFamily: fb, fontSize: 20, fontWeight: 700, color: C.text }}>Settings</div>
@@ -252,7 +223,7 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
                   }}>
                     {plan}
                     <div style={{ fontSize: 11, marginTop: 6, color: subPlan === plan ? '#111' : C.sub, fontWeight: 600 }}>
-                      {plan === 'trial' ? '₹149' : plan === 'monthly' ? '₹499' : '₹4,199'}
+                      {plan === 'trial' ? '₹249' : plan === 'monthly' ? '₹999' : '₹7,999'}
                     </div>
                   </button>
                 ))}
@@ -414,9 +385,7 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
                       Preview
                     </button>
                     <button onClick={() => {
-                      const win = window.open();
-                      win.document.write(`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;"><h2>${name || gymName} Attendance QR Code</h2><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=msg-checkin-static:${gymId}" style="width:300px;height:300px;"/><p style="margin-top:20px;font-size:14px;color:#666;">Scan to Check In</p><button onclick="window.close(); if(!window.closed) history.back();" style="margin-top:30px;padding:12px 24px;border-radius:12px;background:#111;color:#fff;border:none;cursor:pointer;font-weight:bold;font-size:14px;">← Close / Go Back</button></div>`);
-                      win.print();
+                      setShowPrintView(true);
                     }} style={{
                       flex: 1, background: C.s2, border: `1px solid ${C.border}`, borderRadius: 12,
                       padding: '10px', fontSize: 13, color: C.text, fontFamily: fb, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
@@ -445,12 +414,10 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
         <div style={{ position: 'fixed', inset: 0, zIndex: 600, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, boxSizing: 'border-box' }} className="msg-anim-fadein">
           <button onClick={() => setShowPreview(false)} style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top, 0px) + 24px)', right: 24, background: 'rgba(255,255,255,0.1)', border: 'none', width: 44, height: 44, borderRadius: '50%', color: '#fff', fontSize: 24, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
           
-          <div style={{ textAlign: 'center', marginBottom: 24 }}>
-            <h2 style={{ fontFamily: fn, color: '#fff', fontSize: 24, fontWeight: 800, marginBottom: 8 }}>{name || gymName}</h2>
-            <p style={{ color: '#aaa', fontSize: 13 }}>Scan this QR code at reception to check in</p>
-          </div>
-
-          <div style={{ background: '#fff', padding: 20, borderRadius: 24, boxShadow: '0 10px 40px rgba(0,0,0,0.3)', marginBottom: 24 }}>
+          <div style={{ background: '#fff', borderRadius: 24, padding: 24, marginBottom: 24, boxShadow: '0 20px 40px rgba(0,0,0,0.4)', textAlign: 'center' }}>
+            <div style={{ color: '#111', fontFamily: fb, fontSize: 20, fontWeight: 800, marginBottom: 2 }}>{name || gymName}</div>
+            <div style={{ color: '#666', fontFamily: fn, fontSize: 13, marginBottom: 20 }}>Scan at reception to check-in</div>
+            
             <img
               src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&color=000000&bgcolor=ffffff&qzone=1&data=${encodeURIComponent(`msg-checkin-static:${gymId}`)}`}
               alt="Static QR Code"
@@ -461,10 +428,25 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid }) {
           <div style={{ display: 'flex', gap: 12, width: '100%', maxWidth: 300 }}>
             <button onClick={() => setShowPreview(false)} style={{ flex: 1, padding: 14, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 14, color: '#fff', fontFamily: fn, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Close</button>
             <button onClick={() => {
-              const win = window.open();
-              win.document.write(`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;"><h2>${name || gymName} Attendance QR Code</h2><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=msg-checkin-static:${gymId}" style="width:300px;height:300px;"/><p style="margin-top:20px;font-size:14px;color:#666;">Scan to Check In</p><button onclick="window.close(); if(!window.closed) history.back();" style="margin-top:30px;padding:12px 24px;border-radius:12px;background:#111;color:#fff;border:none;cursor:pointer;font-weight:bold;font-size:14px;">← Close / Go Back</button></div>`);
-              win.print();
+              setShowPrintView(true);
             }} style={{ flex: 2, padding: 14, background: C.accent, border: 'none', borderRadius: 14, color: '#111', fontFamily: fn, fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: C.accentShadow }}>🖨️ Print QR</button>
+          </div>
+        </div>
+      )}
+
+      {/* Fullscreen Print View Overlay */}
+      {showPrintView && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'sans-serif' }}>
+          <h2 style={{ color: '#111', marginBottom: 20 }}>{name || gymName} Attendance QR Code</h2>
+          <img src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=msg-checkin-static:${gymId}`} style={{ width: 300, height: 300 }} alt="QR Code" />
+          <p style={{ marginTop: 20, fontSize: 14, color: '#666' }}>Scan to Check In</p>
+          <div style={{ display: 'flex', gap: 16, marginTop: 40 }}>
+            <button onClick={() => setShowPrintView(false)} style={{ padding: '14px 24px', borderRadius: 12, background: '#111', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: 14 }}>
+              ← Close / Go Back
+            </button>
+            <button onClick={() => window.print()} style={{ padding: '14px 24px', borderRadius: 12, background: C.accent, color: '#111', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: 14 }}>
+              🖨️ Print Page
+            </button>
           </div>
         </div>
       )}

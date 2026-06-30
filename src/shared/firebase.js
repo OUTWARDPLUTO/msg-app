@@ -1,6 +1,6 @@
 // ─── Firebase Config ──────────────────────────────────────────────────────────
 export const FB_CONFIG = {
-  apiKey: "AIzaSyDhFd7sd_qioRmGoWgOkJweDkvqgMUKznE",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: "msg2-3da02.firebaseapp.com",
   projectId: "msg2-3da02",
   storageBucket: "msg2-3da02.firebasestorage.app",
@@ -214,11 +214,18 @@ export async function trackActivity(uid, gymId, type) {
 
 async function recalculateEngagement(uid, gymId, db) {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000);
+  // Fetch by UID only to bypass need for composite index
   const snap = await db.collection(`activityLogs/${gymId}/events`)
     .where('uid', '==', uid)
-    .where('timestamp', '>=', thirtyDaysAgo)
     .get();
-  const events = snap.docs.map(d => d.data());
+  
+  const events = snap.docs
+    .map(d => d.data())
+    .filter(e => {
+      const d = e.timestamp?.toDate ? e.timestamp.toDate() : new Date(e.timestamp || 0);
+      return d >= thirtyDaysAgo;
+    });
+
   const score = calcEngagementScore(events);
   await db.doc(`members/${gymId}_${uid}`).update({ engagementScore: score, lastActiveAt: serverTimestamp() }).catch(() => {});
 }
