@@ -1,8 +1,16 @@
 import { useState, useEffect } from 'react';
 import { C, fn, fb, MC } from '../shared/theme.js';
 import { AnatomicalFigure } from '../AnatomicalFigure';
-import { Card, Tag, Lbl, Hd, ExCard } from './primitives.jsx';
+import { Card, Tag, Lbl, ExCard } from './primitives.jsx';
 import { EX } from './constants.js';
+
+// ── Inline Hd to avoid import chain failures on Android WebView ───────────────
+const Hd = ({ t, s: sub }) => (
+  <div style={{ padding: '24px 20px 12px' }}>
+    <div style={{ fontFamily: fn, fontSize: 28, fontWeight: 800, color: C.text, lineHeight: 1.1, letterSpacing: '-0.02em' }}>{t}</div>
+    {sub && <div style={{ color: C.sub, fontSize: 13, marginTop: 4, fontWeight: 400 }}>{sub}</div>}
+  </div>
+);
 // ─── Attendance Heat Map (30-Day Grid) ─────────────────────────────────────────
 // Renders a static, non-scrollable 10 columns × 3 rows grid representing the last 30 days
 export function AttendanceHeatMap({ uid, gymId }) {

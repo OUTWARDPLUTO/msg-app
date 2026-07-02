@@ -76,6 +76,9 @@ export default function MSG() {
   const [gymName, setGymName]   = useState(() => load('msg_gym_name', ''));
   const [role, setRole]         = useState(() => load('msg_role', 'member'));
   const [gymLoading, setGymLoading] = useState(false);
+  // authLoading: true on cold start when a cached user exists, so we never flash
+  // GymOnboarding or LoginScreen while Firebase is validating the session token.
+  const [authLoading, setAuthLoading] = useState(() => !!load('msg_user', null));
   const [gymSubscriptionExpired, setGymSubscriptionExpired] = useState(false);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const gymResolvedRef = useRef(false); // prevents double-resolveGym from onAuthStateChanged race
@@ -219,10 +222,17 @@ export default function MSG() {
             photo: fbUser.photoURL,
           };
           setUser(u); save('msg_user', u);
-          resolveGym(fbUser.uid);
+          resolveGym(fbUser.uid).finally(() => setAuthLoading(false));
+        } else if (!fbUser) {
+          // Firebase confirmed: no valid session — clear cached user and stop loading
+          setAuthLoading(false);
+          if (!gymResolvedRef.current) {
+            setUser(null); save('msg_user', null);
+            setGymId(null); save('msg_gym_id', null);
+          }
         }
       });
-    }).catch(() => {});
+    }).catch(() => { setAuthLoading(false); });
   }, []); // eslint-disable-line
 
   // ── Resolve gymId + role from Firestore ────────────────────────────────────
@@ -313,6 +323,7 @@ export default function MSG() {
     // Normalise name — Google displayName can be null
     const safeUser = { ...u, name: u.name || u.email?.split('@')[0] || 'User' };
     setUser(safeUser); save('msg_user', safeUser);
+    setAuthLoading(false); // login bypasses onAuthStateChanged — clear loading guard
     // Claim gymResolvedRef BEFORE resolveGym so onAuthStateChanged (which fires
     // after signInWithCredential resolves) sees it as already handled and skips.
     gymResolvedRef.current = true;
@@ -334,6 +345,7 @@ export default function MSG() {
     localStorage.removeItem('msg_profile_details');
     localStorage.removeItem('msg_profile_photo');
     gymResolvedRef.current = false;
+    setAuthLoading(false); // reset auth guard so next login starts fresh
     // Background cleanup (fire-and-forget — errors are swallowed intentionally)
     try {
       getFBAuth().then(auth => {
@@ -416,7 +428,10 @@ export default function MSG() {
     </div>
   );
 
-  // 1. Not logged in
+  // 1. Auth still resolving — show skeleton loader, never flash wrong screen
+  if (authLoading || gymLoading) return fullPageLoader;
+
+  // 2. Not logged in
   if (!user) return <LoginScreen onLogin={handleLogin} darkMode={darkMode} />;
 
   // 2. Profile setup for new signups
@@ -430,8 +445,7 @@ export default function MSG() {
     />
   );
 
-  // 3. Resolving gym from Firestore
-  if (gymLoading) return fullPageLoader;
+  // 3. (gymLoading already handled above with authLoading)
 
   // 4. No gymId — must onboard
   if (!gymId) return (

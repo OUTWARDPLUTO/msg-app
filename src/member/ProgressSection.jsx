@@ -1,8 +1,40 @@
 import { useState } from 'react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { C, fn, fb } from '../shared/theme.js';
-import { ChartTip, getThisWeekActivity, getTodayDowIndex } from './utils.jsx';
-import { Card, Tag, Lbl } from './primitives.jsx';
+import { Card, Lbl } from './primitives.jsx';
+
+// ── Inline helpers to avoid import-chain failures on Android WebView ──────────
+function parseLogDate(dateStr) {
+  const y = new Date().getFullYear();
+  let d = new Date(`${dateStr} ${y}`);
+  if (isNaN(d.getTime())) return null;
+  if (d.getTime() > Date.now() + 30 * 86400000) d = new Date(`${dateStr} ${y - 1}`);
+  return d;
+}
+function getThisWeekActivity(logs) {
+  const parsed = logs.map(l => parseLogDate(l.date)).filter(Boolean);
+  const now = Date.now();
+  const dow = new Date().getDay(); // 0=Sun
+  const weekStart = new Date(now);
+  weekStart.setHours(0,0,0,0);
+  weekStart.setDate(weekStart.getDate() - ((dow + 6) % 7)); // Monday
+  const ms = weekStart.getTime();
+  return Array.from({ length: 7 }, (_, i) => {
+    const s = ms + i * 86400000;
+    const e = s + 86400000;
+    return parsed.some(d => d.getTime() >= s && d.getTime() < e);
+  });
+}
+function getTodayDowIndex() { return (new Date().getDay() + 6) % 7; }
+function ChartTip({ active, payload, label, color, unit }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={{ background: C.s3, border: `1px solid ${C.border}`, borderRadius: 8, padding: '8px 12px' }}>
+      <div style={{ color: C.sub, fontSize: 10, marginBottom: 2 }}>{label}</div>
+      <div style={{ fontFamily: fn, fontSize: 20, color }}>{payload[0].value}{unit}</div>
+    </div>
+  );
+}
 export default function ProgressSection({ logs, onLogClick, onDelete }) {
   const [metric, setMetric] = useState('weight');
   const metrics = [
