@@ -1,9 +1,10 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { C, fn, fb, MC } from '../shared/theme.js';
 import { AnatomicalFigure } from '../AnatomicalFigure';
 import { API_URL, callClaude } from './memberData.js';
 import { Card, Tag, Lbl, Hd, ExCard } from './primitives.jsx';
 import { EX } from './constants.js';
+import { trackActivity } from '../shared/firebase.js';
 
 // EX array is inlined below via WorkoutSection.jsx extraction â€” do not import// ─── Warmup Block ─────────────────────────────────────────────────────────────
 const WARMUP_ROUTINE = [
@@ -376,7 +377,7 @@ function ManualPlanBuilder({ setWeekPlan, onBack }) {
       <button onClick={() => {
         savePlan();
         if (user?.uid && gymId && user.uid !== 'demo') {
-          import('../shared/firebase.js').then(f => f.trackActivity(user.uid, gymId, 'workout'));
+          trackActivity(user.uid, gymId, 'workout');
         }
       }} disabled={planDays.every(d => d.exercises.length === 0)} style={{
         width: '100%', padding: '14px', marginBottom: 20,

@@ -4,6 +4,7 @@ import { THEMES, C, fn } from './shared/theme.js';
 import { UserAvatar } from './shared/primitives.jsx';
 import AmbientBackground from './shared/AmbientBackground.jsx';
 import appIconLight from './assets/app-icon-light.png';
+import { trackActivity } from './shared/firebase.js';
 
 // ── Per-section error boundary (keeps crashes isolated to one tab) ────────────
 class SectionErrorBoundary extends Component {
@@ -118,7 +119,7 @@ export default function MemberApp({
   const handleSaveProgress = (entry) => {
     setProgressLogs(l => [...l, entry]);
     if (user?.uid && gymId && user.uid !== 'demo') {
-      import('./shared/firebase.js').then(f => f.trackActivity(user.uid, gymId, 'progress'));
+      trackActivity(user.uid, gymId, 'progress');
     }
   };
 
@@ -126,7 +127,7 @@ export default function MemberApp({
   useEffect(() => {
     if (mealLog.length > prevMealCount.current) {
       if (user?.uid && gymId && user.uid !== 'demo') {
-        import('./shared/firebase.js').then(f => f.trackActivity(user.uid, gymId, 'diet'));
+        trackActivity(user.uid, gymId, 'diet');
       }
     }
     prevMealCount.current = mealLog.length;
