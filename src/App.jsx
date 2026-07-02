@@ -460,7 +460,7 @@ export default function MSG() {
 
   // 6. Role-based routing
   if (role === 'owner') return (
-    <ErrorBoundary C={C} fn={fn} onRetry={() => { setGymId(null); save('msg_gym_id', null); }}>
+    <ErrorBoundary C={C} fn={fn} onRetry={() => { /* just reset error state — don't clear gymId */ }}>
       <OwnerDashboard
         gymId={gymId}
         gymName={gymName}
@@ -482,7 +482,7 @@ export default function MSG() {
 
   // 6. Default: member app
   return (
-    <ErrorBoundary C={C} fn={fn} onRetry={() => { setGymId(null); save('msg_gym_id', null); }}>
+    <ErrorBoundary C={C} fn={fn} onRetry={() => { /* just reset error state — don't clear gymId */ }}>
       <Suspense fallback={fullPageLoader}>
         <MemberApp
           user={user}

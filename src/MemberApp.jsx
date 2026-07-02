@@ -1,9 +1,41 @@
 // MemberApp.jsx — Lean orchestrator: imports all sections from src/member/
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Component } from 'react';
 import { THEMES, C, fn } from './shared/theme.js';
 import { UserAvatar } from './shared/primitives.jsx';
 import AmbientBackground from './shared/AmbientBackground.jsx';
 import appIconLight from './assets/app-icon-light.png';
+
+// ── Per-section error boundary (keeps crashes isolated to one tab) ────────────
+class SectionErrorBoundary extends Component {
+  constructor(props) { super(props); this.state = { hasError: false, error: null }; }
+  static getDerivedStateFromError(error) { return { hasError: true, error }; }
+  componentDidCatch(err, info) { console.error('[MSG] Section crash:', err, info); }
+  render() {
+    if (!this.state.hasError) return this.props.children;
+    return (
+      <div style={{
+        padding: '48px 24px', textAlign: 'center',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
+      }}>
+        <div style={{ fontSize: 40 }}>⚠️</div>
+        <div style={{ fontFamily: fn, fontSize: 17, fontWeight: 800, color: C.text }}>Something went wrong</div>
+        <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.6, maxWidth: 280 }}>
+          {this.state.error?.message || 'An unexpected error occurred in this section.'}
+        </div>
+        <button
+          onClick={() => this.setState({ hasError: false, error: null })}
+          style={{
+            background: C.accent, border: 'none', borderRadius: 12,
+            padding: '12px 28px', color: '#111', fontWeight: 800, fontSize: 13,
+            cursor: 'pointer', marginTop: 8,
+          }}
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+}
 
 // ── Section imports ──────────────────────────────────────────────────────────
 import HomeSection from './member/HomeSection.jsx';
@@ -102,21 +134,23 @@ export default function MemberApp({
 
   const views = {
     home: (
-      <HomeSection
-        mealLog={mealLog}
-        progressLogs={progressLogs}
-        dietGoal={dietGoal}
-        onLogClick={() => setShowLogModal(true)}
-        user={user}
-        gymId={gymId}
-        onAchievementsClick={() => setProfileScreen('profile')}
-        setBackHandler={setChildBackHandler}
-      />
+      <SectionErrorBoundary key="home">
+        <HomeSection
+          mealLog={mealLog}
+          progressLogs={progressLogs}
+          dietGoal={dietGoal}
+          onLogClick={() => setShowLogModal(true)}
+          user={user}
+          gymId={gymId}
+          onAchievementsClick={() => setProfileScreen('profile')}
+          setBackHandler={setChildBackHandler}
+        />
+      </SectionErrorBoundary>
     ),
-    workout: <WorkoutSection weekPlan={weekPlan} setWeekPlan={setWeekPlan} />,
-    diet:    <DietSection dietGoal={dietGoal} setDietGoal={setDietGoal} mealLog={mealLog} setMealLog={setMealLog} />,
-    store:   <StoreSection gymId={gymId} setBackHandler={setChildBackHandler} />,
-    progress: <ProgressSection logs={progressLogs} onLogClick={() => setShowLogModal(true)} onDelete={i => setProgressLogs(l => l.filter((_, j) => j !== i))} />,
+    workout: <SectionErrorBoundary key="workout"><WorkoutSection weekPlan={weekPlan} setWeekPlan={setWeekPlan} /></SectionErrorBoundary>,
+    diet:    <SectionErrorBoundary key="diet"><DietSection dietGoal={dietGoal} setDietGoal={setDietGoal} mealLog={mealLog} setMealLog={setMealLog} /></SectionErrorBoundary>,
+    store:   <SectionErrorBoundary key="store"><StoreSection gymId={gymId} setBackHandler={setChildBackHandler} /></SectionErrorBoundary>,
+    progress: <SectionErrorBoundary key="progress"><ProgressSection logs={progressLogs} onLogClick={() => setShowLogModal(true)} onDelete={i => setProgressLogs(l => l.filter((_, j) => j !== i))} /></SectionErrorBoundary>,
   };
 
   if (!setupDone) {
