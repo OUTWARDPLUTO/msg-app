@@ -224,12 +224,15 @@ export default function MSG() {
           setUser(u); save('msg_user', u);
           resolveGym(fbUser.uid).finally(() => setAuthLoading(false));
         } else if (!fbUser) {
-          // Firebase confirmed: no valid session — clear cached user and stop loading
+          // Firebase fired null — this can happen before the authenticated user
+          // fires on Android cold start. Just unblock authLoading; do NOT clear
+          // user/gymId here or we get a GymOnboarding flash when the user
+          // comes in a frame later. If the session is truly expired, Firebase
+          // ops will fail with auth errors which are handled individually.
+          if (!gymResolvedRef.current) setAuthLoading(false);
+        } else {
+          // fbUser && gymResolvedRef.current = true → handleLogin already ran
           setAuthLoading(false);
-          if (!gymResolvedRef.current) {
-            setUser(null); save('msg_user', null);
-            setGymId(null); save('msg_gym_id', null);
-          }
         }
       });
     }).catch(() => { setAuthLoading(false); });
