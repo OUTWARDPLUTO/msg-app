@@ -68,7 +68,7 @@ export default function ProgressSection({ logs, onLogClick, onDelete }) {
         <div style={{ padding: '0 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
           {[
             { label: 'Body Weight', val: `${last.weight} kg`, diff: totalDiff, c: C.accent },
-            { label: 'Body Fat', val: `${last.bodyFat}%`, diff: null, c: C.orange },
+            { label: 'Body Fat', val: last.bodyFat > 0 ? `${last.bodyFat}%` : '—', diff: null, c: C.orange },
             { label: 'Waist', val: last.waist > 0 ? `${last.waist} cm` : '—', diff: null, c: C.blue },
             { label: 'Chest', val: last.chest > 0 ? `${last.chest} cm` : '—', diff: null, c: C.purple },
             { label: 'Arms', val: last.arms > 0 ? `${last.arms} cm` : '—', diff: null, c: C.teal },
@@ -126,11 +126,10 @@ export default function ProgressSection({ logs, onLogClick, onDelete }) {
         {logs.length === 0 && (
           <div style={{ color: C.muted, fontSize: 13, textAlign: 'center', padding: '24px 0' }}>No entries yet — tap + Log Entry to start</div>
         )}
-        {[...logs].map((log, ri) => {
-          const realIdx = logs.length - 1 - ri; // index in original array (reverse display)
+        {[...logs].reverse().map((log, ri) => {
           const idx = logs.length - 1 - ri;
           return (
-            <Card key={ri} style={{ padding: '12px 16px', marginBottom: 8 }}>
+            <Card key={idx} style={{ padding: '12px 16px', marginBottom: 8 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ fontFamily: fb, fontWeight: 700, fontSize: 12, color: C.sub, letterSpacing: '0.06em', textTransform: 'uppercase', marginTop: 2 }}>{log.date}</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -150,7 +149,7 @@ export default function ProgressSection({ logs, onLogClick, onDelete }) {
               {log.notes && <div style={{ fontSize: 11, color: C.muted, marginTop: 5, fontStyle: 'italic' }}>"{log.notes}"</div>}
             </Card>
           );
-        }).reverse()}
+        })}
       </div>
 
       {/* Weekly Activity — driven by real log data */}
