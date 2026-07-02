@@ -45,8 +45,8 @@ import GymOnboarding    from './auth/GymOnboarding.jsx';
 import OwnerDashboard   from './owner/OwnerDashboard.jsx';
 import TrainerView      from './owner/TrainerView.jsx';
 
-// ── Member App (lazy — bundles all existing sections)
-const MemberApp = lazy(() => import('./MemberApp.jsx'));
+// ── Member App (static — no lazy-load/dynamic fetch issues in Capacitor)
+import MemberApp from './MemberApp.jsx';
 import { Spinner, Skeleton } from './shared/primitives.jsx';
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -500,20 +500,18 @@ export default function MSG() {
   // 6. Default: member app
   return (
     <ErrorBoundary C={C} fn={fn} onRetry={() => { /* just reset error state — don't clear gymId */ }}>
-      <Suspense fallback={fullPageLoader}>
-        <MemberApp
-          user={user}
-          gymId={gymId}
-          gymName={gymName}
-          darkMode={darkMode}
-          onToggleTheme={toggleTheme}
-          onLogout={handleLogout}
-          dietGoal={dietGoal}       setDietGoal={setDietGoal}
-          mealLog={mealLog}         setMealLog={setMealLog}
-          weekPlan={weekPlan}       setWeekPlan={setWeekPlan}
-          progressLogs={progressLogs} setProgressLogs={setProgressLogs}
-        />
-      </Suspense>
+      <MemberApp
+        user={user}
+        gymId={gymId}
+        gymName={gymName}
+        darkMode={darkMode}
+        onToggleTheme={toggleTheme}
+        onLogout={handleLogout}
+        dietGoal={dietGoal}       setDietGoal={setDietGoal}
+        mealLog={mealLog}         setMealLog={setMealLog}
+        weekPlan={weekPlan}       setWeekPlan={setWeekPlan}
+        progressLogs={progressLogs} setProgressLogs={setProgressLogs}
+      />
     </ErrorBoundary>
   );
 }
