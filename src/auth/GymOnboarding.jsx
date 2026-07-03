@@ -676,7 +676,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
         background: C.s2, border: `1px solid ${C.border}`, borderRadius: 18,
         cursor: 'pointer', textAlign: 'left',
       }}>
-        <div style={{ fontSize: 24, marginBottom: 6 }}>哨</div>
+        <div style={{ fontSize: 24, marginBottom: 6 }}>👟</div>
         <div style={{ fontFamily: fn, fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 4 }}>I'm a Trainer</div>
         <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.5 }}>Apply to join a gym and manage your assigned members.</div>
       </button>
@@ -800,7 +800,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
   if (screen === 'trainer') return wrap(
     <>
       {backBtn('choice')}
-      <div className="ob-card" style={{ fontSize: 40, marginBottom: 12 }}>哨</div>
+      <div className="ob-card" style={{ fontSize: 40, marginBottom: 12 }}>👟</div>
       <div className="ob-card" style={{ fontFamily: fn, fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 8, letterSpacing: '-0.02em' }}>Join as Trainer</div>
       <div className="ob-card" style={{ color: C.sub, fontSize: 13, marginBottom: 28, lineHeight: 1.5 }}>
         Enter the gym's 6-character code to apply as a trainer. The gym owner must approve your application.

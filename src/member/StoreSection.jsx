@@ -536,7 +536,7 @@ function PlansBottomSheet({ plans, onClose }) {
 }
 
 // ─── Explore Section ─────────────────────────────────────────────────────────
-function ExploreSection() {
+export function ExploreSection() {
 
   const [muscle, setMuscle] = useState('chest');
   const [filter, setFilter] = useState('all');

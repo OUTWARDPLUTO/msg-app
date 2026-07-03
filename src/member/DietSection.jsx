@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { BASE_DRI, NMETA, DEF_MEALS, API_URL, callClaude } from './memberData.js';
 import { Card, Tag, Lbl, Hd, NRow } from './primitives.jsx';
@@ -71,46 +71,77 @@ function MealCard({ item, onDelete }) {
 // ─── Diet Onboarding ─────────────────────────────────────────────────────────
 function DietOnboarding({ onComplete }) {
   const [step, setStep] = useState(0);
-  const [ans, setAns] = useState({ goal: '', speed: '', activity: '', diet: '', cw: '', tw: '' });
+  const [ans, setAns] = useState({
+    goal: '',
+    activity: '',
+    diet: '',
+    gender: 'Male',
+    age: '',
+    height: '',
+    cw: '',
+    tw: '',
+    speed: ''
+  });
 
   const allSteps = [
     { q: "What's your primary goal?", field: 'goal', opts: ['Lose Weight', 'Gain Weight', 'Maintain'] },
-    { q: 'At what pace?', field: 'speed', opts: ['Slow (±250 kcal)', 'Moderate (±500 kcal)', 'Aggressive (±750 kcal)'], skip: ans.goal === 'Maintain' },
     { q: 'How active are you?', field: 'activity', opts: ['Sedentary', 'Lightly Active', 'Moderately Active', 'Very Active'] },
     { q: 'Diet preference?', field: 'diet', opts: ['Non-Vegetarian', 'Vegetarian', 'Vegan', 'Flexible'] },
   ];
-  const steps = allSteps.filter(s => !s.skip);
-  const total = steps.length + 1;
-  const cur = steps[step];
+  
+  const total = ans.goal === 'Maintain' ? 4 : 5;
 
   const next = (val) => {
+    const cur = allSteps[step];
     if (cur) setAns(a => ({ ...a, [cur.field]: val }));
     setStep(s => s + 1);
   };
 
-  const finish = () => {
-    const w = parseFloat(ans.cw) || 75;
-    const mult = { Sedentary: 30, 'Lightly Active': 33, 'Moderately Active': 36, 'Very Active': 40 }[ans.activity] || 33;
-    const tdee = Math.round(w * mult);
-    const speedAdj = { 'Slow (±250 kcal)': 250, 'Moderate (±500 kcal)': 500, 'Aggressive (±750 kcal)': 750 }[ans.speed] || 0;
-    const cal = ans.goal === 'Lose Weight' ? tdee - speedAdj : ans.goal === 'Gain Weight' ? tdee + speedAdj : tdee;
-    const protein = Math.round(ans.goal === 'Gain Weight' ? w * 2.2 : ans.goal === 'Lose Weight' ? w * 2.0 : w * 1.8);
+  const finish = (finalAns) => {
+    const w = parseFloat(finalAns.cw) || 75;
+    const h = parseFloat(finalAns.height) || 170;
+    const age = parseFloat(finalAns.age) || 25;
+    const gender = finalAns.gender || 'Male';
+    
+    // BMR Calculation (Mifflin-St Jeor)
+    let bmr = 10 * w + 6.25 * h - 5 * age;
+    if (gender === 'Male') bmr += 5;
+    else if (gender === 'Female') bmr -= 161;
+    else bmr -= 78;
+
+    // TDEE calculation
+    const factor = { Sedentary: 1.2, 'Lightly Active': 1.375, 'Moderately Active': 1.55, 'Very Active': 1.725 }[finalAns.activity] || 1.375;
+    const tdee = Math.round(bmr * factor);
+
+    let speedAdj = 0;
+    if (finalAns.goal === 'Gain Weight') {
+      speedAdj = { 'Slow Gain': 250, 'Moderate Gain': 500, 'Fast Gain': 750 }[finalAns.speed] || 500;
+    } else if (finalAns.goal === 'Lose Weight') {
+      speedAdj = -({ 'Slow Loss': -250, 'Moderate Loss': -500, 'Fast Loss': -750 }[finalAns.speed] || -500);
+    }
+    
+    const cal = finalAns.goal === 'Lose Weight' ? Math.max(1200, tdee - speedAdj) : finalAns.goal === 'Gain Weight' ? tdee + speedAdj : tdee;
+    const protein = Math.round(finalAns.goal === 'Gain Weight' ? w * 2.2 : finalAns.goal === 'Lose Weight' ? w * 2.0 : w * 1.8);
     const fat = Math.round(w * 0.8);
     const carbs = Math.max(50, Math.round((cal - protein * 4 - fat * 9) / 4));
-    onComplete({ ...ans, calories: cal, protein, carbs, fat, currentWeight: w, targetWeight: parseFloat(ans.tw) || w });
+    
+    onComplete({
+      ...finalAns,
+      calories: cal,
+      protein,
+      carbs,
+      fat,
+      currentWeight: w,
+      targetWeight: parseFloat(finalAns.tw) || w,
+      height: h,
+      age
+    });
   };
 
-  return (
-    <div style={{ padding: 24, minHeight: '100%' }}>
-      <div style={{ fontFamily: fn, fontSize: 34, color: C.text, letterSpacing: '0.05em', marginBottom: 6 }}>PERSONALIZE</div>
-      <div style={{ color: C.sub, fontSize: 13, marginBottom: 24 }}>Set up your nutrition profile in {total} steps</div>
-      <div style={{ display: 'flex', gap: 4, marginBottom: 28 }}>
-        {Array.from({ length: total }).map((_, i) => (
-          <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: i < step || step >= total ? C.accent : i === step ? C.accent + '60' : C.s3, transition: 'background 0.3s' }} />
-        ))}
-      </div>
-
-      {cur ? (
+  const renderStepContent = () => {
+    if (step < 3) {
+      const cur = allSteps[step];
+      return (
         <>
           <div style={{ fontFamily: fn, fontSize: 22, color: C.text, letterSpacing: '0.04em', marginBottom: 20, lineHeight: 1.2 }}>{cur.q}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -124,23 +155,138 @@ function DietOnboarding({ onComplete }) {
             ))}
           </div>
         </>
-      ) : (
+      );
+    }
+
+    if (step === 3) {
+      const canContinue = ans.age && ans.height && ans.cw && (ans.goal === 'Maintain' || ans.tw);
+      return (
         <>
-          <div style={{ fontFamily: fn, fontSize: 22, color: C.text, letterSpacing: '0.04em', marginBottom: 20 }}>YOUR WEIGHT DETAILS</div>
-          {[{ l: 'Current Weight (kg)', k: 'cw', p: 'e.g. 72.5' }, { l: 'Target Weight (kg)', k: 'tw', p: 'e.g. 68.0' }].map(f => (
-            <div key={f.k} style={{ marginBottom: 16 }}>
-              <Lbl text={f.l} style={{ marginBottom: 8 }} />
-              <input type="number" value={ans[f.k]} onChange={e => setAns(a => ({ ...a, [f.k]: e.target.value }))} placeholder={f.p}
+          <div style={{ fontFamily: fn, fontSize: 22, color: C.text, letterSpacing: '0.04em', marginBottom: 20 }}>YOUR PHYSICAL DETAILS</div>
+          
+          <div style={{ marginBottom: 16 }}>
+            <Lbl text="Gender" style={{ marginBottom: 8 }} />
+            <div style={{ display: 'flex', gap: 10 }}>
+              {['Male', 'Female'].map(g => (
+                <button key={g} type="button" onClick={() => setAns(a => ({ ...a, gender: g }))} style={{
+                  flex: 1, background: ans.gender === g ? C.accent : C.s2, border: `1px solid ${ans.gender === g ? C.accent : C.border}`,
+                  borderRadius: 12, padding: '12px 0', color: ans.gender === g ? '#000' : C.text,
+                  fontSize: 14, fontWeight: 600, fontFamily: 'Barlow,sans-serif', cursor: 'pointer'
+                }}>{g}</button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+            <div style={{ flex: 1 }}>
+              <Lbl text="Age (years)" style={{ marginBottom: 8 }} />
+              <input type="number" value={ans.age} onChange={e => setAns(a => ({ ...a, age: e.target.value }))} placeholder="e.g. 25"
                 style={{ width: '100%', boxSizing: 'border-box', background: C.s2, border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 16px', color: C.text, fontSize: 16, fontFamily: 'Barlow,sans-serif', outline: 'none' }} />
             </div>
-          ))}
-          <button onClick={finish} disabled={!ans.cw} style={{
-            width: '100%', background: ans.cw ? C.accent : C.s4, color: ans.cw ? '#000' : C.muted,
+            <div style={{ flex: 1 }}>
+              <Lbl text="Height (cm)" style={{ marginBottom: 8 }} />
+              <input type="number" value={ans.height} onChange={e => setAns(a => ({ ...a, height: e.target.value }))} placeholder="e.g. 175"
+                style={{ width: '100%', boxSizing: 'border-box', background: C.s2, border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 16px', color: C.text, fontSize: 16, fontFamily: 'Barlow,sans-serif', outline: 'none' }} />
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+            <div style={{ flex: 1 }}>
+              <Lbl text="Current Weight (kg)" style={{ marginBottom: 8 }} />
+              <input type="number" value={ans.cw} onChange={e => setAns(a => ({ ...a, cw: e.target.value }))} placeholder="e.g. 72.5"
+                style={{ width: '100%', boxSizing: 'border-box', background: C.s2, border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 16px', color: C.text, fontSize: 16, fontFamily: 'Barlow,sans-serif', outline: 'none' }} />
+            </div>
+            {ans.goal !== 'Maintain' && (
+              <div style={{ flex: 1 }}>
+                <Lbl text="Target Weight (kg)" style={{ marginBottom: 8 }} />
+                <input type="number" value={ans.tw} onChange={e => setAns(a => ({ ...a, tw: e.target.value }))} placeholder="e.g. 68.0"
+                  style={{ width: '100%', boxSizing: 'border-box', background: C.s2, border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 16px', color: C.text, fontSize: 16, fontFamily: 'Barlow,sans-serif', outline: 'none' }} />
+              </div>
+            )}
+          </div>
+
+          <button onClick={() => {
+            if (ans.goal === 'Maintain') {
+              finish({ ...ans, tw: ans.cw, speed: 'Maintain' });
+            } else {
+              setStep(4);
+            }
+          }} disabled={!canContinue} style={{
+            width: '100%', background: canContinue ? C.accent : C.s4, color: canContinue ? '#000' : C.muted,
             border: 'none', borderRadius: 12, padding: 15, fontSize: 13, fontFamily: fb,
-            fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: ans.cw ? 'pointer' : 'not-allowed', marginTop: 8,
-          }}>Calculate My Plan →</button>
+            fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: canContinue ? 'pointer' : 'not-allowed', marginTop: 8,
+          }}>
+            {ans.goal === 'Maintain' ? 'Calculate My Plan →' : 'Continue →'}
+          </button>
         </>
-      )}
+      );
+    }
+
+    if (step === 4) {
+      const w = parseFloat(ans.cw) || 70;
+      const h = parseFloat(ans.height) || 170;
+      const age = parseFloat(ans.age) || 25;
+      const gender = ans.gender || 'Male';
+
+      let bmr = 10 * w + 6.25 * h - 5 * age;
+      if (gender === 'Male') bmr += 5;
+      else if (gender === 'Female') bmr -= 161;
+      else bmr -= 78;
+
+      const factor = { Sedentary: 1.2, 'Lightly Active': 1.375, 'Moderately Active': 1.55, 'Very Active': 1.725 }[ans.activity] || 1.375;
+      const tdee = Math.round(bmr * factor);
+
+      const options = ans.goal === 'Gain Weight' ? [
+        { label: 'Slow Gain', adj: 250, desc: 'Lean bulking, minimal fat gain (+250 kcal)' },
+        { label: 'Moderate Gain', adj: 500, desc: 'Steady strength & size increase (+500 kcal)' },
+        { label: 'Fast Gain', adj: 750, desc: 'Aggressive mass gain (+750 kcal)' }
+      ] : [
+        { label: 'Slow Loss', adj: -250, desc: 'Very gentle deficit, preserves muscle (-250 kcal)' },
+        { label: 'Moderate Loss', adj: -500, desc: 'Standard weight loss pace (-500 kcal)' },
+        { label: 'Fast Loss', adj: -750, desc: 'Aggressive fat loss, higher effort (-750 kcal)' }
+      ];
+
+      return (
+        <>
+          <div style={{ fontFamily: fn, fontSize: 22, color: C.text, letterSpacing: '0.04em', marginBottom: 12 }}>RECOMMENDED CALORIES</div>
+          <div style={{ color: C.sub, fontSize: 13, marginBottom: 20 }}>Based on your TDEE of <strong>{tdee} kcal</strong>, choose your pace:</div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {options.map(opt => {
+              const calVal = Math.max(1200, tdee + opt.adj);
+              return (
+                <button key={opt.label} onClick={() => finish({ ...ans, speed: opt.label, calories: calVal })} style={{
+                  background: C.s2, border: `1px solid ${C.border}`, borderRadius: 14,
+                  padding: '16px 20px', textAlign: 'left', cursor: 'pointer', transition: 'border-color 0.2s',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                }}>
+                  <div style={{ flex: 1, marginRight: 12 }}>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: C.text }}>{opt.label}</div>
+                    <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>{opt.desc}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontFamily: fn, fontSize: 26, color: C.accent, fontWeight: 800 }}>{calVal}</div>
+                    <div style={{ fontSize: 10, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.04em' }}>kcal / day</div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </>
+      );
+    }
+  };
+
+  return (
+    <div style={{ padding: 24, minHeight: '100%' }}>
+      <div style={{ fontFamily: fn, fontSize: 34, color: C.text, letterSpacing: '0.05em', marginBottom: 6 }}>PERSONALIZE</div>
+      <div style={{ color: C.sub, fontSize: 13, marginBottom: 24 }}>Set up your nutrition profile in {total} steps</div>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 28 }}>
+        {Array.from({ length: total }).map((_, i) => (
+          <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: i < step || step >= total ? C.accent : i === step ? C.accent + '60' : C.s3, transition: 'background 0.3s' }} />
+        ))}
+      </div>
+      {renderStepContent()}
     </div>
   );
 }

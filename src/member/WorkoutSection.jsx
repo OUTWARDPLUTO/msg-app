@@ -5,6 +5,7 @@ import { API_URL, callClaude } from './memberData.js';
 import { Card, Tag, Lbl, Hd, ExCard } from './primitives.jsx';
 import { EX } from './constants.js';
 import { trackActivity } from '../shared/firebase.js';
+import { ExploreSection } from './StoreSection.jsx';
 
 // EX array is inlined below via WorkoutSection.jsx extraction â€” do not import// ─── Warmup Block ─────────────────────────────────────────────────────────────
 const WARMUP_ROUTINE = [
