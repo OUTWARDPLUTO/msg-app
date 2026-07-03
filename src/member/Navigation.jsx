@@ -61,7 +61,7 @@ export function LogProgressModal({ onSave, onClose, darkMode }) {
 
   const save = () => {
     const entry = {
-      date: new Date().toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }),
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
       weight: validateNumber(form.weight, 20, 500, 0),
       height: validateNumber(form.height, 50, 300, 0),
       bodyFat: validateNumber(form.bodyFat, 0, 100, 0),

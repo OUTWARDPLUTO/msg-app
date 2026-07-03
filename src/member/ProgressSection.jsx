@@ -43,6 +43,7 @@ export default function ProgressSection({ logs, onLogClick, onDelete }) {
     { key: 'waist', label: 'Waist', unit: 'cm', color: C.blue },
     { key: 'chest', label: 'Chest', unit: 'cm', color: C.purple },
     { key: 'arms', label: 'Arms', unit: 'cm', color: C.teal },
+    { key: 'legs', label: 'Legs', unit: 'cm', color: C.pink },
   ];
   const cur = metrics.find(m => m.key === metric) || metrics[0];
   const last = logs[logs.length - 1];

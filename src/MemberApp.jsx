@@ -199,6 +199,17 @@ export default function MemberApp({
       {profileScreen === 'profile'  && <ProfileScreen  onClose={() => setProfileScreen(null)} progressLogs={progressLogs} dietGoal={dietGoal} mealLog={mealLog} weekPlan={weekPlan} user={user} gymId={gymId} />}
       {profileScreen === 'settings' && <SettingsScreen onClose={() => setProfileScreen(null)} onResetDiet={() => setDietGoal(null)} onResetWorkout={() => setWeekPlan(null)} darkMode={darkMode} onToggleTheme={onToggleTheme} />}
       {profileScreen === 'language' && <LanguageScreen onClose={() => setProfileScreen(null)} />}
+      {profileScreen === 'premium'  && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 500, background: C.bg, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px', textAlign: 'center', fontFamily: fn }}>
+          <div style={{ fontSize: 64, marginBottom: 16 }}>⭐</div>
+          <div style={{ fontSize: 26, fontWeight: 800, color: C.text, marginBottom: 8, letterSpacing: '-0.02em' }}>MSG Premium</div>
+          <div style={{ fontSize: 14, color: C.sub, lineHeight: 1.7, marginBottom: 32, maxWidth: 300 }}>
+            Advanced AI coaching, personalised macro targets, detailed analytics and priority support — coming soon for members.
+          </div>
+          <div style={{ fontSize: 13, color: C.muted, marginBottom: 32 }}>Ask your gym owner to upgrade the gym's subscription to unlock member premium features.</div>
+          <button onClick={() => setProfileScreen(null)} style={{ background: C.accent, border: 'none', borderRadius: 14, padding: '14px 36px', color: '#111', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>Got It</button>
+        </div>
+      )}
 
       <div className="msg-scroll" style={{ flex: 1, overflowY: 'auto', paddingBottom: 100 }}>
         {views[tab]}
