@@ -76,15 +76,17 @@ export function LogProgressModal({ onSave, onClose, darkMode }) {
   };
 
   return (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-end' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-end' }}
+      onClick={onClose}>
       <div style={{
         width: '100%',
-        background: darkMode ? 'rgba(18, 18, 18, 0.88)' : 'rgba(255, 255, 255, 0.92)',
+        background: darkMode ? 'rgba(18, 18, 18, 0.96)' : 'rgba(255, 255, 255, 0.97)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
         borderTop: `1px solid ${darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
-        borderRadius: '20px 20px 0 0', padding: '20px 20px 30px', maxHeight: '88%', overflowY: 'auto', boxSizing: 'border-box'
-      }}>
+        borderRadius: '20px 20px 0 0', padding: `20px 20px calc(env(safe-area-inset-bottom, 0px) + 32px)`, maxHeight: '88dvh', overflowY: 'auto', boxSizing: 'border-box'
+      }}
+        onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div style={{ fontFamily: fn, fontSize: 22, fontWeight: 800, color: C.text, letterSpacing: '-0.02em' }}>Log Progress</div>
           <button onClick={onClose} style={{ background: C.s3, border: 'none', width: 32, height: 32, borderRadius: '50%', color: C.sub, fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
