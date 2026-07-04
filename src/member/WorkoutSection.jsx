@@ -761,7 +761,7 @@ export default function WorkoutSection({ weekPlan, setWeekPlan }) {
               {/* Plan header */}
               <div style={{ marginBottom: 14 }}>
                 <div style={{ marginBottom: 10 }}>
-                  <div style={{ fontFamily: fn, fontWeight: 800, fontSize: 18, color: C.text, letterSpacing: '-0.02em' }}>{days}-Day {goal.charAt(0).toUpperCase() + goal.slice(1)} Plan</div>
+                  <div style={{ fontFamily: fn, fontWeight: 800, fontSize: 18, color: C.text, letterSpacing: '-0.02em' }}>{weekPlan.length}-Day Training Plan</div>
                   <div style={{ fontSize: 12, color: C.sub, marginTop: 3 }}>
                     {level} · {equip}{injury ? ` · 🩺 Injury-safe (${typeof injury === 'string' ? injury.slice(0, 30) : 'adjusted'})` : ''}
                   </div>

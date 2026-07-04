@@ -421,7 +421,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
               <MoreTab gymId={gymId} gymName={gymName} ownerUid={user?.uid} onNavigate={handleMoreNavigate} pendingTrainersCount={pendingTrainersCount} />
             )}
             {tab === 'dashboard'  && <DashboardTab gymId={gymId} user={user} gymName={gymName} onNavigate={handleMoreNavigate} onViewMemberProfile={setProfileMember} setTab={setTab} setMembersSubTab={setMembersSubTab} setBackHandler={setChildBackHandler} />}
-            {tab === 'members'    && <MemberListTab gymId={gymId} setBackHandler={setChildBackHandler} onViewMemberProfile={setProfileMember} subTab={membersSubTab} setSubTab={setMembersSubTab} />}
+            {tab === 'members'    && <MemberListTab gymId={gymId} gymCode={gymCode} setBackHandler={setChildBackHandler} onViewMemberProfile={setProfileMember} subTab={membersSubTab} setSubTab={setMembersSubTab} />}
             {tab === 'attendance' && <AttendanceTab gymId={gymId} onViewMemberProfile={setProfileMember} />}
             {tab === 'store'      && <StoreTab gymId={gymId} setBackHandler={setChildBackHandler} />}
           </div>

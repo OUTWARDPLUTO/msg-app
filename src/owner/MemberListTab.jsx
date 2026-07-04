@@ -14,7 +14,7 @@ function getJsDate(field) {
   return isNaN(d.getTime()) ? null : d;
 }
 
-export default function MemberListTab({ gymId, setBackHandler, onViewMemberProfile, subTab, setSubTab }) {
+export default function MemberListTab({ gymId, gymCode = '', setBackHandler, onViewMemberProfile, subTab, setSubTab }) {
   const _subTab = subTab || 'directory';
   const _setSubTab = setSubTab || (() => {});
   const [members, setMembers] = useState([]);
@@ -22,18 +22,21 @@ export default function MemberListTab({ gymId, setBackHandler, onViewMemberProfi
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(null); // member for detail sheet
   const [activeTab, setActiveTab] = useState('All');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (selected && setBackHandler) {
+    if ((selected || showAddModal) && setBackHandler) {
       setBackHandler(() => () => {
         setSelected(null);
+        setShowAddModal(false);
         return true;
       });
     } else if (setBackHandler) {
       setBackHandler(null);
     }
     return () => { if (setBackHandler) setBackHandler(null); };
-  }, [selected, setBackHandler]);
+  }, [selected, showAddModal, setBackHandler]);
 
   useEffect(() => { if (gymId) loadMembers(); }, [gymId]);
 
@@ -51,6 +54,13 @@ export default function MemberListTab({ gymId, setBackHandler, onViewMemberProfi
     }
     setLoading(false);
   }
+
+  const handleCopyCode = () => {
+    if (!gymCode) return;
+    navigator.clipboard.writeText(gymCode).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
 
   function computeStatus(member) {
@@ -132,7 +142,7 @@ export default function MemberListTab({ gymId, setBackHandler, onViewMemberProfi
 
       {/* Add Member Button */}
       <div style={{ padding: '0 20px', marginBottom: 20 }}>
-        <button style={{
+        <button onClick={() => setShowAddModal(true)} style={{
           width: '100%', background: C.accent, borderRadius: 16, padding: '16px',
           color: C.text, fontFamily: fb, fontSize: 16, fontWeight: 700, border: 'none',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer'
@@ -219,6 +229,65 @@ export default function MemberListTab({ gymId, setBackHandler, onViewMemberProfi
         })}
           </div>
         </>
+      )}
+
+      {showAddModal && (
+        <ModalShell title="Add Gym Member" onClose={() => setShowAddModal(false)}>
+          <div style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: 20, fontFamily: fn }}>
+            <div style={{ fontSize: 14, color: C.sub, lineHeight: 1.6 }}>
+              Members join your gym themselves by entering your unique code or scanning the QR code below on their own devices.
+            </div>
+            
+            <div style={{
+              background: `linear-gradient(135deg, ${C.accent}20, ${C.accent}08)`,
+              border: `2px solid ${C.accent}55`, borderRadius: 20,
+              padding: '24px 20px', textAlign: 'center'
+            }}>
+              <div style={{ fontSize: 10, fontFamily: fb, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16 }}>
+                Gym Code & QR
+              </div>
+              
+              {gymCode && (
+                <div style={{ background: '#fff', padding: 12, borderRadius: 12, display: 'inline-block', marginBottom: 20 }}>
+                  <img 
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${gymCode}`} 
+                    alt="Gym QR Code" 
+                    style={{ width: 180, height: 180, display: 'block' }}
+                  />
+                </div>
+              )}
+
+              <div style={{ fontFamily: fn, fontSize: 42, fontWeight: 800, color: C.accent, letterSpacing: '0.4em', lineHeight: 1, paddingLeft: '0.4em' }}>
+                {gymCode || '——'}
+              </div>
+            </div>
+
+            <button onClick={handleCopyCode} style={{
+              width: '100%', padding: '16px',
+              background: copied ? C.green + '18' : C.s1,
+              border: `1px solid ${copied ? C.green : C.border}`,
+              borderRadius: 16, color: copied ? C.green : C.text,
+              fontFamily: fb, fontWeight: 700, fontSize: 14, cursor: 'pointer',
+              transition: 'all 0.25s',
+            }}>
+              {copied ? '✓ Copied to clipboard!' : '📋 Copy Gym Code'}
+            </button>
+
+            <div style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: 16, padding: '20px' }}>
+              <div style={{ fontSize: 11, color: C.muted, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>Instructions for Members</div>
+              {[
+                ['1️⃣', 'Download the MSG app on their phone.'],
+                ['2️⃣', 'Sign in and select "I\'m a Gym Member".'],
+                ['3️⃣', `Scan the QR above or enter code: ${gymCode || '——'}`],
+              ].map(([num, text]) => (
+                <div key={text} style={{ display: 'flex', gap: 12, marginBottom: 10, alignItems: 'flex-start', fontSize: 13, color: C.sub, lineHeight: 1.5 }}>
+                  <span style={{ fontSize: 15, flexShrink: 0 }}>{num}</span>
+                  <span>{text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </ModalShell>
       )}
     </div>
   );

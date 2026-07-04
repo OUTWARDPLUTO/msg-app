@@ -243,8 +243,8 @@ export default function HomeSection({ mealLog, progressLogs, dietGoal, onLogClic
               {[
                 { l: 'Cal', v: Math.round(tot.cal), max: dri.calories, c: C.accent },
                 { l: 'Protein', v: Math.round(tot.p), max: dri.protein, c: C.blue },
-                { l: 'Carbs', v: Math.round(tot.cal / 4 * 0.45), max: dri.carbs, c: C.teal },
-                { l: 'Fat', v: Math.round(tot.cal / 9 * 0.3), max: dri.fat, c: C.orange },
+                { l: 'Carbs', v: Math.round(tot.c || 0), max: dri.carbs, c: C.teal },
+                { l: 'Fat', v: Math.round(tot.f || 0), max: dri.fat, c: C.orange },
               ].map(m => {
                 const pct = Math.min(Math.round((m.v / m.max) * 100), 100);
                 const over = m.v > m.max;
