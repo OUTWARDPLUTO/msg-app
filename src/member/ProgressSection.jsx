@@ -129,8 +129,10 @@ export default function ProgressSection({ logs, onLogClick, onDelete }) {
         )}
         {[...logs].reverse().map((log, ri) => {
           const idx = logs.length - 1 - ri;
+          // Use date and weight as a stable key instead of index
+          const uniqueKey = `${log.date}_${log.weight}_${idx}`;
           return (
-            <Card key={idx} style={{ padding: '12px 16px', marginBottom: 8 }}>
+            <Card key={uniqueKey} style={{ padding: '12px 16px', marginBottom: 8 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ fontFamily: fb, fontWeight: 700, fontSize: 12, color: C.sub, letterSpacing: '0.06em', textTransform: 'uppercase', marginTop: 2 }}>{log.date}</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

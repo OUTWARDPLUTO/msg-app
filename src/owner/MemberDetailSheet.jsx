@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { Card, Lbl, ScoreRing, ModalShell, Spinner, Skeleton } from '../shared/primitives.jsx';
-import { getFBFirestore } from '../shared/firebase.js';
+import { getFBFirestore, getFBAuth, getChatId } from '../shared/firebase.js';
+import ChatScreen from '../shared/ChatScreen.jsx';
 
 function getJsDate(field) {
   if (!field) return null;
@@ -154,30 +155,27 @@ export default function MemberDetailSheet({ member, gymId, onClose }) {
     }
   };
 
-  if (activeModal === 'message') {
+  const [currentUser, setCurrentUser] = useState(null);
+  
+  useEffect(() => {
+    getFBAuth().then(auth => setCurrentUser(auth.currentUser)).catch(() => {});
+  }, []);
+
+  if (activeModal === 'message' && currentUser) {
+    const isTrainer = memberDetail?.trainerUid === currentUser.uid;
+    const senderRole = isTrainer ? 'trainer' : 'owner';
+    const chatId = getChatId(gymId, memberDetail.uid, senderRole, currentUser.uid);
+
     return (
       <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: C.bg, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', borderBottom: `1px solid ${C.border}` }}>
-          <button onClick={() => setActiveModal(null)} style={{ background: 'none', border: 'none', color: C.text, padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontFamily: fn, fontSize: 16, fontWeight: 700 }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-            Back
-          </button>
-          <div style={{ flex: 1, textAlign: 'center', fontFamily: fb, fontSize: 16, fontWeight: 700, color: C.text }}>
-            Message {firstName(memberDetail?.name)}
-          </div>
-          <div style={{ width: 60 }} />
-        </div>
-        <div style={{ flex: 1, padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ flex: 1, background: C.s1, borderRadius: 16, padding: 16, color: C.sub, fontFamily: fn, fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            Message history will appear here.
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <input placeholder="Type a message..." style={{ flex: 1, background: C.s1, border: `1px solid ${C.border}`, borderRadius: 20, padding: '12px 16px', color: C.text, fontFamily: fn, fontSize: 14, outline: 'none' }} />
-            <button style={{ background: C.accent, color: C.text, border: 'none', borderRadius: '50%', width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-            </button>
-          </div>
-        </div>
+        <ChatScreen
+          chatId={chatId}
+          chatMeta={{ gymId, memberUid: memberDetail.uid, [senderRole === 'trainer' ? 'trainerUid' : 'ownerUid']: currentUser.uid, type: senderRole, otherName: firstName(memberDetail?.name) }}
+          senderUid={currentUser.uid}
+          senderRole={senderRole}
+          onClose={() => setActiveModal(null)}
+          otherUser={{ name: memberDetail?.name || 'Member', photo: memberDetail?.photo }}
+        />
       </div>
     );
   }

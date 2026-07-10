@@ -326,8 +326,8 @@ function WaterTracker() {
   };
 
   const intakeMl   = glasses * ML_PER_GLASS;
-  const pct        = Math.min((intakeMl / goalMl) * 100, 100);
-  const done       = intakeMl >= goalMl;
+  const pct        = goalMl > 0 ? Math.min((intakeMl / goalMl) * 100, 100) : 100;
+  const done       = goalMl > 0 ? intakeMl >= goalMl : true;
   const waterColor = done ? C.accent : C.blue;
   const bubbleCount = Math.min(goalGlasses, 12);
 

@@ -126,10 +126,11 @@ service cloud.firestore {
         (isTrainerOf(chatData().gymId) && chatData().trainerUid == request.auth.uid)
       );
 
-      // Allow creating a chat doc if the requester is the member or owner
+      // Allow creating a chat doc if the requester is the member, owner, or assigned trainer
       allow create: if isAuth() && (
         newChatData().memberUid == request.auth.uid ||
-        isOwnerOf(newChatData().gymId)
+        isOwnerOf(newChatData().gymId) ||
+        (isTrainerOf(newChatData().gymId) && newChatData().trainerUid == request.auth.uid)
       );
 
       // Allow updating (last message, unread counts) for participants only

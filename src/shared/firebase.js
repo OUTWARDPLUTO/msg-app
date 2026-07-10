@@ -468,3 +468,18 @@ export function listenToMemberChats(gymId, memberUid, callback) {
   });
   return () => { if (unsub) unsub(); };
 }
+
+export function listenToTrainerChats(gymId, trainerUid, callback) {
+  let unsub = null;
+  getFBFirestore().then(db => {
+    unsub = db.collection('chats')
+      .where('gymId', '==', gymId)
+      .where('trainerUid', '==', trainerUid)
+      .orderBy('lastMessageAt', 'desc')
+      .onSnapshot(snap => {
+        const chats = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        callback(chats);
+      }, err => console.warn('[MSG] listenToTrainerChats:', err));
+  });
+  return () => { if (unsub) unsub(); };
+}
