@@ -385,3 +385,86 @@ export async function uploadFile(path, file) {
   return await snap.ref.getDownloadURL();
 }
 
+// ─── Messaging / Chat Helpers ─────────────────────────────────────────────────
+// Chat ID formats:
+//   member ↔ owner:   "{gymId}_{memberUid}"
+//   member ↔ trainer: "{gymId}_tr_{trainerUid}_{memberUid}"
+
+export function getChatId(gymId, memberUid, type = 'owner', trainerUid = null) {
+  if (type === 'trainer' && trainerUid) return `${gymId}_tr_${trainerUid}_${memberUid}`;
+  return `${gymId}_${memberUid}`;
+}
+
+export async function sendMessage(chatId, senderUid, senderRole, text, chatMeta = {}) {
+  const db = await getFBFirestore();
+  const ts = serverTimestamp();
+  const cleanText = (text || '').trim().slice(0, 1000);
+  if (!cleanText) return;
+
+  // Write the message to the subcollection
+  await db.collection(`chats/${chatId}/messages`).add({
+    senderUid,
+    senderRole, // 'member' | 'owner' | 'trainer'
+    text: cleanText,
+    createdAt: ts,
+    read: false,
+  });
+
+  // Update (or create) the parent chat doc with metadata
+  const unreadField = senderRole === 'member' ? 'unreadOwner' : 'unreadMember';
+  const increment = window.firebase.firestore.FieldValue.increment(1);
+  await db.doc(`chats/${chatId}`).set({
+    ...chatMeta,
+    lastMessage: cleanText,
+    lastMessageAt: ts,
+    [unreadField]: increment,
+  }, { merge: true });
+}
+
+export async function markChatRead(chatId, readerRole) {
+  // readerRole: 'member' | 'owner' | 'trainer'
+  const db = await getFBFirestore();
+  const field = readerRole === 'member' ? 'unreadMember' : 'unreadOwner';
+  await db.doc(`chats/${chatId}`).set({ [field]: 0 }, { merge: true });
+}
+
+export function listenToMessages(chatId, callback) {
+  let unsub = null;
+  getFBFirestore().then(db => {
+    unsub = db.collection(`chats/${chatId}/messages`)
+      .orderBy('createdAt', 'asc')
+      .onSnapshot(snap => {
+        const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        callback(msgs);
+      }, err => console.warn('[MSG] listenToMessages:', err));
+  });
+  return () => { if (unsub) unsub(); };
+}
+
+export function listenToOwnerChats(gymId, callback) {
+  let unsub = null;
+  getFBFirestore().then(db => {
+    unsub = db.collection('chats')
+      .where('gymId', '==', gymId)
+      .orderBy('lastMessageAt', 'desc')
+      .onSnapshot(snap => {
+        const chats = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        callback(chats);
+      }, err => console.warn('[MSG] listenToOwnerChats:', err));
+  });
+  return () => { if (unsub) unsub(); };
+}
+
+export function listenToMemberChats(gymId, memberUid, callback) {
+  let unsub = null;
+  getFBFirestore().then(db => {
+    unsub = db.collection('chats')
+      .where('gymId', '==', gymId)
+      .where('memberUid', '==', memberUid)
+      .onSnapshot(snap => {
+        const chats = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        callback(chats);
+      }, err => console.warn('[MSG] listenToMemberChats:', err));
+  });
+  return () => { if (unsub) unsub(); };
+}

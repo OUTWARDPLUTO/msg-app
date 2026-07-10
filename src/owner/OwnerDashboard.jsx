@@ -19,13 +19,16 @@ import MemberDetailSheet from './MemberDetailSheet.jsx';
 import AmbientBackground from '../shared/AmbientBackground.jsx';
 import OwnerTutorial from './OwnerTutorial.jsx';
 import RevenueDetail from './RevenueDetail.jsx';
+import OwnerInbox from './OwnerInbox.jsx';
 import { useTranslation } from 'react-i18next';
+import { listenToOwnerChats } from '../shared/firebase.js';
 
 const NAV = [
   { key: 'dashboard',  label: 'Dashboard',   icon: '🏠' },
   { key: 'members',    label: 'Members',     icon: '👥' },
   { key: 'attendance', label: 'Attend.',     icon: '📅' },
   { key: 'store',      label: 'Store',       icon: '🛒' },
+  { key: 'messages',   label: 'Messages',    icon: '💬' },
   { key: 'more',       label: 'More',        icon: '⚙️' },
 ];
 
@@ -37,6 +40,7 @@ function OwnerNavIcon({ id, active }) {
   if (id === 'members') return <svg {...p}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>;
   if (id === 'attendance') return <svg {...p}><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>;
   if (id === 'store') return <svg {...p}><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>;
+  if (id === 'messages') return <svg {...p}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>;
   if (id === 'more') return <svg {...p}><circle cx="12" cy="5" r="1" fill={s} /><circle cx="12" cy="12" r="1" fill={s} /><circle cx="12" cy="19" r="1" fill={s} /></svg>;
   return null;
 }
@@ -283,6 +287,16 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
     };
   }, [gymId]);
 
+  // Unread message count for badge
+  const [unreadMsgs, setUnreadMsgs] = useState(0);
+  useEffect(() => {
+    if (!gymId) return;
+    const unsub = listenToOwnerChats(gymId, chats => {
+      setUnreadMsgs(chats.reduce((sum, c) => sum + (c.unreadOwner || 0), 0));
+    });
+    return unsub;
+  }, [gymId]);
+
   // Tab navigation with history
   const handleTabChange = useCallback((newTab) => {
     setPrevTab(tab);
@@ -424,6 +438,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
             {tab === 'members'    && <MemberListTab gymId={gymId} gymCode={gymCode} setBackHandler={setChildBackHandler} onViewMemberProfile={setProfileMember} subTab={membersSubTab} setSubTab={setMembersSubTab} />}
             {tab === 'attendance' && <AttendanceTab gymId={gymId} onViewMemberProfile={setProfileMember} />}
             {tab === 'store'      && <StoreTab gymId={gymId} setBackHandler={setChildBackHandler} />}
+            {tab === 'messages'   && <OwnerInbox gymId={gymId} user={user} gymName={gymName} setBackHandler={setChildBackHandler} />}
           </div>
         </ErrorBoundary>
       </div>
@@ -449,6 +464,9 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
                 <OwnerNavIcon id={n.key} active={active} />
                 {n.key === 'more' && pendingTrainersCount > 0 && (
                   <div style={{ position: 'absolute', top: -2, right: -4, width: 8, height: 8, borderRadius: '50%', background: C.orange, border: `2px solid ${C.bg}` }} />
+                )}
+                {n.key === 'messages' && unreadMsgs > 0 && (
+                  <div style={{ position: 'absolute', top: -2, right: -4, width: 8, height: 8, borderRadius: '50%', background: C.accent, border: `2px solid ${C.bg}` }} />
                 )}
               </div>
               <span style={{

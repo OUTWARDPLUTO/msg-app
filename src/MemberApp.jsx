@@ -50,6 +50,8 @@ import { LanguageScreen } from './member/SettingsScreen.jsx';
 import { ProfileDropdown, LogProgressModal, BottomNavAnimated } from './member/Navigation.jsx';
 import ProfileSetupScreen from './member/ProfileSetupScreen.jsx';
 import { TutorialOverlay } from './member/ProfileSetupScreen.jsx';
+import MessagingSection from './member/MessagingSection.jsx';
+import { listenToMemberChats } from './shared/firebase.js';
 
 export default function MemberApp({
   user, darkMode, onToggleTheme, onLogout,
@@ -67,6 +69,17 @@ export default function MemberApp({
 
   const [setupDone, setSetupDone] = useState(() => !!localStorage.getItem('msg_setup_done') || !!user?.profile);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [unreadMessages, setUnreadMessages] = useState(0);
+
+  // Listen to unread message count for badge
+  useEffect(() => {
+    if (!gymId || !user?.uid || user?.uid === 'demo') return;
+    const unsub = listenToMemberChats(gymId, user.uid, chats => {
+      const total = chats.reduce((sum, c) => sum + (c.unreadMember || 0), 0);
+      setUnreadMessages(total);
+    });
+    return unsub;
+  }, [gymId, user?.uid]);
 
   // Register push notifications via Capacitor
   useEffect(() => {
@@ -152,6 +165,7 @@ export default function MemberApp({
     diet:    <SectionErrorBoundary key="diet"><DietSection dietGoal={dietGoal} setDietGoal={setDietGoal} mealLog={mealLog} setMealLog={setMealLog} /></SectionErrorBoundary>,
     store:   <SectionErrorBoundary key="store"><StoreSection gymId={gymId} setBackHandler={setChildBackHandler} /></SectionErrorBoundary>,
     progress: <SectionErrorBoundary key="progress"><ProgressSection logs={progressLogs} onLogClick={() => setShowLogModal(true)} onDelete={i => setProgressLogs(l => l.filter((_, j) => j !== i))} /></SectionErrorBoundary>,
+    messages: <SectionErrorBoundary key="messages"><MessagingSection user={user} gymId={gymId} gymName={gymName} /></SectionErrorBoundary>,
   };
 
   if (!setupDone) {
@@ -214,7 +228,7 @@ export default function MemberApp({
       <div className="msg-scroll" style={{ flex: 1, overflowY: 'auto', paddingBottom: 100 }}>
         {views[tab]}
       </div>
-      <BottomNavAnimated tab={tab} setTab={navigate} darkMode={darkMode} />
+      <BottomNavAnimated tab={tab} setTab={navigate} darkMode={darkMode} unreadMessages={unreadMessages} />
     </div>
   );
 }

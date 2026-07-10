@@ -109,5 +109,56 @@ service cloud.firestore {
       allow update: if false;
       allow delete: if false;
     }
+
+    // ── Chats ────────────────────────────────────────────────────────────────
+    // Chat ID format: "{gymId}_{memberUid}" or "{gymId}_tr_{trainerUid}_{memberUid}"
+    // Only the participants of a chat can read/write it.
+    match /chats/{chatId} {
+      function chatData() { return resource.data; }
+      function newChatData() { return request.resource.data; }
+
+      // Member: can access chats where they are the member
+      // Owner: can access chats in their gym
+      // Trainer: can access chats where they are the trainer
+      allow read: if isAuth() && (
+        (chatData().memberUid == request.auth.uid) ||
+        isOwnerOf(chatData().gymId) ||
+        (isTrainerOf(chatData().gymId) && chatData().trainerUid == request.auth.uid)
+      );
+
+      // Allow creating a chat doc if the requester is the member or owner
+      allow create: if isAuth() && (
+        newChatData().memberUid == request.auth.uid ||
+        isOwnerOf(newChatData().gymId)
+      );
+
+      // Allow updating (last message, unread counts) for participants only
+      allow update: if isAuth() && (
+        (chatData().memberUid == request.auth.uid) ||
+        isOwnerOf(chatData().gymId) ||
+        (isTrainerOf(chatData().gymId) && chatData().trainerUid == request.auth.uid)
+      );
+
+      allow delete: if false;
+
+      // Messages subcollection — same participant rules as parent
+      match /messages/{msgId} {
+        function parentChat() {
+          return get(/databases/$(database)/documents/chats/$(chatId)).data;
+        }
+        allow read: if isAuth() && (
+          parentChat().memberUid == request.auth.uid ||
+          isOwnerOf(parentChat().gymId) ||
+          (isTrainerOf(parentChat().gymId) && parentChat().trainerUid == request.auth.uid)
+        );
+        allow create: if isAuth() && (
+          parentChat().memberUid == request.auth.uid ||
+          isOwnerOf(parentChat().gymId) ||
+          (isTrainerOf(parentChat().gymId) && parentChat().trainerUid == request.auth.uid)
+        ) && request.resource.data.senderUid == request.auth.uid;
+        allow update: if false;
+        allow delete: if false;
+      }
+    }
   }
 }

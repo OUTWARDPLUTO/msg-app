@@ -136,11 +136,12 @@ function NavIcon({ id, active }) {
   if (id === 'diet') return <svg {...p}><circle cx="12" cy="12" r="10" /><path d="M8 6s1 2 4 2 4-2 4-2" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="9" y1="12" x2="15" y2="12" /></svg>;
   if (id === 'store') return <svg {...p}><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>;
   if (id === 'progress') return <svg {...p}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></svg>;
+  if (id === 'messages') return <svg {...p}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>;
   return null;
 }
 
-export function BottomNavAnimated({ tab, setTab, darkMode }) {
-  const tabs = ['home', 'workout', 'diet', 'store', 'progress'];
+export function BottomNavAnimated({ tab, setTab, darkMode, unreadMessages = 0 }) {
+  const tabs = ['home', 'workout', 'diet', 'store', 'progress', 'messages'];
   const isDark = !C.isLight;
   return (
     <div className="msg-bottom-nav" style={{
@@ -160,6 +161,7 @@ export function BottomNavAnimated({ tab, setTab, darkMode }) {
     }}>
       {tabs.map(id => {
         const active = tab === id;
+        const badge = id === 'messages' && unreadMessages > 0 ? unreadMessages : 0;
         return (
           <button key={id} id={`tut-tab-${id}`} onClick={() => setTab(id)} style={{
             flex: 1, background: 'none', border: 'none', cursor: 'pointer',
@@ -169,15 +171,25 @@ export function BottomNavAnimated({ tab, setTab, darkMode }) {
               transform: active ? 'scale(1.15) translateY(-2px)' : 'scale(1) translateY(0)',
               transition: 'transform 0.25s cubic-bezier(.22,.68,0,1.4)',
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+              position: 'relative',
             }}>
               <NavIcon id={id} active={active} />
+              {badge > 0 && (
+                <div style={{
+                  position: 'absolute', top: -4, right: -6,
+                  width: 14, height: 14, borderRadius: '50%',
+                  background: C.accent, border: `2px solid ${isDark ? '#141414' : '#fff'}`,
+                  fontSize: 8, fontFamily: fb, fontWeight: 800, color: '#fff',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>{badge > 9 ? '9+' : badge}</div>
+              )}
             </div>
             <span style={{
               fontSize: 8, fontFamily: fb, fontWeight: active ? 800 : 500,
               color: active ? C.accent : C.muted, textTransform: 'uppercase', letterSpacing: '0.04em',
               transition: 'color 0.2s',
             }}>
-              {id}
+              {id === 'messages' ? 'inbox' : id}
             </span>
             {active && (
               <div className="msg-anim-scalein" style={{ position: 'absolute', bottom: -1, width: 24, height: 3, borderRadius: '3px 3px 0 0', background: C.accent, boxShadow: C.accentShadow }} />
