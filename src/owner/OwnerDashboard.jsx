@@ -510,70 +510,72 @@ function DashboardTab({ gymId, user, gymName, onNavigate, onViewMemberProfile, s
     }
   }, [tileOverlay, setBackHandler]);
 
-  useEffect(() => { if (gymId) loadStats(); }, [gymId]);
-
-  // Real-time listener for today's check-ins so the KPI tile updates instantly after manual check-ins
+  // ── Real-time listeners — all three update instantly on any data change ─────
   useEffect(() => {
     if (!gymId) return;
-    const todayKey = new Date().toISOString().split('T')[0];
-    let unsub;
+    const unsubs = [];
+    let membersDone = false, attendanceDone = false;
+
     getFBFirestore().then(db => {
-      unsub = db.collection(`attendance/${gymId}/logs`)
-        .where('date', '==', todayKey)
-        .onSnapshot(snap => setTodayCheckIns(snap.size), () => {});
-    }).catch(() => {});
-    return () => { if (unsub) unsub(); };
-  }, [gymId]);
+      // 1. Members — drives stats KPIs
+      unsubs.push(
+        db.collection('members').where('gymId', '==', gymId)
+          .onSnapshot(snap => {
+            const members = snap.docs.map(d => d.data());
+            const total = members.length;
+            const now = Date.now();
+            const fiveDaysAgo  = now - 5 * 86400000;
+            const threeDaysAgo = now - 3 * 86400000;
+            const active   = members.filter(m => (m.lastActiveAt?.toDate?.()?.getTime() || 0) > fiveDaysAgo).length;
+            const atRisk   = members.filter(m => { const la = m.lastActiveAt?.toDate?.()?.getTime() || 0; return la <= fiveDaysAgo && la > threeDaysAgo; }).length;
+            const avgScore = total > 0 ? Math.round(members.reduce((s, m) => s + (m.engagementScore || 0), 0) / total) : 0;
+            const weekAgo  = new Date(now - 7 * 86400000);
+            const newMembers = members.filter(m => { const j = m.joinedAt?.toDate?.(); return j && j > weekAgo; }).length;
+            const nowDate = new Date();
+            let liveCount = 0, expiringCount = 0;
+            members.forEach(m => {
+              if (!m.membershipEndDate) return;
+              const end = m.membershipEndDate?.toDate ? m.membershipEndDate.toDate() : new Date(m.membershipEndDate);
+              const daysLeft = Math.ceil((end - nowDate) / 86400000);
+              if (daysLeft >= 0) liveCount++;
+              if (daysLeft >= 0 && daysLeft <= 7) expiringCount++;
+            });
+            setStats({ total, active, atRisk, inactive: total - active - atRisk, avgScore, newMembers, liveCount, expiringCount });
+            membersDone = true;
+            if (attendanceDone) setLoading(false);
+          }, () => { membersDone = true; if (attendanceDone) setLoading(false); })
+      );
 
-  async function loadStats() {
-    setLoading(true);
-    try {
-      const db = await getFBFirestore();
-      const memberSnap = await db.collection('members').where('gymId', '==', gymId).get();
-      const members = memberSnap.docs.map(d => d.data());
-      const total = members.length;
-      const now = Date.now();
-      const fiveDaysAgo  = now - 5 * 86400000;
-      const threeDaysAgo = now - 3 * 86400000;
-      const active   = members.filter(m => (m.lastActiveAt?.toDate?.()?.getTime() || 0) > fiveDaysAgo).length;
-      const atRisk   = members.filter(m => { const la = m.lastActiveAt?.toDate?.()?.getTime() || 0; return la <= fiveDaysAgo && la > threeDaysAgo; }).length;
-      const avgScore = total > 0 ? Math.round(members.reduce((s, m) => s + (m.engagementScore || 0), 0) / total) : 0;
-      const weekAgo  = new Date(now - 7 * 86400000);
-      const newMembers = members.filter(m => { const j = m.joinedAt?.toDate?.(); return j && j > weekAgo; }).length;
+      // 2. Attendance logs — drives chart + today's KPI (last 365 days)
+      const maxDaysAgo = new Date(Date.now() - 365 * 86400000).toISOString().split('T')[0];
+      const todayKey = new Date().toISOString().split('T')[0];
+      unsubs.push(
+        db.collection(`attendance/${gymId}/logs`)
+          .where('date', '>=', maxDaysAgo)
+          .onSnapshot(snap => {
+            const logs = snap.docs.map(d => d.data());
+            setAttendanceLogs(logs);
+            setTodayCheckIns(logs.filter(l => l.date === todayKey).length);
+            attendanceDone = true;
+            if (membersDone) setLoading(false);
+          }, () => { attendanceDone = true; if (membersDone) setLoading(false); })
+      );
 
-      const nowDate = new Date();
-      let liveCount = 0, expiringCount = 0;
-      members.forEach(m => {
-        if (!m.membershipEndDate) return;
-        const end = m.membershipEndDate?.toDate ? m.membershipEndDate.toDate() : new Date(m.membershipEndDate);
-        const daysLeft = Math.ceil((end - nowDate) / 86400000);
-        if (daysLeft >= 0) liveCount++;
-        if (daysLeft >= 0 && daysLeft <= 7) expiringCount++;
-      });
-
-      setStats({ total, active, atRisk, inactive: total - active - atRisk, avgScore, newMembers, liveCount, expiringCount });
-
-      // Load attendance logs for chart (up to 365 days for the year view)
-      const maxDaysAgo = new Date(now - 365 * 86400000);
+      // 3. Recent activity — drives activity feed
       try {
-        const attSnap = await db.collection(`attendance/${gymId}/logs`)
-          .where('date', '>=', maxDaysAgo.toISOString().split('T')[0])
-          .orderBy('date', 'desc').get();
-        setAttendanceLogs(attSnap.docs.map(d => d.data()));
-        
-        // Also load recent activity
-        const actSnap = await db.collection(`activityLogs/${gymId}/events`)
-          .orderBy('timestamp', 'desc').limit(5).get();
-        setRecentActivity(actSnap.docs.map(d => d.data()));
-      } catch { 
-        setAttendanceLogs([]); 
-        setRecentActivity([]);
-      }
-    } catch (err) {
-      console.warn('Dashboard load error:', err.message);
-    }
-    setLoading(false);
-  }
+        unsubs.push(
+          db.collection(`activityLogs/${gymId}/events`)
+            .orderBy('timestamp', 'desc').limit(5)
+            .onSnapshot(snap => {
+              setRecentActivity(snap.docs.map(d => d.data()));
+            }, () => setRecentActivity([]))
+        );
+      } catch { setRecentActivity([]); }
+
+    }).catch(() => setLoading(false));
+
+    return () => unsubs.forEach(u => u && u());
+  }, [gymId]);
 
   const PERIODS = [
     { key: 'week',  label: 'This Week',  days: 7 },
