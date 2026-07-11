@@ -497,6 +497,7 @@ function DashboardTab({ gymId, user, gymName, onNavigate, onViewMemberProfile, s
   const [chartPeriod, setChartPeriod] = useState('week');
   const [showPeriodPicker, setShowPeriodPicker] = useState(false);
   const [tileOverlay, setTileOverlay] = useState(null);
+  const [todayCheckIns, setTodayCheckIns] = useState(0);
   const isDark = !C.isLight;
 
   useEffect(() => {
@@ -510,6 +511,19 @@ function DashboardTab({ gymId, user, gymName, onNavigate, onViewMemberProfile, s
   }, [tileOverlay, setBackHandler]);
 
   useEffect(() => { if (gymId) loadStats(); }, [gymId]);
+
+  // Real-time listener for today's check-ins so the KPI tile updates instantly after manual check-ins
+  useEffect(() => {
+    if (!gymId) return;
+    const todayKey = new Date().toISOString().split('T')[0];
+    let unsub;
+    getFBFirestore().then(db => {
+      unsub = db.collection(`attendance/${gymId}/logs`)
+        .where('date', '==', todayKey)
+        .onSnapshot(snap => setTodayCheckIns(snap.size), () => {});
+    }).catch(() => {});
+    return () => { if (unsub) unsub(); };
+  }, [gymId]);
 
   async function loadStats() {
     setLoading(true);
@@ -613,7 +627,6 @@ function DashboardTab({ gymId, user, gymName, onNavigate, onViewMemberProfile, s
 
   const currentPeriodLabel = PERIODS.find(p => p.key === chartPeriod)?.label || 'This Week';
   const todayKey = new Date().toISOString().split('T')[0];
-  const todayCheckIns = attendanceLogs.filter(l => l.date === todayKey).length;
 
   return (
     <div style={{ paddingBottom: 110 }}>

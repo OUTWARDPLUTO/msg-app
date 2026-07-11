@@ -194,9 +194,34 @@ export default function MemberApp({
             <img src={appIconLight} alt="MSG" style={{ height: '100%', width: '100%', objectFit: 'contain', display: 'block', borderRadius: 8 }} />
           </div>
         </div>
-        <button id="tut-profile-btn" onClick={() => setShowProfile(p => !p)} style={{ width: 36, height: 36, borderRadius: '50%', background: C.accent, border: `2px solid ${showProfile ? C.text : 'transparent'}`, cursor: 'pointer', fontFamily: fn, fontSize: 11, fontWeight: 800, color: '#111', transition: 'all 0.2s', boxShadow: C.accentShadow, overflow: 'hidden', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <UserAvatar user={{ ...user, photo: localStorage.getItem('msg_profile_photo') || user?.photo }} size={36} fontSize={11} />
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Message button */}
+          <button
+            onClick={() => navigate('messages')}
+            style={{
+              width: 36, height: 36, borderRadius: '50%',
+              background: tab === 'messages' ? C.accent + '20' : C.s2,
+              border: `1px solid ${tab === 'messages' ? C.accent : C.border}`,
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              position: 'relative', transition: 'all 0.2s',
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={tab === 'messages' ? C.accent : C.sub} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+            {unreadMessages > 0 && (
+              <div style={{
+                position: 'absolute', top: 1, right: 1,
+                width: 8, height: 8, borderRadius: '50%',
+                background: C.accent, border: `2px solid ${C.bg}`,
+              }} />
+            )}
+          </button>
+          {/* Profile button */}
+          <button id="tut-profile-btn" onClick={() => setShowProfile(p => !p)} style={{ width: 36, height: 36, borderRadius: '50%', background: C.accent, border: `2px solid ${showProfile ? C.text : 'transparent'}`, cursor: 'pointer', fontFamily: fn, fontSize: 11, fontWeight: 800, color: '#111', transition: 'all 0.2s', boxShadow: C.accentShadow, overflow: 'hidden', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <UserAvatar user={{ ...user, photo: localStorage.getItem('msg_profile_photo') || user?.photo }} size={36} fontSize={11} />
+          </button>
+        </div>
       </div>
 
       {showProfile && (

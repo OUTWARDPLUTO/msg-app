@@ -17,6 +17,7 @@ export default function MemberDetailSheet({ member, gymId, onClose }) {
   const [activity, setActivity] = useState([]);
   const [loadingActivity, setLoadingActivity] = useState(true);
   const [loadingDetails, setLoadingDetails] = useState(!member.email || !member.joinedAt);
+  const [activeModal, setActiveModal] = useState(null);
 
   // Self-healing: if details are missing, fetch them dynamically
   useEffect(() => {
@@ -138,8 +139,6 @@ export default function MemberDetailSheet({ member, gymId, onClose }) {
   };
 
   const TYPE_ICONS = { workout: '💪', diet: '🥗', progress: '📊', checkin: '✅' };
-
-  const [activeModal, setActiveModal] = useState(null);
 
   // Map real data to mockup-like formatting where possible
   const statusText = (memberDetail?.status || 'active') === 'inactive' ? 'Inactive' : 'Active';

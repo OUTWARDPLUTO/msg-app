@@ -5,7 +5,6 @@ import { API_URL, callClaude } from './memberData.js';
 import { Card, Tag, Lbl, Hd, ExCard } from './primitives.jsx';
 import { EX } from './constants.js';
 import { trackActivity } from '../shared/firebase.js';
-import { ExploreSection } from './StoreSection.jsx';
 
 // EX array is inlined below via WorkoutSection.jsx extraction â€” do not import// ─── Warmup Block ─────────────────────────────────────────────────────────────
 const WARMUP_ROUTINE = [
@@ -424,6 +423,107 @@ function ExerciseConfirmCard({ ex, onAdd, onDismiss }) {
         <button onClick={onDismiss} style={{ flex: 1, padding: '10px', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 10, color: C.muted, fontFamily: fn, fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>Dismiss</button>
         <button onClick={() => onAdd(ex, sets, reps)} style={{ flex: 2, padding: '10px', background: mc, border: 'none', borderRadius: 10, color: '#111', fontFamily: fn, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>+ Add to Day</button>
       </div>
+    </div>
+  );
+}
+
+// ─── Explore Section (Muscle Map) ────────────────────────────────────────────
+function ExploreSection() {
+  const [muscleView, setMuscleView] = useState('front');
+  const [selectedMuscle, setSelectedMuscle] = useState(null);
+
+  const MUSCLE_GROUPS = [
+    { key: 'chest', label: 'Chest', view: 'front' },
+    { key: 'shoulders', label: 'Shoulders', view: 'front' },
+    { key: 'biceps', label: 'Biceps', view: 'front' },
+    { key: 'abs', label: 'Abs', view: 'front' },
+    { key: 'quads', label: 'Quads', view: 'front' },
+    { key: 'traps', label: 'Traps', view: 'back' },
+    { key: 'lats', label: 'Lats', view: 'back' },
+    { key: 'triceps', label: 'Triceps', view: 'back' },
+    { key: 'hamstrings', label: 'Hamstrings', view: 'back' },
+    { key: 'glutes', label: 'Glutes', view: 'back' },
+    { key: 'calves', label: 'Calves', view: 'back' },
+    { key: 'lower_back', label: 'Lower Back', view: 'back' },
+  ];
+
+  const muscleExercises = selectedMuscle
+    ? EX.filter(e => e.muscle === selectedMuscle && e.cat === 'strength').slice(0, 8)
+    : [];
+
+  const handleMuscleClick = (muscle) => {
+    const group = MUSCLE_GROUPS.find(g => g.key === muscle);
+    if (group) {
+      setMuscleView(group.view);
+      setSelectedMuscle(prev => prev === muscle ? null : muscle);
+    }
+  };
+
+  const isMainGroupActive = (m) => m === selectedMuscle;
+
+  return (
+    <div style={{ padding: '0 16px 24px' }}>
+      {/* View toggle */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        {['front', 'back'].map(v => (
+          <button key={v} onClick={() => setMuscleView(v)} style={{
+            flex: 1, padding: '10px', borderRadius: 12,
+            background: muscleView === v ? C.accent : C.s2,
+            border: `1px solid ${muscleView === v ? C.accent : C.border}`,
+            color: muscleView === v ? '#000' : C.sub,
+            fontFamily: fn, fontWeight: 700, fontSize: 12, cursor: 'pointer',
+            textTransform: 'capitalize',
+          }}>{v} View</button>
+        ))}
+      </div>
+
+      {/* Anatomical Figure */}
+      <div style={{
+        background: C.s1, borderRadius: 20, border: `1px solid ${C.border}`,
+        padding: '12px', marginBottom: 16, position: 'relative',
+        display: 'flex', justifyContent: 'center', alignItems: 'center',
+        minHeight: 260,
+      }}>
+        <div style={{ width: '100%', maxWidth: 200, height: 260 }}>
+          <AnatomicalFigure
+            view={muscleView}
+            muscle={selectedMuscle}
+            onMuscleClick={handleMuscleClick}
+            isMainGroupActive={isMainGroupActive}
+          />
+        </div>
+        {!selectedMuscle && (
+          <div style={{
+            position: 'absolute', bottom: 12, left: 0, right: 0,
+            textAlign: 'center', fontSize: 11, color: C.muted, fontFamily: fn,
+          }}>Tap a muscle to explore exercises</div>
+        )}
+      </div>
+
+      {/* Muscle chip list */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
+        {MUSCLE_GROUPS.filter(g => g.view === muscleView).map(g => (
+          <button key={g.key} onClick={() => setSelectedMuscle(prev => prev === g.key ? null : g.key)} style={{
+            padding: '6px 12px', borderRadius: 20,
+            background: selectedMuscle === g.key ? C.accent + '20' : C.s2,
+            border: `1px solid ${selectedMuscle === g.key ? C.accent : C.border}`,
+            color: selectedMuscle === g.key ? C.accent : C.sub,
+            fontFamily: fn, fontWeight: 600, fontSize: 11, cursor: 'pointer',
+          }}>{g.label}</button>
+        ))}
+      </div>
+
+      {/* Exercise list for selected muscle */}
+      {selectedMuscle && (
+        <>
+          <div style={{ fontSize: 14, fontWeight: 700, color: C.text, fontFamily: fn, marginBottom: 10, textTransform: 'capitalize' }}>
+            {selectedMuscle} Exercises <span style={{ color: C.muted, fontWeight: 500, fontSize: 12 }}>({muscleExercises.length})</span>
+          </div>
+          {muscleExercises.length === 0 ? (
+            <div style={{ color: C.muted, fontSize: 13, textAlign: 'center', padding: 20 }}>No exercises found for this muscle</div>
+          ) : muscleExercises.map((ex, i) => <ExCard key={i} ex={ex} />)}
+        </>
+      )}
     </div>
   );
 }
