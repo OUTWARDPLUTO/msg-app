@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { C, fn, fb } from './theme.js';
 import { sendMessage, listenToMessages, markChatRead } from './firebase.js';
+import { UserAvatar } from './primitives.jsx';
 
 function formatTime(ts) {
   if (!ts) return '';

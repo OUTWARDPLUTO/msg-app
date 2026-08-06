@@ -3,7 +3,8 @@ import { useState, useEffect, useRef, Component } from 'react';
 import { THEMES, C, fn } from './shared/theme.js';
 import { UserAvatar } from './shared/primitives.jsx';
 import AmbientBackground from './shared/AmbientBackground.jsx';
-import appIconLight from './assets/app-icon-light.png';
+import msgLogoExact from './assets/msg_logo_exact.svg';
+import msgLogoWhite from './assets/msg_logo_white.svg';
 import { trackActivity } from './shared/firebase.js';
 
 // ── Per-section error boundary (keeps crashes isolated to one tab) ────────────
@@ -191,7 +192,7 @@ export default function MemberApp({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 'calc(env(safe-area-inset-top) + 12px)', paddingLeft: 20, paddingRight: 20, paddingBottom: 0, flexShrink: 0, zIndex: 10, background: C.bg }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <div style={{ height: 32, width: 32, display: 'flex', alignItems: 'center' }}>
-            <img src={appIconLight} alt="MSG" style={{ height: '100%', width: '100%', objectFit: 'contain', display: 'block', borderRadius: 8 }} />
+            <img src={darkMode ? msgLogoWhite : msgLogoExact} alt="MSG" style={{ height: '100%', width: 'auto', objectFit: 'contain', display: 'block' }} />
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

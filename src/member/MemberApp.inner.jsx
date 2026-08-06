@@ -1,4 +1,7 @@
-﻿export default function MemberApp({
+import msgLogoExact from '../assets/msg_logo_exact.svg';
+import msgLogoWhite from '../assets/msg_logo_white.svg';
+
+export default function MemberApp({
   user, darkMode, onToggleTheme, onLogout,
   gymId, gymName, // msg-app SaaS layer props
   dietGoal, setDietGoal, mealLog, setMealLog, weekPlan, setWeekPlan,
@@ -145,9 +148,9 @@
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <div style={{ height: 32, width: 32, display: 'flex', alignItems: 'center' }}>
             <img
-              src={appIconLight}
+              src={darkMode ? msgLogoWhite : msgLogoExact}
               alt="MSG"
-              style={{ height: '100%', width: '100%', objectFit: 'contain', display: 'block', borderRadius: 8 }}
+              style={{ height: '100%', width: 'auto', objectFit: 'contain', display: 'block' }}
             />
           </div>
         </div>

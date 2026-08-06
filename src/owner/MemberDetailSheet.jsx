@@ -12,6 +12,25 @@ function getJsDate(field) {
   return isNaN(d.getTime()) ? null : d;
 }
 
+function timeAgo(ts) {
+  const date = getJsDate(ts);
+  if (!date) return '—';
+  const diff = Date.now() - date.getTime();
+  if (diff < 60000) return 'Just now';
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+  return `${Math.floor(diff / 86400000)}d ago`;
+}
+
+function getJoinedDate(memberDetail) {
+  const d = getJsDate(memberDetail?.joinedAt);
+  return d ? d.toLocaleDateString('en-IN') : '—';
+}
+
+function firstName(name) {
+  return name ? name.split(' ')[0] : 'Member';
+}
+
 export default function MemberDetailSheet({ member, gymId, onClose }) {
   const [memberDetail, setMemberDetail] = useState(member);
   const [activity, setActivity] = useState([]);
@@ -122,21 +141,6 @@ export default function MemberDetailSheet({ member, gymId, onClose }) {
     });
     return () => { active = false; };
   }, [member.uid, gymId]);
-
-  function timeAgo(ts) {
-    const date = getJsDate(ts);
-    if (!date) return '—';
-    const diff = Date.now() - date.getTime();
-    if (diff < 60000) return 'Just now';
-    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
-    return `${Math.floor(diff / 86400000)}d ago`;
-  }
-
-  const getJoinedDate = () => {
-    const d = getJsDate(memberDetail?.joinedAt);
-    return d ? d.toLocaleDateString('en-IN') : '—';
-  };
 
   const TYPE_ICONS = { workout: '💪', diet: '🥗', progress: '📊', checkin: '✅' };
 
@@ -280,7 +284,7 @@ export default function MemberDetailSheet({ member, gymId, onClose }) {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0', borderBottom: `1px solid ${C.border}` }}>
               <div style={{ fontSize: 14, fontFamily: fn, color: C.sub }}>Start Date</div>
-              <div style={{ fontSize: 14, fontFamily: fb, fontWeight: 600, color: C.text }}>{getJoinedDate()}</div>
+              <div style={{ fontSize: 14, fontFamily: fb, fontWeight: 600, color: C.text }}>{getJoinedDate(memberDetail)}</div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0', borderBottom: `1px solid ${C.border}` }}>
               <div style={{ fontSize: 14, fontFamily: fn, color: C.sub }}>Next Billing</div>
@@ -321,8 +325,6 @@ export default function MemberDetailSheet({ member, gymId, onClose }) {
       </div>
     );
   }
-
-  function firstName(name) { return name ? name.split(' ')[0] : 'Member'; }
 
   return (
     <div style={{
@@ -390,7 +392,7 @@ export default function MemberDetailSheet({ member, gymId, onClose }) {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0', borderBottom: `1px solid ${C.border}` }}>
                   <div style={{ fontSize: 14, fontFamily: fn, color: C.sub }}>Joined Gym On</div>
-                  <div style={{ fontSize: 14, fontFamily: fb, fontWeight: 600, color: C.text }}>{getJoinedDate()}</div>
+                  <div style={{ fontSize: 14, fontFamily: fb, fontWeight: 600, color: C.text }}>{getJoinedDate(memberDetail)}</div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0' }}>
                   <div style={{ fontSize: 14, fontFamily: fn, color: C.sub }}>Next Billing</div>

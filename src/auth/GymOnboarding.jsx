@@ -5,8 +5,8 @@ import {
   getGymByCode, createGym, createMemberDoc,
   setUserDoc, serverTimestamp, saveSubscription, getFBFirestore,
 } from '../shared/firebase.js';
-import appIconLight from '../assets/app-icon-light.png';
-import appIconDark from '../assets/app-icon-dark.png';
+import msgLogoExact from '../assets/msg_logo_exact.svg';
+import msgLogoWhite from '../assets/msg_logo_white.svg';
 
 // ─── Keyframe injector ───────────────────────────────────────────────────────
 function injectOnboardingCSS() {
@@ -382,9 +382,9 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
   const logoBlock = (
     <div style={{ textAlign: 'center', marginBottom: 24 }}>
       <img
-        src={appIconLight}
+        src={darkMode ? msgLogoWhite : msgLogoExact}
         alt="MSG"
-        style={{ height: 60, width: 60, objectFit: 'contain', display: 'block', margin: '0 auto', borderRadius: 14 }}
+        style={{ height: 48, width: 'auto', objectFit: 'contain', display: 'block', margin: '0 auto' }}
       />
     </div>
   );

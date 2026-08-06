@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { getFBAuth } from '../shared/firebase.js';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
-import appIconLight from '../assets/app-icon-light.png';
-import appIconDark from '../assets/app-icon-dark.png';
+import msgLogoExact from '../assets/msg_logo_exact.svg';
+import msgLogoWhite from '../assets/msg_logo_white.svg';
 
 export default function LoginScreen({ onLogin, darkMode }) {
   const [mode, setMode]       = useState('login');
@@ -141,9 +141,9 @@ export default function LoginScreen({ onLogin, darkMode }) {
       {/* Logo */}
       <div style={{ textAlign: 'center', marginBottom: 32, zIndex: 1 }} className="msg-anim-scalein">
         <img
-          src={appIconLight}
+          src={darkMode ? msgLogoWhite : msgLogoExact}
           alt="MSG"
-          style={{ height: 72, width: 72, objectFit: 'contain', display: 'block', margin: '0 auto', borderRadius: 16, boxShadow: '0 8px 24px rgba(0,0,0,0.15)' }}
+          style={{ height: 72, width: 'auto', objectFit: 'contain', display: 'block', margin: '0 auto' }}
         />
         <div style={{ color: C.sub, fontSize: 13, marginTop: 14, lineHeight: 1.6 }}>Train smart. Eat right. Track everything.</div>
       </div>
