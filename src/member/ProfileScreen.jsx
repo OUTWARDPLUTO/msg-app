@@ -4,6 +4,7 @@ import { UserAvatar } from '../shared/primitives.jsx';
 import { Card, Lbl, Hd } from './primitives.jsx';
 import { sanitizeString, validateNumber } from '../shared/security.js';
 import { calcStreak } from './utils.jsx';
+import { getStatusFromScore } from '../shared/engagementScore.js';
 // ─── Modal Shell ─────────────────────────────────────────────────────────────
 export function ModalShell({ title, onClose, children }) {
   return (
@@ -73,6 +74,7 @@ export default function ProfileScreen({ onClose, progressLogs, dietGoal, mealLog
   const sp = (k, v) => setDraft(p => ({ ...p, [k]: v }));
 
   const [score, setScore] = useState(0);
+  const [engagementData, setEngagementData] = useState(null);
   useEffect(() => {
     if (user?.uid && gymId && user.uid !== 'demo') {
       import('../shared/firebase.js').then(async (f) => {
@@ -80,7 +82,13 @@ export default function ProfileScreen({ onClose, progressLogs, dietGoal, mealLog
           const db = await f.getFBFirestore();
           const doc = await db.doc(`members/${gymId}_${user.uid}`).get();
           if (doc.exists) {
-            setScore(doc.data().engagementScore || 0);
+            const d = doc.data();
+            setScore(d.engagementScore || 0);
+            setEngagementData({
+              score: d.engagementScore || 0,
+              status: d.engagementStatus || null,
+              breakdown: d.engagementBreakdown || null,
+            });
           }
         } catch (err) { console.warn('Failed to fetch engagement score:', err); }
       });
@@ -322,6 +330,55 @@ export default function ProfileScreen({ onClose, progressLogs, dietGoal, mealLog
           </div>
         ))}
       </div>
+      {/* 28-day Rolling Engagement Breakdown */}
+      {engagementData?.breakdown && (
+        <div style={{ padding: '16px 16px 0' }}>
+          <div style={{ background: C.s2, border: `1px solid ${C.border}`, borderRadius: 14, padding: '14px 16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div>
+                <div style={{ fontSize: 13, fontFamily: fb, fontWeight: 700, color: C.text }}>Engagement Breakdown</div>
+                <div style={{ fontSize: 11, fontFamily: fn, color: C.sub }}>28-day rolling window · 4 pillars</div>
+              </div>
+              <span style={{
+                background: getStatusFromScore(score).badgeBg,
+                color: getStatusFromScore(score).color,
+                fontSize: 10, fontFamily: fb, fontWeight: 700,
+                padding: '4px 8px', borderRadius: 12,
+              }}>
+                {engagementData.status || getStatusFromScore(score).label}
+              </span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div style={{ background: C.s3, borderRadius: 10, padding: '10px 12px' }}>
+                <div style={{ fontSize: 11, color: C.sub, fontFamily: fn }}>Consistency</div>
+                <div style={{ fontSize: 15, fontFamily: fb, fontWeight: 700, color: C.accent, marginTop: 2 }}>
+                  {engagementData.breakdown.consistency?.points ?? 0} <span style={{ fontSize: 11, color: C.sub }}>/ 30</span>
+                </div>
+              </div>
+              <div style={{ background: C.s3, borderRadius: 10, padding: '10px 12px' }}>
+                <div style={{ fontSize: 11, color: C.sub, fontFamily: fn }}>Workouts</div>
+                <div style={{ fontSize: 15, fontFamily: fb, fontWeight: 700, color: C.accent, marginTop: 2 }}>
+                  {engagementData.breakdown.workouts?.points ?? 0} <span style={{ fontSize: 11, color: C.sub }}>/ 30</span>
+                </div>
+              </div>
+              <div style={{ background: C.s3, borderRadius: 10, padding: '10px 12px' }}>
+                <div style={{ fontSize: 11, color: C.sub, fontFamily: fn }}>Healthy Habits</div>
+                <div style={{ fontSize: 15, fontFamily: fb, fontWeight: 700, color: C.accent, marginTop: 2 }}>
+                  {engagementData.breakdown.habits?.points ?? 0} <span style={{ fontSize: 11, color: C.sub }}>/ 25</span>
+                </div>
+              </div>
+              <div style={{ background: C.s3, borderRadius: 10, padding: '10px 12px' }}>
+                <div style={{ fontSize: 11, color: C.sub, fontFamily: fn }}>Recency</div>
+                <div style={{ fontSize: 15, fontFamily: fb, fontWeight: 700, color: C.accent, marginTop: 2 }}>
+                  {engagementData.breakdown.recency?.points ?? 0} <span style={{ fontSize: 11, color: C.sub }}>/ 15</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Achievements */}
       <div style={{ padding: '18px 16px 30px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
