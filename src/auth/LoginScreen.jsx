@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
-import { getFBAuth } from '../shared/firebase.js';
+import { getFBAuth, setUserDoc, serverTimestamp } from '../shared/firebase.js';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import msgLogoExact from '../assets/msg_logo_exact.svg';
 import msgLogoWhite from '../assets/msg_logo_white.svg';
@@ -19,6 +19,21 @@ export default function LoginScreen({ onLogin, darkMode }) {
       .then(() => setFbStatus('ready'))
       .catch(() => setFbStatus('error'));
   }, []);
+
+  // Android back button: return to login if on signup tab
+  useEffect(() => {
+    window.__msgGoBack = () => {
+      if (mode === 'signup') {
+        setMode('login');
+        setError('');
+        return true;
+      }
+      return false;
+    };
+    return () => {
+      window.__msgGoBack = null;
+    };
+  }, [mode]);
 
   const checkRateLimit = () => {
     try {
@@ -52,13 +67,26 @@ export default function LoginScreen({ onLogin, darkMode }) {
       } else {
         cred = await auth.createUserWithEmailAndPassword(email.trim(), pass);
         await cred.user.updateProfile({ displayName: name.trim() });
+        // Initialize basic user profile doc for new email signup
+        try {
+          await setUserDoc(cred.user.uid, {
+            uid: cred.user.uid,
+            name: name.trim(),
+            email: email.trim(),
+            role: 'member',
+            createdAt: serverTimestamp(),
+            lastActiveAt: serverTimestamp(),
+          });
+        } catch (err) {
+          console.warn('[MSG Auth] Failed to create initial user doc:', err);
+        }
       }
       onLogin({
         uid: cred.user.uid,
         name: cred.user.displayName || name || email.split('@')[0],
         email: cred.user.email,
         photo: cred.user.photoURL,
-      }, mode === 'signup');
+      });
     } catch (e) {
       const msgs = {
         'auth/user-not-found':      'No account found with this email',
@@ -96,7 +124,7 @@ export default function LoginScreen({ onLogin, darkMode }) {
         name: cred.user.displayName,
         email: cred.user.email,
         photo: cred.user.photoURL,
-      }, cred.additionalUserInfo?.isNewUser);
+      });
     } catch (e) {
       const cancelled = e.code === 'auth/popup-closed-by-user'
         || e.message === 'The user canceled the sign-in flow.'

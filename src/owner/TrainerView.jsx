@@ -41,6 +41,29 @@ export default function TrainerView({ gymId, user, onLogout }) {
 
   // Selected member for detail sheet
   const [selectedMember, setSelectedMember] = useState(null);
+  const [childBackHandler, setChildBackHandler] = useState(null);
+
+  // Android system back button handler
+  useEffect(() => {
+    window.__msgGoBack = () => {
+      if (selectedMember) {
+        setSelectedMember(null);
+        return true;
+      }
+      if (childBackHandler) {
+        const handled = childBackHandler();
+        if (handled) return true;
+      }
+      if (tab !== 'dashboard') {
+        setTab('dashboard');
+        return true;
+      }
+      return false;
+    };
+    return () => {
+      window.__msgGoBack = null;
+    };
+  }, [selectedMember, childBackHandler, tab]);
 
   // Online / offline listeners
   useEffect(() => {
@@ -527,7 +550,7 @@ export default function TrainerView({ gymId, user, onLogout }) {
           </div>
         ) : (
           /* ── 3. TRAINER INBOX / MESSAGING ── */
-          <TrainerInbox gymId={gymId} user={user} />
+          <TrainerInbox gymId={gymId} user={user} setBackHandler={setChildBackHandler} />
         )}
       </div>
 

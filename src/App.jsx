@@ -1,6 +1,14 @@
 import { useState, useEffect, useRef, lazy, Suspense, Component } from 'react';
 import { THEMES, C, fn } from './shared/theme.js';
-import { getFBAuth, getFBFirestore, getUserDoc } from './shared/firebase.js';
+import {
+  getFBAuth,
+  getFBFirestore,
+  getUserDoc,
+  setUserDoc,
+  serverTimestamp,
+  findGymByOwnerUid,
+  findMemberRecordsByUid,
+} from './shared/firebase.js';
 import { App as CapApp } from '@capacitor/app';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import {
@@ -77,18 +85,18 @@ export default function MSG() {
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', C.bg);
   }, [darkMode]);
 
-  // ── Auth ───────────────────────────────────────────────────────────────────
+  // ── Auth & Profile Resolution ──────────────────────────────────────────────
   const [user, setUser]         = useState(() => load('msg_user', null));
   const [gymId, setGymId]       = useState(() => load('msg_gym_id', null));
   const [gymName, setGymName]   = useState(() => load('msg_gym_name', ''));
   const [role, setRole]         = useState(() => load('msg_role', 'member'));
-  const [gymLoading, setGymLoading] = useState(false);
-  // authLoading: true on cold start when a cached user exists, so we never flash
-  // GymOnboarding or LoginScreen while Firebase is validating the session token.
-  const [authLoading, setAuthLoading] = useState(() => !!load('msg_user', null));
+  // authStatus: 'initializing' | 'unauthenticated' | 'resolving_profile' | 'ready' | 'needs_onboarding' | 'profile_missing' | 'resolution_error'
+  const [authStatus, setAuthStatus] = useState(() => (load('msg_user', null) && load('msg_gym_id', null) ? 'initializing' : 'initializing'));
+  const [resolutionError, setResolutionError] = useState(null);
   const [gymSubscriptionExpired, setGymSubscriptionExpired] = useState(false);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
-  const gymResolvedRef = useRef(false); // prevents double-resolveGym from onAuthStateChanged race
+  const profileResolvingRef = useRef(false);
+  const lastResolvedUidRef = useRef(null);
 
   // ── Member state (persisted) ────────────────────────────────────────────────
   const [dietGoal, setDietGoalRaw]       = useState(() => load('msg_diet_goal', null));
@@ -216,127 +224,242 @@ export default function MSG() {
   }, [user?.uid, gymId]); // eslint-disable-line
 
   // ── Android back button handler ────────────────────────────────────────────
-  // MemberApp registers window.__msgGoBack() which pops its own nav stack.
-  // We only call exitApp() when there's nothing left to navigate back through.
+  // Active screens register window.__msgGoBack() which returns true if handled.
+  // We only call exitApp() when at root dashboard or root login with no in-app state.
   useEffect(() => {
     let handler;
     CapApp.addListener('backButton', () => {
       const handled = typeof window.__msgGoBack === 'function' && window.__msgGoBack();
-      if (!handled) {
-        // Nothing left in the in-app stack — exit
-        CapApp.exitApp();
+      if (handled) return;
+
+      // If user is on an error/recovery screen, back returns to login screen
+      if (authStatus === 'resolution_error' || authStatus === 'profile_missing') {
+        handleLogout();
+        return;
       }
+
+      // Nothing left in the in-app stack — exit
+      CapApp.exitApp();
     }).then(h => { handler = h; });
     return () => { handler?.remove(); };
-  }, []);
+  }, [authStatus]);
 
-  // ── Firebase Auth state sync (session restore on cold launch only) ─────────
+  // ── Firebase Auth state sync (session restore on launch) ───────────────────
   useEffect(() => {
+    let unsubscribeAuth = null;
     getFBAuth().then(auth => {
-      auth.onAuthStateChanged(fbUser => {
-        // gymResolvedRef.current is false only on cold app launch (never after handleLogin)
-        // This block only handles the case where the app restarts with an existing session.
-        if (fbUser && !gymResolvedRef.current) {
-          gymResolvedRef.current = true; // claim it immediately to prevent any race
+      unsubscribeAuth = auth.onAuthStateChanged(fbUser => {
+        if (fbUser) {
           const u = {
             uid: fbUser.uid,
             name: fbUser.displayName || fbUser.email?.split('@')[0] || 'User',
-            email: fbUser.email,
-            photo: fbUser.photoURL,
+            email: fbUser.email || '',
+            photo: fbUser.photoURL || null,
           };
-          setUser(u); save('msg_user', u);
-          resolveGym(fbUser.uid).finally(() => setAuthLoading(false));
-        } else if (!fbUser) {
-          // Firebase fired null — this can happen before the authenticated user
-          // fires on Android cold start. Just unblock authLoading; do NOT clear
-          // user/gymId here or we get a GymOnboarding flash when the user
-          // comes in a frame later. If the session is truly expired, Firebase
-          // ops will fail with auth errors which are handled individually.
-          if (!gymResolvedRef.current) setAuthLoading(false);
+          setUser(u);
+          save('msg_user', u);
+          // Only trigger if not already resolved/resolving for this UID
+          if (lastResolvedUidRef.current !== fbUser.uid) {
+            resolveUserProfile(u);
+          }
         } else {
-          // fbUser && gymResolvedRef.current = true → handleLogin already ran
-          setAuthLoading(false);
+          // Firebase reports no active user
+          lastResolvedUidRef.current = null;
+          if (!profileResolvingRef.current) {
+            setUser(null);          save('msg_user', null);
+            setGymId(null);         save('msg_gym_id', null);
+            setRole('member');      save('msg_role', 'member');
+            setGymName('');         save('msg_gym_name', '');
+            setAuthStatus('unauthenticated');
+          }
         }
       });
-    }).catch(() => { setAuthLoading(false); });
+    }).catch(err => {
+      console.warn('[MSG Auth] getFBAuth initialization issue:', err.message);
+      const cachedUser = load('msg_user', null);
+      const cachedGymId = load('msg_gym_id', null);
+      if (cachedUser && cachedGymId) {
+        setAuthStatus('ready');
+      } else {
+        setAuthStatus('unauthenticated');
+      }
+    });
+
+    return () => {
+      if (typeof unsubscribeAuth === 'function') unsubscribeAuth();
+    };
   }, []); // eslint-disable-line
 
-  // ── Resolve gymId + role from Firestore ────────────────────────────────────
-  async function resolveGym(uid) {
-    if (!uid) return;
-    // Guard: don't double-run. gymResolvedRef.current must be set to true
-    // by the CALLER before invoking resolveGym (handleLogin / onAuthStateChanged).
-    setGymLoading(true);
-    // Safety timeout: never hang the spinner longer than 10 seconds
-    const timeout = setTimeout(() => setGymLoading(false), 10000);
+  // ── Resolve user profile & gym association from Firestore ──────────────────
+  async function resolveUserProfile(userObj, isFreshLogin = false) {
+    if (!userObj?.uid) {
+      setAuthStatus('unauthenticated');
+      return;
+    }
+    const uid = userObj.uid;
+    lastResolvedUidRef.current = uid;
+    profileResolvingRef.current = true;
+    setAuthStatus('resolving_profile');
+    setResolutionError(null);
+
+    console.log(`[MSG Auth] Resolving profile for UID: ${uid} (freshLogin=${isFreshLogin})`);
+
     try {
-      const doc = await getUserDoc(uid);
-      if (doc) {
-        // Sync user properties (name, photo, profile) from Firestore to client session
+      const userDoc = await getUserDoc(uid);
+
+      if (userDoc) {
+        console.log(`[MSG Auth] Profile confirmed for ${uid}: gymId=${userDoc.gymId}, role=${userDoc.role}`);
         const updatedUser = {
           uid,
-          name: doc.name || user?.name || doc.email?.split('@')[0] || 'User',
-          email: doc.email || user?.email || '',
-          photo: doc.photo || user?.photo || null,
-          profile: doc.profile || null,
+          name: userDoc.name || userObj.name || userDoc.email?.split('@')[0] || 'User',
+          email: userDoc.email || userObj.email || '',
+          photo: userDoc.photo || userObj.photo || null,
+          profile: userDoc.profile || null,
         };
         setUser(updatedUser);
         save('msg_user', updatedUser);
-        if (doc.profile) {
-          try { localStorage.setItem('msg_profile_details', JSON.stringify(doc.profile)); } catch {}
+        if (userDoc.profile) {
+          try { localStorage.setItem('msg_profile_details', JSON.stringify(userDoc.profile)); } catch {}
         }
-        if (doc.photo) {
-          try { localStorage.setItem('msg_profile_photo', doc.photo); } catch {}
+        if (userDoc.photo) {
+          try { localStorage.setItem('msg_profile_photo', userDoc.photo); } catch {}
         }
 
-        if (doc.gymId) {
-          setGymId(doc.gymId);   save('msg_gym_id', doc.gymId);
-          setRole(doc.role || 'member'); save('msg_role', doc.role || 'member');
+        if (userDoc.gymId) {
+          const resolvedGymId = userDoc.gymId;
+          const resolvedRole = userDoc.role || 'member';
+          setGymId(resolvedGymId);
+          save('msg_gym_id', resolvedGymId);
+          setRole(resolvedRole);
+          save('msg_role', resolvedRole);
+
           try {
             const db = await getFBFirestore();
-            const gymDoc = await db.doc(`gyms/${doc.gymId}`).get();
-            if (gymDoc.exists) { 
-              const data = gymDoc.data();
-              setGymName(data.name); save('msg_gym_name', data.name); 
-              
-              // Member Access Restriction Check
-              if (doc.role === 'member' || !doc.role) {
-                if (data.ownerUid) {
-                  const subDoc = await db.doc(`users/${data.ownerUid}`).get();
-                  const subData = subDoc.data()?.subscription;
-                  if (!subData || subData.status !== 'active' || (subData.expiresAt && subData.expiresAt < Date.now())) {
-                    setGymSubscriptionExpired(true);
-                  } else {
-                    setGymSubscriptionExpired(false);
-                  }
+            const gymSnap = await db.doc(`gyms/${resolvedGymId}`).get();
+            if (gymSnap.exists) {
+              const gymData = gymSnap.data();
+              setGymName(gymData.name || '');
+              save('msg_gym_name', gymData.name || '');
+
+              if (resolvedRole === 'member' && gymData.ownerUid) {
+                const subDoc = await db.doc(`users/${gymData.ownerUid}`).get();
+                const subData = subDoc.data()?.subscription;
+                if (!subData || subData.status !== 'active' || (subData.expiresAt && subData.expiresAt < Date.now())) {
+                  setGymSubscriptionExpired(true);
+                } else {
+                  setGymSubscriptionExpired(false);
                 }
               }
             }
-          } catch(_) {}
-        } else {
-          setGymId(null); save('msg_gym_id', null);
-          setRole('member'); save('msg_role', 'member');
-          setGymName(''); save('msg_gym_name', '');
-          setGymSubscriptionExpired(false);
+          } catch (gymErr) {
+            console.warn('[MSG Auth] Failed to fetch gym details (proceeding with known gymId):', gymErr.message);
+          }
+
+          setAuthStatus('ready');
+          profileResolvingRef.current = false;
+          return;
         }
-      } else {
-        // User doc is missing/deleted from Firestore: Self-healing
-        console.warn('User document not found in Firestore. Self-healing state...');
+
+        // userDoc exists but gymId is null: Self-healing lookup
+        const ownedGym = await findGymByOwnerUid(uid);
+        if (ownedGym) {
+          console.log(`[MSG Auth] Self-healed missing gymId from owned gym: ${ownedGym.id}`);
+          await setUserDoc(uid, { gymId: ownedGym.id, role: 'owner' }, true);
+          setGymId(ownedGym.id); save('msg_gym_id', ownedGym.id);
+          setRole('owner'); save('msg_role', 'owner');
+          setGymName(ownedGym.name || ''); save('msg_gym_name', ownedGym.name || '');
+          setAuthStatus('ready');
+          profileResolvingRef.current = false;
+          return;
+        }
+
+        const memberRecord = await findMemberRecordsByUid(uid);
+        if (memberRecord && memberRecord.gymId) {
+          console.log(`[MSG Auth] Self-healed missing gymId from member record: ${memberRecord.gymId}`);
+          const memRole = memberRecord.role || 'member';
+          await setUserDoc(uid, { gymId: memberRecord.gymId, role: memRole }, true);
+          setGymId(memberRecord.gymId); save('msg_gym_id', memberRecord.gymId);
+          setRole(memRole); save('msg_role', memRole);
+          setAuthStatus('ready');
+          profileResolvingRef.current = false;
+          return;
+        }
+
+        // Confirmed: user doc exists in Firestore, but definitely has no gym
         setGymId(null); save('msg_gym_id', null);
-        setRole('member'); save('msg_role', 'member');
         setGymName(''); save('msg_gym_name', '');
-        localStorage.removeItem('msg_gym_id');
-        localStorage.removeItem('msg_gym_name');
-        localStorage.removeItem('msg_role');
-        setShowProfileSetup(true); // Re-run profile setup / user doc creation
+        setAuthStatus('needs_onboarding');
+        profileResolvingRef.current = false;
+        return;
       }
-    } catch (e) { console.warn('resolveGym:', e.message); }
-    clearTimeout(timeout);
-    setGymLoading(false);
+
+      // userDoc is NOT in Firestore
+      console.warn(`[MSG Auth] No user doc at users/${uid}. Performing self-healing check...`);
+      const ownedGym = await findGymByOwnerUid(uid);
+      if (ownedGym) {
+        console.log(`[MSG Auth] Self-healed user doc: user owns gym ${ownedGym.id}`);
+        await setUserDoc(uid, {
+          uid,
+          name: userObj.name || 'Gym Owner',
+          email: userObj.email || '',
+          photo: userObj.photo || null,
+          role: 'owner',
+          gymId: ownedGym.id,
+          createdAt: serverTimestamp(),
+          lastActiveAt: serverTimestamp(),
+        });
+        setGymId(ownedGym.id); save('msg_gym_id', ownedGym.id);
+        setRole('owner'); save('msg_role', 'owner');
+        setGymName(ownedGym.name || ''); save('msg_gym_name', ownedGym.name || '');
+        setAuthStatus('ready');
+        profileResolvingRef.current = false;
+        return;
+      }
+
+      const memberRecord = await findMemberRecordsByUid(uid);
+      if (memberRecord && memberRecord.gymId) {
+        console.log(`[MSG Auth] Self-healed user doc: member record in gym ${memberRecord.gymId}`);
+        const memRole = memberRecord.role || 'member';
+        await setUserDoc(uid, {
+          uid,
+          name: userObj.name || memberRecord.name || 'Member',
+          email: userObj.email || memberRecord.email || '',
+          photo: userObj.photo || null,
+          role: memRole,
+          gymId: memberRecord.gymId,
+          createdAt: serverTimestamp(),
+          lastActiveAt: serverTimestamp(),
+        });
+        setGymId(memberRecord.gymId); save('msg_gym_id', memberRecord.gymId);
+        setRole(memRole); save('msg_role', memRole);
+        setAuthStatus('ready');
+        profileResolvingRef.current = false;
+        return;
+      }
+
+      // Profile truly missing from Firestore with no existing records
+      console.warn(`[MSG Auth] No profile or gym record found for ${uid}. Presenting recovery state.`);
+      setAuthStatus('profile_missing');
+      profileResolvingRef.current = false;
+    } catch (err) {
+      console.error(`[MSG Auth] Profile resolution error for ${uid}:`, err);
+      // Fallback: Check if cached session matches this UID
+      const cachedUser = load('msg_user', null);
+      const cachedGymId = load('msg_gym_id', null);
+      if (cachedUser && cachedUser.uid === uid && cachedGymId) {
+        console.log('[MSG Auth] Network error during resolution. Using cached session as temporary fallback.');
+        setAuthStatus('ready');
+        profileResolvingRef.current = false;
+        return;
+      }
+      setResolutionError(err?.message || 'Unable to connect to database. Please check your connection.');
+      setAuthStatus('resolution_error');
+      profileResolvingRef.current = false;
+    }
   }
 
   // ── Login handler ──────────────────────────────────────────────────────────
-  const handleLogin = (u, isNew = false) => {
+  const handleLogin = (u) => {
     const prevUser = load('msg_user', null);
     if (!prevUser || prevUser.uid !== u.uid) {
       setDietGoal(null); setMealLog([]); setWeekPlan(null); setProgressLogs([]);
@@ -346,15 +469,31 @@ export default function MSG() {
       localStorage.removeItem('msg_profile_details');
       localStorage.removeItem('msg_profile_photo');
     }
-    // Normalise name — Google displayName can be null
     const safeUser = { ...u, name: u.name || u.email?.split('@')[0] || 'User' };
     setUser(safeUser); save('msg_user', safeUser);
-    setAuthLoading(false); // login bypasses onAuthStateChanged — clear loading guard
-    // Claim gymResolvedRef BEFORE resolveGym so onAuthStateChanged (which fires
-    // after signInWithCredential resolves) sees it as already handled and skips.
-    gymResolvedRef.current = true;
-    if (isNew) setShowProfileSetup(true);
-    else resolveGym(safeUser.uid);
+    resolveUserProfile(safeUser, true);
+  };
+
+  // ── Setup new account handler (explicit user confirmation from recovery) ──
+  const handleSetupNewAccount = async () => {
+    if (!user?.uid) return;
+    setAuthStatus('resolving_profile');
+    try {
+      await setUserDoc(user.uid, {
+        uid: user.uid,
+        name: user.name || '',
+        email: user.email || '',
+        photo: user.photo || null,
+        role: 'member',
+        createdAt: serverTimestamp(),
+        lastActiveAt: serverTimestamp(),
+      });
+      setAuthStatus('needs_onboarding');
+    } catch (err) {
+      console.error('[MSG Auth] Failed to initialize user document:', err);
+      setResolutionError(err?.message || 'Failed to initialize account.');
+      setAuthStatus('resolution_error');
+    }
   };
 
   // ── Sync NotificationService session context whenever user/gymId/role change
@@ -393,8 +532,11 @@ export default function MSG() {
     localStorage.removeItem('msg_profile_photo');
     localStorage.removeItem('msg_pending_route');
     clearNotifSessionContext();
-    gymResolvedRef.current = false;
-    setAuthLoading(false); // reset auth guard so next login starts fresh
+    profileResolvingRef.current = false;
+    lastResolvedUidRef.current = null;
+    setShowProfileSetup(false);
+    setResolutionError(null);
+    setAuthStatus('unauthenticated');
     // Background cleanup (fire-and-forget — errors are swallowed intentionally)
     try {
       getFBAuth().then(auth => {
@@ -424,9 +566,10 @@ export default function MSG() {
 
   // ── Gym joined callback ────────────────────────────────────────────────────
   const handleGymJoined = (gId, gRole, gName) => {
-    setGymId(gId);   save('msg_gym_id', gId);
-    setRole(gRole);  save('msg_role', gRole);
+    setGymId(gId);     save('msg_gym_id', gId);
+    setRole(gRole);    save('msg_role', gRole);
     setGymName(gName); save('msg_gym_name', gName);
+    setAuthStatus('ready');
   };
 
   // Sync state between tabs if another tab changes it
@@ -458,32 +601,118 @@ export default function MSG() {
   // ─────────────────────────────────────────────────────────────────────────
 
   const fullPageLoader = (
-    <div style={{ background: C.bg, height: '100dvh', maxWidth: 430, margin: '0 auto', padding: 'env(safe-area-inset-top) 20px 20px', display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 20 }}>
-        <div>
-          <Skeleton width={160} height={28} style={{ marginBottom: 8 }} />
-          <Skeleton width={100} height={16} />
-        </div>
-        <Skeleton circle width={44} height={44} />
+    <div style={{ background: C.bg, height: '100dvh', maxWidth: 430, margin: '0 auto', padding: 'env(safe-area-inset-top) 20px 20px', display: 'flex', flexDirection: 'column', gap: 24, justifyContent: 'center', alignItems: 'center' }}>
+      <div className="msg-shimmer" style={{ width: 68, height: 68, borderRadius: '50%', background: C.s2, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, marginBottom: 8 }}>
+        ⚡
       </div>
-      <Skeleton width="100%" height={160} borderRadius={24} />
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        <Skeleton height={140} borderRadius={20} />
-        <Skeleton height={140} borderRadius={20} />
+      <div style={{ fontFamily: fn, fontSize: 18, fontWeight: 700, color: C.text }}>
+        Verifying Account…
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {[1, 2, 3].map(i => <Skeleton key={i} height={80} borderRadius={16} stagger={i} />)}
+      <div style={{ fontSize: 13, color: C.sub, textAlign: 'center', maxWidth: 280, lineHeight: 1.5 }}>
+        Checking your profile and gym access. Please hold on.
       </div>
     </div>
   );
 
-  // 1. Auth still resolving — show skeleton loader, never flash wrong screen
-  if (authLoading || gymLoading) return fullPageLoader;
+  // 1. Loading / verifying profile
+  if (authStatus === 'initializing' || authStatus === 'resolving_profile') {
+    return fullPageLoader;
+  }
 
-  // 2. Not logged in
-  if (!user) return <LoginScreen onLogin={handleLogin} darkMode={darkMode} />;
+  // 2. Unauthenticated
+  if (authStatus === 'unauthenticated' || !user) {
+    return <LoginScreen onLogin={handleLogin} darkMode={darkMode} />;
+  }
 
-  // 2. Profile setup for new signups
+  // 3. Connection / resolution error state
+  if (authStatus === 'resolution_error') {
+    return (
+      <div style={{ background: C.bg, height: '100dvh', maxWidth: 430, margin: '0 auto', padding: '32px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', fontFamily: fn }}>
+        <div style={{ fontSize: 52, marginBottom: 16 }}>📡</div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: C.text, marginBottom: 8 }}>Connection Problem</div>
+        <div style={{ fontSize: 13, color: C.sub, marginBottom: 20, lineHeight: 1.6, maxWidth: 320 }}>
+          {resolutionError || 'Unable to connect to the database to verify your gym profile.'}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
+          <button
+            onClick={() => resolveUserProfile(user, true)}
+            style={{
+              background: C.accent, border: 'none', borderRadius: 14, padding: '14px',
+              color: '#111', fontWeight: 800, fontSize: 14, cursor: 'pointer',
+            }}
+          >
+            🔄 Retry Connection
+          </button>
+          {load('msg_gym_id', null) && (
+            <button
+              onClick={() => setAuthStatus('ready')}
+              style={{
+                background: C.s2, border: `1px solid ${C.border}`, borderRadius: 14, padding: '13px',
+                color: C.text, fontWeight: 700, fontSize: 13, cursor: 'pointer',
+              }}
+            >
+              Continue Offline
+            </button>
+          )}
+          <button
+            onClick={handleLogout}
+            style={{
+              background: 'none', border: 'none', color: C.muted, padding: '10px',
+              fontWeight: 600, fontSize: 12, cursor: 'pointer',
+            }}
+          >
+            Sign Out / Return to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 4. Missing profile recovery state (explicit choice to prevent duplicate accounts)
+  if (authStatus === 'profile_missing') {
+    return (
+      <div style={{ background: C.bg, height: '100dvh', maxWidth: 430, margin: '0 auto', padding: '32px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', fontFamily: fn }}>
+        <div style={{ fontSize: 52, marginBottom: 16 }}>🔍</div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: C.text, marginBottom: 8 }}>Profile Recovery</div>
+        <div style={{ fontSize: 13, color: C.sub, marginBottom: 24, lineHeight: 1.6, maxWidth: 320 }}>
+          We authenticated <strong style={{ color: C.text }}>{user?.email || 'your account'}</strong>, but did not find an active gym profile.
+          <br/><br/>
+          To prevent duplicate records, please confirm:
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
+          <button
+            onClick={() => resolveUserProfile(user, true)}
+            style={{
+              background: C.s2, border: `1px solid ${C.border}`, borderRadius: 14, padding: '14px',
+              color: C.text, fontWeight: 700, fontSize: 14, cursor: 'pointer',
+            }}
+          >
+            🔄 Re-check Database
+          </button>
+          <button
+            onClick={handleSetupNewAccount}
+            style={{
+              background: C.accent, border: 'none', borderRadius: 14, padding: '14px',
+              color: '#111', fontWeight: 800, fontSize: 14, cursor: 'pointer',
+            }}
+          >
+            ✨ Set Up Account As New
+          </button>
+          <button
+            onClick={handleLogout}
+            style={{
+              background: 'none', border: 'none', color: C.muted, padding: '10px',
+              fontWeight: 600, fontSize: 12, cursor: 'pointer',
+            }}
+          >
+            Sign Out / Switch Account
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 5. Profile setup for new signups
   if (showProfileSetup) return (
     <ProfileSetupScreen
       user={user}
@@ -491,17 +720,17 @@ export default function MSG() {
         setUser(u); save('msg_user', u);
         setShowProfileSetup(false);
       }}
+      onBackToLogin={handleLogout}
     />
   );
 
-  // 3. (gymLoading already handled above with authLoading)
-
-  // 4. No gymId — must onboard
-  if (!gymId) return (
+  // 6. Confirmed needs onboarding
+  if (authStatus === 'needs_onboarding' || !gymId) return (
     <GymOnboarding
       user={user}
       onGymJoined={handleGymJoined}
       darkMode={darkMode}
+      onBackToLogin={handleLogout}
     />
   );
 

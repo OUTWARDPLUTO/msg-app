@@ -171,6 +171,32 @@ export async function createGym(ownerUid, gymName) {
   return { id: ref.id, ...gymData };
 }
 
+export async function findGymByOwnerUid(uid) {
+  try {
+    const db = await getFBFirestore();
+    const snap = await db.collection('gyms').where('ownerUid', '==', uid).limit(1).get();
+    if (!snap.empty) {
+      return { id: snap.docs[0].id, ...snap.docs[0].data() };
+    }
+  } catch (err) {
+    console.warn('[MSG Auth] findGymByOwnerUid check skipped:', err.message);
+  }
+  return null;
+}
+
+export async function findMemberRecordsByUid(uid) {
+  try {
+    const db = await getFBFirestore();
+    const snap = await db.collection('members').where('uid', '==', uid).limit(1).get();
+    if (!snap.empty) {
+      return { id: snap.docs[0].id, ...snap.docs[0].data() };
+    }
+  } catch (err) {
+    console.warn('[MSG Auth] findMemberRecordsByUid check skipped:', err.message);
+  }
+  return null;
+}
+
 // ─── Member Document Helpers ──────────────────────────────────────────────────
 export async function createMemberDoc(gymId, uid, data) {
   const db = await getFBFirestore();

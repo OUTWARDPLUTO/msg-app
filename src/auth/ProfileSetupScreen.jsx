@@ -1,14 +1,31 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { Lbl } from '../shared/primitives.jsx';
 
-export default function ProfileSetupScreen({ user, onComplete }) {
+export default function ProfileSetupScreen({ user, onComplete, onBackToLogin }) {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({
     age: '', gender: '', height: '', currentWeight: '', targetWeight: '',
     goal: '', activity: '', diet: '',
   });
   const sp = (k, v) => setForm(p => ({ ...p, [k]: v }));
+
+  useEffect(() => {
+    window.__msgGoBack = () => {
+      if (step > 0) {
+        setStep(s => s - 1);
+        return true;
+      }
+      if (typeof onBackToLogin === 'function') {
+        onBackToLogin();
+        return true;
+      }
+      return false;
+    };
+    return () => {
+      window.__msgGoBack = null;
+    };
+  }, [step, onBackToLogin]);
 
   const steps = [
     {

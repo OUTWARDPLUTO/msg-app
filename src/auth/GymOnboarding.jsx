@@ -30,7 +30,7 @@ function injectOnboardingCSS() {
   document.head.appendChild(s);
 }
 
-export default function GymOnboarding({ user, onGymJoined, darkMode }) {
+export default function GymOnboarding({ user, onGymJoined, darkMode, onBackToLogin }) {
   injectOnboardingCSS();
 
   const [screen, setScreen]     = useState('choice');
@@ -49,6 +49,46 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
   const animationFrameRef = useRef(null);
+
+  // Register Android system back handler for Onboarding
+  useEffect(() => {
+    window.__msgGoBack = () => {
+      // 1. If QR scanner is open, close scanner
+      if (showScanner) {
+        closeScanner();
+        return true;
+      }
+      // 2. If on sub-screens (join, create, trainer), return to choice
+      if (screen === 'join' || screen === 'create' || screen === 'trainer') {
+        setScreen('choice');
+        setError('');
+        return true;
+      }
+      // 3. If on subscription screen, return to create screen
+      if (screen === 'subscription') {
+        setScreen('create');
+        setError('');
+        return true;
+      }
+      // 4. If on success screen, return to choice
+      if (screen === 'success') {
+        setScreen('choice');
+        setError('');
+        return true;
+      }
+      // 5. If on the root onboarding screen ('choice'), return to LoginScreen
+      if (screen === 'choice') {
+        if (typeof onBackToLogin === 'function') {
+          onBackToLogin();
+          return true;
+        }
+      }
+      return false;
+    };
+    return () => {
+      window.__msgGoBack = null;
+    };
+  }, [showScanner, screen, onBackToLogin]);
 
   // Pre-warm Firestore so scripts are loaded before user submits gym code
   useEffect(() => { getFBFirestore().catch(() => {}); }, []);
@@ -714,6 +754,17 @@ export default function GymOnboarding({ user, onGymJoined, darkMode }) {
         <div style={{ fontSize: 24, marginBottom: 6 }}>👟</div>
         <div style={{ fontFamily: fn, fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 4 }}>I'm a Trainer</div>
         <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.5 }}>Apply to join a gym and manage your assigned members.</div>
+      </button>
+
+      <button
+        onClick={() => onBackToLogin?.()}
+        style={{
+          marginTop: 20, background: 'none', border: 'none', color: C.muted,
+          fontFamily: fn, fontSize: 13, cursor: 'pointer', textAlign: 'center', width: '100%',
+          padding: '10px',
+        }}
+      >
+        ← Back to Login / Switch Account
       </button>
     </>
   );
