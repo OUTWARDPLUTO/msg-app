@@ -82,21 +82,30 @@ export default function MemberApp({
     return unsub;
   }, [gymId, user?.uid]);
 
-  // Register push notifications via Capacitor
+  // Push listeners are now attached centrally in App.jsx via NotificationService.
+  // Notification tap routing comes through the 'msg_notif_route' custom event.
   useEffect(() => {
-    (async () => {
-      try {
-        const { PushNotifications } = await import('@capacitor/push-notifications');
-        const perm = await PushNotifications.requestPermissions();
-        if (perm.receive === 'granted') {
-          await PushNotifications.register();
-          PushNotifications.addListener('registration', token => console.log('[MSG] Push token:', token.value));
-          PushNotifications.addListener('registrationError', err => console.warn('[MSG] Push registration error:', err));
-          PushNotifications.addListener('pushNotificationReceived', n => console.log('[MSG] Push received:', n));
-        }
-      } catch { /* Not available in web/dev environment */ }
-    })();
-  }, []);
+    const handleNotifRoute = (e) => {
+      const route = e.detail;
+      if (route && views[route]) {
+        navigate(route);
+        try { localStorage.removeItem('msg_pending_route'); } catch {}
+      } else if (route === 'home') {
+        navigate('home');
+        try { localStorage.removeItem('msg_pending_route'); } catch {}
+      }
+    };
+    window.addEventListener('msg_notif_route', handleNotifRoute);
+    // Also handle pending route set while app was closed
+    try {
+      const pending = localStorage.getItem('msg_pending_route');
+      if (pending) {
+        localStorage.removeItem('msg_pending_route');
+        setTimeout(() => navigate(pending), 300); // after first render
+      }
+    } catch {}
+    return () => window.removeEventListener('msg_notif_route', handleNotifRoute);
+  }, []); // eslint-disable-line
 
   // ── Tab navigation history for Android back button ──────────────────────
   const tabHistoryRef = useRef(['home']);
@@ -237,7 +246,7 @@ export default function MemberApp({
 
       {showLogModal && <LogProgressModal onSave={handleSaveProgress} onClose={() => setShowLogModal(false)} darkMode={darkMode} />}
       {profileScreen === 'profile'  && <ProfileScreen  onClose={() => setProfileScreen(null)} progressLogs={progressLogs} dietGoal={dietGoal} mealLog={mealLog} weekPlan={weekPlan} user={user} gymId={gymId} />}
-      {profileScreen === 'settings' && <SettingsScreen onClose={() => setProfileScreen(null)} onResetDiet={() => setDietGoal(null)} onResetWorkout={() => setWeekPlan(null)} darkMode={darkMode} onToggleTheme={onToggleTheme} />}
+      {profileScreen === 'settings' && <SettingsScreen onClose={() => setProfileScreen(null)} onResetDiet={() => setDietGoal(null)} onResetWorkout={() => setWeekPlan(null)} darkMode={darkMode} onToggleTheme={onToggleTheme} user={user} />}
       {profileScreen === 'language' && <LanguageScreen onClose={() => setProfileScreen(null)} />}
       {profileScreen === 'premium'  && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 500, background: C.bg, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px', textAlign: 'center', fontFamily: fn }}>

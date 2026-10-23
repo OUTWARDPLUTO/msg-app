@@ -3,6 +3,13 @@ import { THEMES, C, fn } from './shared/theme.js';
 import { getFBAuth, getFBFirestore, getUserDoc } from './shared/firebase.js';
 import { App as CapApp } from '@capacitor/app';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import {
+  setNotifSessionContext,
+  clearNotifSessionContext,
+  updateLastActive,
+  ensureNotifChannels,
+  attachPushListeners,
+} from './shared/NotificationService.js';
 
 // ────────────────────────────────────────────────────────────────────────────
 // Error Boundary — catches MemberApp crashes, shows recovery UI (no blank screen)
@@ -192,6 +199,22 @@ export default function MSG() {
     }
   }, []);
 
+  // ── Notification channels (idempotent — safe on every launch) ────────────
+  useEffect(() => {
+    ensureNotifChannels();
+  }, []);
+
+  // ── App foreground → update lastActiveAt (rate-limited) ─────────────────
+  useEffect(() => {
+    let handler;
+    CapApp.addListener('appStateChange', (state) => {
+      if (state.isActive && user?.uid) {
+        updateLastActive(user.uid, gymId || null);
+      }
+    }).then(h => { handler = h; });
+    return () => { handler?.remove(); };
+  }, [user?.uid, gymId]); // eslint-disable-line
+
   // ── Android back button handler ────────────────────────────────────────────
   // MemberApp registers window.__msgGoBack() which pops its own nav stack.
   // We only call exitApp() when there's nothing left to navigate back through.
@@ -334,6 +357,27 @@ export default function MSG() {
     else resolveGym(safeUser.uid);
   };
 
+  // ── Sync NotificationService session context whenever user/gymId/role change
+  useEffect(() => {
+    if (user?.uid && gymId) {
+      setNotifSessionContext(user.uid, gymId, role);
+      // Update lastActiveAt on fresh login / cold-start restore
+      updateLastActive(user.uid, gymId);
+      // Attach persistent push listeners (once per session; handlers are idempotent)
+      attachPushListeners({
+        // Route navigation callback: navigate member to tab, owner to nav section
+        onNavigate: (route) => {
+          // Store pending route; each role's UI reads this on mount
+          try { localStorage.setItem('msg_pending_route', route); } catch {}
+          // Trigger custom event for in-app subscribers to react immediately
+          window.dispatchEvent(new CustomEvent('msg_notif_route', { detail: route }));
+        },
+      });
+    } else if (!user) {
+      clearNotifSessionContext();
+    }
+  }, [user?.uid, gymId, role]); // eslint-disable-line
+
   // ── Logout handler ─────────────────────────────────────────────────────────
   const handleLogout = () => {
     // Clear React state FIRST so the UI returns to LoginScreen immediately.
@@ -347,6 +391,8 @@ export default function MSG() {
     localStorage.removeItem('msg_setup_done');
     localStorage.removeItem('msg_profile_details');
     localStorage.removeItem('msg_profile_photo');
+    localStorage.removeItem('msg_pending_route');
+    clearNotifSessionContext();
     gymResolvedRef.current = false;
     setAuthLoading(false); // reset auth guard so next login starts fresh
     // Background cleanup (fire-and-forget — errors are swallowed intentionally)

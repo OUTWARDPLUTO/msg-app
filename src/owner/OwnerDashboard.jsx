@@ -20,6 +20,7 @@ import AmbientBackground from '../shared/AmbientBackground.jsx';
 import OwnerTutorial from './OwnerTutorial.jsx';
 import RevenueDetail from './RevenueDetail.jsx';
 import OwnerInbox from './OwnerInbox.jsx';
+import OwnerNotifCampaignTab from './OwnerNotifCampaignTab.jsx';
 import { useTranslation } from 'react-i18next';
 import { listenToOwnerChats } from '../shared/firebase.js';
 
@@ -50,6 +51,7 @@ function MoreTab({ gymId, gymName, ownerUid, onNavigate, pendingTrainersCount = 
   const items = [
     { key: 'memberships', icon: '💳', label: 'Memberships',   sub: 'Manage plans and member subscriptions' },
     { key: 'import',      icon: '📤', label: 'CSV Import',    sub: 'Bulk import members from CSV' },
+    { key: 'campaigns',  icon: '📣', label: 'Campaigns',     sub: 'Send push notifications to your members' },
   ];
   const isDark = !C.isLight;
   return (
@@ -333,6 +335,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
     if (moreScreen === 'memberships') return <MembershipsTab gymId={gymId} onBack={onBack} />;
     if (moreScreen === 'alerts')      return <AlertsTab gymId={gymId} onViewMemberProfile={setProfileMember} onBack={onBack} />;
     if (moreScreen === 'import')      return <CSVImport gymId={gymId} onBack={onBack} />;
+    if (moreScreen === 'campaigns')   return <OwnerNotifCampaignTab gymId={gymId} ownerUid={user?.uid} onBack={onBack} />;
     if (moreScreen === 'settings')    return <GymSettingsTab gymId={gymId} gymName={gymName} ownerUid={user?.uid} onBack={onBack} />;
     if (moreScreen === 'trainers')    return <GymTrainersTab gymId={gymId} onBack={onBack} />;
     if (moreScreen === 'account')     return <OwnerAccountTab user={user} onLogout={onLogout} onBack={onBack} />;

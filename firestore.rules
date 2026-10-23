@@ -33,6 +33,16 @@ service cloud.firestore {
       allow create: if isUser(uid) && !('subscription' in request.resource.data);
       allow update: if isUser(uid) && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['subscription']));
       allow delete: if false;
+
+      // Device tokens — users may only manage their own devices
+      match /devices/{installationId} {
+        allow read, write: if isUser(uid);
+      }
+
+      // Notification preferences — users may only manage their own preferences
+      match /notificationPreferences/{docId} {
+        allow read, write: if isUser(uid);
+      }
     }
 
         // ── Gyms ──────────────────────────────────────────────────────────────────
@@ -52,6 +62,18 @@ service cloud.firestore {
       match /membership_plans/{planId} {
         allow read:   if isMemberOf(gymId) || isOwnerOf(gymId);
         allow write:  if isOwnerOf(gymId);
+      }
+
+      // Owner campaign records (created & read by owner, or server-managed)
+      match /campaigns/{campaignId} {
+        allow read:           if isOwnerOf(gymId);
+        allow create, update: if isOwnerOf(gymId);
+        allow delete:         if false;
+      }
+
+      // Membership event alerts (e.g. status changes, suspensions)
+      match /membershipEvents/{eventId} {
+        allow read, write: if isOwnerOf(gymId);
       }
     }
 
@@ -160,6 +182,17 @@ service cloud.firestore {
         allow update: if false;
         allow delete: if false;
       }
+    }
+
+    // ── Notification Delivery History (server-written only, owner read-only) ──
+    match /notifDelivery/{gymId}/logs/{logId} {
+      allow read:  if isOwnerOf(gymId);
+      allow write: if false;
+    }
+
+    // ── Idempotency Keys (server-only) ────────────────────────────────────────
+    match /idempotency/{key} {
+      allow read, write: if false;
     }
   }
 }

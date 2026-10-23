@@ -203,8 +203,15 @@ export async function trackActivity(uid, gymId, type) {
       points: ACTIVITY_POINTS[type] || 1,
       timestamp: ts,
     });
-    // Update lastActiveAt on user doc
-    await db.doc(`users/${uid}`).update({ lastActiveAt: ts }).catch(() => {});
+    // Update lastActiveAt on user doc and reset inactivity notification state
+    await db.doc(`users/${uid}`).update({
+      lastActiveAt: ts,
+      inactivity: {
+        lastNotifiedAt: null,
+        notifCountThisMonth: 0,
+        resetAt: ts,
+      },
+    }).catch(() => {});
     // Recalculate + store engagement score
     await recalculateEngagement(uid, gymId, db);
   } catch (err) {
