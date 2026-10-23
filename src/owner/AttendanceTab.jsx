@@ -65,10 +65,13 @@ export default function AttendanceTab({ gymId, onViewMemberProfile, onBack }) {
     return () => clearInterval(interval);
   }, [qrModal, gymId]);
 
+  const [error, setError]       = useState(null);
+
   useEffect(() => { if (gymId) load(); }, [gymId]);
 
   async function load() {
     setLoading(true);
+    setError(null);
     try {
       const db = await getFBFirestore();
       const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000);
@@ -88,7 +91,10 @@ export default function AttendanceTab({ gymId, onViewMemberProfile, onBack }) {
       });
       setMembers(map);
       setAllMembers(all.sort((a, b) => a.name.localeCompare(b.name)));
-    } catch (e) { console.warn(e); }
+    } catch (e) {
+      console.warn('Attendance load error:', e);
+      setError('Unable to load attendance records. Please check your connection.');
+    }
     setLoading(false);
   }
 
@@ -204,7 +210,16 @@ export default function AttendanceTab({ gymId, onViewMemberProfile, onBack }) {
         </div>
       </div>
 
-      {loading ? (
+      {error ? (
+        <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+          <div style={{ fontSize: 36, marginBottom: 12 }}>⚠️</div>
+          <div style={{ fontFamily: fb, fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 8 }}>Unable to load attendance</div>
+          <div style={{ color: C.sub, fontSize: 13, fontFamily: fn, marginBottom: 20 }}>{error}</div>
+          <button onClick={load} style={{ background: C.accent, color: '#111', border: 'none', borderRadius: 12, padding: '10px 24px', fontFamily: fn, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+            ↻ Retry
+          </button>
+        </div>
+      ) : loading ? (
         <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 24 }}>
           <Skeleton height={120} borderRadius={20} />
           <Skeleton height={180} borderRadius={20} />

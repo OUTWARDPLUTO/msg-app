@@ -22,23 +22,23 @@ activityLogs/{gymId}/events → uid, gymId, type, points, timestamp
 ## What's DONE ✅
 - Firebase Auth (Email + Google OAuth, native Android)
 - Role-based router, Gym create/join (6-char code)
-- Owner Dashboard: 6 tabs (Overview, Members, Alerts, Attendance, CSV Import, Settings)
-- Firestore multi-tenant security rules
-- MemberApp: workout (WGER), nutrition (USDA), progress, check-in
+- Owner Dashboard: Overview, Members, Alerts, Attendance, CSV Import, Settings (with loading, empty, error/retry states)
+- Firestore multi-tenant security rules (tamper-resistant engagement scores, trainer scoping)
+- MemberApp: workout (WGER), nutrition (USDA), progress, check-in, lean orchestrator split
 - Android Capacitor build with ErrorBoundary + back nav
 - Razorpay payment integration (subscription screen is mocked)
 - Member profile/stats page (own score, streak, history)
 - QR code gym join
-- BUG: GymSettingsTab.jsx line 33 — useState used instead of useEffect
-- Engagement score engine (workout+10, diet+5, progress+8, checkin+3 | cap=100 | 30-day rolling)
+- FIXED: GymSettingsTab.jsx line 134 gymName sync effect bug
+- Production TrainerView.jsx: assigned squad, dashboard KPIs, roster search/filter, follow-ups, chat, member detail & coaching notes
+- Rebuilt Engagement Scoring Engine: 28-day rolling window, 4 pillars (Consistency 30, Workouts 30, Habits 25, Recency 15), tamper-resistant Cloud Functions v2 + Admin SDK
+- Automated daily score decay and activity event trigger functions
 
 ## What's MISSING ❌ (in priority order)
-1. TrainerView.jsx — empty stub, needs building
+- None (Core product MVP & trainer experience fully built)
 
 ## Known Technical Debt
-- MemberApp.jsx is 221KB single file — needs splitting
-- No loading states on tab switch in OwnerDashboard
-- No error handling UI in owner tabs
+- MemberApp split completed into src/member/ sections; keep monitoring bundle chunk sizes.
 
 ## Agent Rules
 - Always git pull before starting work

@@ -24,6 +24,7 @@ const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { initializeApp } = require('firebase-admin/app');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const { getMessaging } = require('firebase-admin/messaging');
+const { computeEngagementScore, ROLLING_WINDOW_DAYS, MS_PER_DAY } = require('./engagementScore');
 
 initializeApp();
 
@@ -596,3 +597,163 @@ exports.onMembershipChange = onDocumentCreated(
     }
   }
 );
+
+// ─── 7. Engagement Scoring Backend (Trusted Cloud Function) ───────────────────
+// Central engine that recomputes a member's 28-day rolling engagement score.
+// Written exclusively by Firebase Admin — clients cannot forge or edit scores.
+
+async function recomputeMemberEngagement(gymId, memberUid) {
+  if (!gymId || !memberUid || memberUid.startsWith('imported_') || memberUid === 'demo') return null;
+
+  // 1. Fetch member doc
+  const memberRef = db.doc(`members/${gymId}_${memberUid}`);
+  const memberSnap = await memberRef.get();
+  if (!memberSnap.exists) return null;
+  const memberData = memberSnap.data();
+
+  // 2. Fetch user doc & gym settings
+  const [userSnap, gymSnap] = await Promise.all([
+    db.doc(`users/${memberUid}`).get().catch(() => null),
+    db.doc(`gyms/${gymId}`).get().catch(() => null),
+  ]);
+
+  const userData = userSnap?.exists ? userSnap.data() : {};
+  const gymData = gymSnap?.exists ? gymSnap.data() : {};
+  const gymSettings = gymData.settings || {};
+
+  // Gym uses attendance if QR or GPS check-in is enabled (or settings not explicitly disabled)
+  const gymUsesAttendance = gymSettings.useQr !== false && gymSettings.useGps !== false;
+  const weeklyWorkoutTarget = userData.weeklyWorkoutTarget || memberData.weeklyWorkoutTarget || 3;
+  const lastActiveAt = userData.lastActiveAt || memberData.lastActiveAt || null;
+
+  // 3. Fetch activity events in the 28-day rolling window
+  const cutoff = new Date(Date.now() - ROLLING_WINDOW_DAYS * MS_PER_DAY);
+  let rawEvents = [];
+
+  try {
+    const snap = await db.collection(`activityLogs/${gymId}/events`)
+      .where('uid', '==', memberUid)
+      .where('timestamp', '>=', cutoff)
+      .get();
+    rawEvents = snap.docs.map(d => d.data());
+  } catch {
+    // Graceful fallback if composite index is pending: fetch by UID and filter in memory
+    const snap = await db.collection(`activityLogs/${gymId}/events`)
+      .where('uid', '==', memberUid)
+      .get();
+    rawEvents = snap.docs
+      .map(d => d.data())
+      .filter(e => {
+        const t = e.timestamp?.toDate ? e.timestamp.toDate() : new Date(e.timestamp || 0);
+        return t >= cutoff;
+      });
+  }
+
+  // 4. Compute 0 - 100 rolling score
+  const result = computeEngagementScore(rawEvents, {
+    weeklyWorkoutTarget,
+    gymUsesAttendance,
+    lastActiveAt,
+    now: Date.now(),
+  });
+
+  const ts = FieldValue.serverTimestamp();
+
+  // Determine true latest activity timestamp from rawEvents or existing record
+  let latestActivityTs = lastActiveAt || null;
+  for (const e of rawEvents) {
+    if (e.timestamp) {
+      const et = e.timestamp.toDate ? e.timestamp.toDate().getTime() : new Date(e.timestamp).getTime();
+      const cur = latestActivityTs ? (latestActivityTs.toDate ? latestActivityTs.toDate().getTime() : new Date(latestActivityTs).getTime()) : 0;
+      if (et > cur) {
+        latestActivityTs = e.timestamp;
+      }
+    }
+  }
+
+  const memberUpdates = {
+    engagementScore: result.score,
+    engagementStatus: result.status,
+    engagementStatusKey: result.statusKey,
+    engagementBreakdown: result.breakdown,
+    engagementUpdatedAt: ts,
+  };
+  if (latestActivityTs) {
+    memberUpdates.lastActiveAt = latestActivityTs;
+  }
+
+  // 5. Update member doc (trusted server write)
+  await memberRef.update(memberUpdates);
+
+  // 6. Update user doc: sync lastActiveAt & reset inactivity alert counters only if genuinely active
+  const isRecentlyActive = result.breakdown.recency.daysAgo !== null && result.breakdown.recency.daysAgo <= 1;
+  if (userSnap?.exists) {
+    const userUpdates = {};
+    if (latestActivityTs) userUpdates.lastActiveAt = latestActivityTs;
+    if (isRecentlyActive) {
+      userUpdates.inactivity = {
+        lastNotifiedAt: null,
+        notifCountThisMonth: 0,
+        resetAt: ts,
+      };
+    }
+    if (Object.keys(userUpdates).length > 0) {
+      await db.doc(`users/${memberUid}`).update(userUpdates).catch(() => {});
+    }
+  }
+
+  return result;
+}
+
+// ─── 8. Trigger on Activity Logged ────────────────────────────────────────────
+// Whenever a client logs an activity event, trigger server-side recomputation.
+// Idempotent and recursion-free (updates member doc, not activityLogs).
+
+exports.onActivityLogged = onDocumentCreated(
+  'activityLogs/{gymId}/events/{eventId}',
+  async (event) => {
+    const data = event.data?.data();
+    if (!data) return;
+    const { gymId, eventId } = event.params;
+    const { uid } = data;
+    if (!uid || uid.startsWith('imported_') || uid === 'demo') return;
+
+    // Idempotency: skip if already processed on retry
+    const iKey = `act_${gymId}_${eventId}`;
+    const fresh = await claimIdempotencyKey(iKey, 60 * 60 * 1000); // 1 hour TTL
+    if (!fresh) return;
+
+    try {
+      await recomputeMemberEngagement(gymId, uid);
+    } catch (err) {
+      console.warn(`[MSG] onActivityLogged failed for ${uid} in ${gymId}:`, err.message);
+    }
+  }
+);
+
+// ─── 9. Scheduled Daily Engagement Decay ──────────────────────────────────────
+// Runs daily at 03:00 IST. Recomputes rolling 28-day scores for all active members
+// so that scores naturally decay as activity ages out, even if the user is dormant.
+
+exports.scheduledDailyEngagementDecay = onSchedule(
+  { schedule: '0 3 * * *', timeZone: 'Asia/Kolkata', retryCount: 1 },
+  async () => {
+    console.log('[MSG] Starting scheduledDailyEngagementDecay...');
+    try {
+      const membersSnap = await db.collection('members').where('status', '==', 'active').get();
+      for (const doc of membersSnap.docs) {
+        const { uid, gymId } = doc.data();
+        if (!uid || !gymId || uid.startsWith('imported_') || uid === 'demo') continue;
+        try {
+          await recomputeMemberEngagement(gymId, uid);
+        } catch (err) {
+          console.warn(`[MSG] Failed to decay engagement for ${uid} in ${gymId}:`, err.message);
+        }
+      }
+      console.log(`[MSG] Completed scheduledDailyEngagementDecay for ${membersSnap.size} members.`);
+    } catch (err) {
+      console.error('[MSG] scheduledDailyEngagementDecay error:', err);
+    }
+  }
+);
+

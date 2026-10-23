@@ -526,11 +526,21 @@ function DashboardTab({ gymId, user, gymName, onNavigate, onViewMemberProfile, s
           .onSnapshot(snap => {
             const members = snap.docs.map(d => d.data());
             const total = members.length;
-            const now = Date.now();
-            const fiveDaysAgo  = now - 5 * 86400000;
             const threeDaysAgo = now - 3 * 86400000;
-            const active   = members.filter(m => (m.lastActiveAt?.toDate?.()?.getTime() || 0) > fiveDaysAgo).length;
-            const atRisk   = members.filter(m => { const la = m.lastActiveAt?.toDate?.()?.getTime() || 0; return la <= fiveDaysAgo && la > threeDaysAgo; }).length;
+            const sevenDaysAgo = now - 7 * 86400000;
+            const active   = members.filter(m => {
+              const la = m.lastActiveAt?.toDate?.()?.getTime() || 0;
+              const score = m.engagementScore !== undefined ? m.engagementScore : null;
+              if (score !== null) return score >= 60;
+              return la > threeDaysAgo;
+            }).length;
+            const atRisk   = members.filter(m => {
+              const la = m.lastActiveAt?.toDate?.()?.getTime() || 0;
+              const score = m.engagementScore !== undefined ? m.engagementScore : null;
+              if (score !== null) return score >= 35 && score < 60;
+              return la <= threeDaysAgo && la > sevenDaysAgo;
+            }).length;
+            const inactive = Math.max(0, total - active - atRisk);
             const avgScore = total > 0 ? Math.round(members.reduce((s, m) => s + (m.engagementScore || 0), 0) / total) : 0;
             const weekAgo  = new Date(now - 7 * 86400000);
             const newMembers = members.filter(m => { const j = m.joinedAt?.toDate?.(); return j && j > weekAgo; }).length;
@@ -543,7 +553,7 @@ function DashboardTab({ gymId, user, gymName, onNavigate, onViewMemberProfile, s
               if (daysLeft >= 0) liveCount++;
               if (daysLeft >= 0 && daysLeft <= 7) expiringCount++;
             });
-            setStats({ total, active, atRisk, inactive: total - active - atRisk, avgScore, newMembers, liveCount, expiringCount });
+            setStats({ total, active, atRisk, inactive, avgScore, newMembers, liveCount, expiringCount });
             membersDone = true;
             if (attendanceDone) setLoading(false);
           }, () => { membersDone = true; if (attendanceDone) setLoading(false); })

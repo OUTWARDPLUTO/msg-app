@@ -134,6 +134,12 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid, onBack }) {
     }
   }, [gymId]);
 
+  useEffect(() => {
+    if (gymName) {
+      setName(prev => prev || gymName);
+    }
+  }, [gymName]);
+
   return (
     <div style={{ paddingBottom: 100, background: C.bg, minHeight: '100vh' }}>
       {/* Header */}

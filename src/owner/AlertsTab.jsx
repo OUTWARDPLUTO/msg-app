@@ -8,11 +8,13 @@ export default function AlertsTab({ gymId, onViewMemberProfile, onBack, hideHead
   const [atRisk, setAtRisk]     = useState([]);   // 3-5 days
   const [loading, setLoading]   = useState(true);
   const [threshold, setThreshold] = useState(5);
+  const [error, setError] = useState(null);
 
   useEffect(() => { if (gymId) load(); }, [gymId, threshold]);
 
   async function load() {
     setLoading(true);
+    setError(null);
     try {
       const db = await getFBFirestore();
       const snap = await db.collection('members').where('gymId', '==', gymId).get();
@@ -31,7 +33,10 @@ export default function AlertsTab({ gymId, onViewMemberProfile, onBack, hideHead
       });
       setInactive(inactiveList);
       setAtRisk(atRiskList);
-    } catch (e) { console.warn(e); }
+    } catch (e) {
+      console.warn('AlertsTab load error:', e);
+      setError('Unable to load member alerts. Please check your connection.');
+    }
     setLoading(false);
   }
 
@@ -70,7 +75,16 @@ export default function AlertsTab({ gymId, onViewMemberProfile, onBack, hideHead
         </div>
       </div>
 
-      {loading ? (
+      {error ? (
+        <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+          <div style={{ fontSize: 36, marginBottom: 12 }}>⚠️</div>
+          <div style={{ fontFamily: fb, fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 8 }}>Unable to load alerts</div>
+          <div style={{ color: C.sub, fontSize: 13, fontFamily: fn, marginBottom: 20 }}>{error}</div>
+          <button onClick={load} style={{ background: C.accent, color: '#111', border: 'none', borderRadius: 12, padding: '10px 24px', fontFamily: fn, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+            ↻ Retry
+          </button>
+        </div>
+      ) : loading ? (
         <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
           {[1, 2, 3].map(i => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px', background: C.s1, border: `1px solid ${C.border}`, borderRadius: 16 }}>

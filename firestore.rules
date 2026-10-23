@@ -91,27 +91,47 @@ service cloud.firestore {
       allow write:  if isMemberOf(gymId) || isOwnerOf(gymId);
     }
 
+    // ── Member Score Protection Helper ───────────────────────────────────────
+    function hasProtectedScoreFields() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasAny([
+        'engagementScore', 'engagementBreakdown', 'engagementUpdatedAt', 'engagementStatus', 'engagementStatusKey'
+      ]);
+    }
+
     // ── Members ───────────────────────────────────────────────────────────────
     // Members can read their own doc; owners can read/write all members in their gym
-    // Trainers can only list their assigned members, but can get a specific member if they have the ID (via member_code)
+    // Trainers can only list their assigned members, or read unassigned members during linking
+    // Only Firebase Admin backend logic can write protected engagementScore / breakdown fields
     match /members/{docId} {
       // docId is "{gymId}_{uid}"
       allow get:    if isAuth() && (
                       resource == null ||
                       isUser(resource.data.uid) ||
                       isOwnerOf(resource.data.gymId) ||
-                      isTrainerOf(resource.data.gymId)
+                      (isTrainerOf(resource.data.gymId) && (
+                        resource.data.trainerUid == request.auth.uid ||
+                        !('trainerUid' in resource.data) ||
+                        resource.data.trainerUid == null
+                      ))
                     );
       allow list:   if isAuth() && (
                       isUser(resource.data.uid) ||
                       isOwnerOf(resource.data.gymId) ||
                       (isTrainerOf(resource.data.gymId) && resource.data.trainerUid == request.auth.uid)
                     );
-      allow create: if isAuth();
-      allow update: if isAuth() && (
+      allow create: if isAuth() && !request.resource.data.keys().hasAny([
+                      'engagementScore', 'engagementBreakdown', 'engagementUpdatedAt', 'engagementStatus', 'engagementStatusKey'
+                    ]);
+      allow update: if isAuth() && !hasProtectedScoreFields() && (
                       isUser(resource.data.uid) ||
                       isOwnerOf(resource.data.gymId) ||
-                      (isTrainerOf(resource.data.gymId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['trainerUid']))
+                      (isTrainerOf(resource.data.gymId) && (
+                        resource.data.trainerUid == request.auth.uid ||
+                        !('trainerUid' in resource.data) ||
+                        resource.data.trainerUid == null
+                      ) && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+                        'trainerUid', 'coachingNotes', 'workoutPlanText'
+                      ]))
                     );
       allow delete: if isOwnerOf(resource.data.gymId);
     }
@@ -125,9 +145,20 @@ service cloud.firestore {
     }
 
     // ── Activity Logs ─────────────────────────────────────────────────────────
+    // Strictly validated client events: only self-logging in user's own gym,
+    // narrow type/point constraints, deterministic ID format, and immutable log records.
     match /activityLogs/{gymId}/events/{eventId} {
-      allow read:   if isOwnerOf(gymId) || (isMemberOf(gymId) && isUser(resource.data.uid)) || isTrainerOf(gymId);
-      allow create: if isMemberOf(gymId) && isUser(request.resource.data.uid);
+      allow read:   if isOwnerOf(gymId) ||
+                       (isMemberOf(gymId) && isUser(resource.data.uid)) ||
+                       isTrainerOf(gymId);
+      allow create: if isMemberOf(gymId) &&
+                       isUser(request.resource.data.uid) &&
+                       request.resource.data.gymId == gymId &&
+                       request.resource.data.type in ['workout', 'diet', 'checkin', 'progress'] &&
+                       request.resource.data.points is number &&
+                       request.resource.data.points >= 1 && request.resource.data.points <= 10 &&
+                       request.resource.data.timestamp != null &&
+                       eventId.matches('^[a-zA-Z0-9_-]{5,100}$');
       allow update: if false;
       allow delete: if false;
     }

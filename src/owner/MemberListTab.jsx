@@ -19,6 +19,7 @@ export default function MemberListTab({ gymId, gymCode = '', setBackHandler, onV
   const _setSubTab = setSubTab || (() => {});
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(null); // member for detail sheet
   const [activeTab, setActiveTab] = useState('All');
@@ -42,6 +43,7 @@ export default function MemberListTab({ gymId, gymCode = '', setBackHandler, onV
 
   async function loadMembers() {
     setLoading(true);
+    setError(null);
     try {
       const db = await getFBFirestore();
       const snap = await db.collection('members')
@@ -51,6 +53,7 @@ export default function MemberListTab({ gymId, gymCode = '', setBackHandler, onV
       setMembers(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     } catch (e) {
       console.warn('MemberList load error:', e.message);
+      setError('Failed to load member roster. Please check your connection.');
     }
     setLoading(false);
   }
@@ -62,12 +65,17 @@ export default function MemberListTab({ gymId, gymCode = '', setBackHandler, onV
     setTimeout(() => setCopied(false), 2000);
   };
 
-
   function computeStatus(member) {
+    const score = member.engagementScore;
+    if (score !== undefined && score !== null) {
+      if (score >= 60) return 'active';
+      if (score >= 35) return 'at-risk';
+      return 'inactive';
+    }
     const date = getJsDate(member.lastActiveAt);
     const la = date ? date.getTime() : 0;
     const now = Date.now();
-    if (!la || now - la > 5 * 86400000) return 'inactive';
+    if (!la || now - la > 7 * 86400000) return 'inactive';
     if (now - la > 3 * 86400000) return 'at-risk';
     return 'active';
   }
@@ -170,7 +178,16 @@ export default function MemberListTab({ gymId, gymCode = '', setBackHandler, onV
 
           {/* Member List */}
           <div style={{ padding: '0 20px' }}>
-            {loading ? (
+            {error ? (
+              <div style={{ textAlign: 'center', padding: '48px 20px' }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>⚠️</div>
+                <div style={{ fontFamily: fb, fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 4 }}>Unable to load roster</div>
+                <div style={{ color: C.sub, fontSize: 13, fontFamily: fn, marginBottom: 16 }}>{error}</div>
+                <button onClick={loadMembers} style={{ background: C.accent, color: '#111', border: 'none', borderRadius: 12, padding: '10px 24px', fontFamily: fn, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                  ↻ Retry
+                </button>
+              </div>
+            ) : loading ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {[1, 2, 3, 4, 5].map(i => (
                   <div key={i} style={{ display: 'flex', gap: 16, alignItems: 'center', padding: '16px 0', borderBottom: `1px solid ${C.border}` }}>

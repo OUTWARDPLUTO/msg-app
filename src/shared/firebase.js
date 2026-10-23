@@ -188,6 +188,8 @@ export async function getGymMembers(gymId) {
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
+import { toWeekKey, computeEngagementScore } from './engagementScore.js';
+
 // ─── Engagement & Activity Logs ───────────────────────────────────────────────
 const ACTIVITY_POINTS = { workout: 10, diet: 5, progress: 8, checkin: 3 };
 
@@ -197,12 +199,25 @@ export async function trackActivity(uid, gymId, type) {
   try {
     const db = await getFBFirestore();
     const ts = serverTimestamp();
-    // Write activity event
-    await db.collection(`activityLogs/${gymId}/events`).add({
+
+    // Deterministic, deduplicated activity doc ID:
+    // workout, diet, checkin: maximum once per member/day
+    // progress: maximum once per member/week
+    const now = new Date();
+    const dateKey = now.toISOString().split('T')[0];
+    const weekKey = toWeekKey(now);
+    const eventId = type === 'progress'
+      ? `progress_${uid}_${weekKey}`
+      : `${type}_${uid}_${dateKey}`;
+
+    // Write activity event with deterministic ID to prevent button-mashing inflation
+    await db.collection(`activityLogs/${gymId}/events`).doc(eventId).set({
       uid, gymId, type,
       points: ACTIVITY_POINTS[type] || 1,
       timestamp: ts,
-    });
+      dateKey: type === 'progress' ? weekKey : dateKey,
+    }, { merge: true });
+
     // Update lastActiveAt on user doc and reset inactivity notification state
     await db.doc(`users/${uid}`).update({
       lastActiveAt: ts,
@@ -212,42 +227,17 @@ export async function trackActivity(uid, gymId, type) {
         resetAt: ts,
       },
     }).catch(() => {});
-    // Recalculate + store engagement score
-    await recalculateEngagement(uid, gymId, db);
+
+    // Note: engagementScore calculation is authoritative in Cloud Functions v2
+    // (onActivityLogged & scheduledDailyEngagementDecay). Clients do not write score fields.
   } catch (err) {
     console.warn('[MSG] trackActivity failed (offline?):', err.message);
   }
 }
 
-async function recalculateEngagement(uid, gymId, db) {
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000);
-  // Fetch by UID only to bypass need for composite index
-  const snap = await db.collection(`activityLogs/${gymId}/events`)
-    .where('uid', '==', uid)
-    .get();
-  
-  const events = snap.docs
-    .map(d => d.data())
-    .filter(e => {
-      const d = e.timestamp?.toDate ? e.timestamp.toDate() : new Date(e.timestamp || 0);
-      return d >= thirtyDaysAgo;
-    });
-
-  const score = calcEngagementScore(events);
-  await db.doc(`members/${gymId}_${uid}`).update({ engagementScore: score, lastActiveAt: serverTimestamp() }).catch(() => {});
-}
-
-export function calcEngagementScore(events) {
-  const totalPoints = events.reduce((s, e) => s + (e.points || 0), 0);
-  const cappedBase = Math.min(totalPoints, 80);
-  const uniqueDays = new Set(
-    events.map(e => {
-      const d = e.timestamp?.toDate ? e.timestamp.toDate() : new Date(e.timestamp);
-      return d.toDateString();
-    })
-  ).size;
-  const consistencyBonus = uniqueDays >= 15 ? 20 : uniqueDays >= 8 ? 10 : uniqueDays >= 4 ? 5 : 0;
-  return Math.min(cappedBase + consistencyBonus, 100);
+export function calcEngagementScore(events, options = {}) {
+  const res = computeEngagementScore(events, options);
+  return res.score;
 }
 
 export function getDistance(lat1, lon1, lat2, lon2) {
