@@ -6,6 +6,24 @@ import { Card, Tag, Lbl, Hd, ExCard } from './primitives.jsx';
 import { EX } from './constants.js';
 import { trackActivity } from '../shared/firebase.js';
 import ExploreSection from './ExploreSection.jsx';
+import {
+  WEEK_SPLIT_DEFINITIONS,
+  buildIntelligentWorkoutPlan,
+  sanitizeAndValidatePlan,
+  buildAiPromptContext,
+  CUSTOM_PREFERRED_EXERCISES,
+  setCustomPreferredExercises,
+  addCustomPreferredExercise
+} from './workoutEngine.js';
+
+// Expose custom exercise prioritization hooks globally for modular integration
+if (typeof window !== 'undefined') {
+  window.__MSG_CUSTOM_EXERCISES__ = {
+    set: setCustomPreferredExercises,
+    add: addCustomPreferredExercise,
+    get: () => Array.from(CUSTOM_PREFERRED_EXERCISES)
+  };
+}
 
 // EX array is inlined below via WorkoutSection.jsx extraction â€” do not import// ─── Warmup Block ─────────────────────────────────────────────────────────────
 const WARMUP_ROUTINE = [
@@ -164,34 +182,7 @@ function WarmupBlock() {
 }
 
 // ─── Week Plan Structures ─────────────────────────────────────────────────────
-const WEEK_STRUCTURES = {
-  3: [
-    { day: 'Day 1', focus: 'Full Body A', muscles: ['chest', 'back', 'legs', 'core'] },
-    { day: 'Day 2', focus: 'Full Body B', muscles: ['front-delt', 'lateral-delt', 'back', 'legs', 'arms'] },
-    { day: 'Day 3', focus: 'Full Body C', muscles: ['chest', 'rear-delt', 'legs', 'core'] },
-  ],
-  4: [
-    { day: 'Day 1', focus: 'Upper Body A — Push', muscles: ['chest', 'front-delt', 'lateral-delt', 'arms'] },
-    { day: 'Day 2', focus: 'Lower Body A — Quad Focus', muscles: ['legs', 'calves', 'core'] },
-    { day: 'Day 3', focus: 'Upper Body B — Pull', muscles: ['back', 'rear-delt', 'traps', 'arms'] },
-    { day: 'Day 4', focus: 'Lower Body B — Posterior Chain', muscles: ['legs', 'glutes', 'core'] },
-  ],
-  5: [
-    { day: 'Day 1', focus: 'Push — Chest & Front Delt', muscles: ['chest', 'front-delt', 'arms'] },
-    { day: 'Day 2', focus: 'Pull — Back & Rear Delt', muscles: ['back', 'rear-delt', 'arms'] },
-    { day: 'Day 3', focus: 'Legs — Quad, Glute & Calf Focus', muscles: ['legs', 'glutes', 'calves'] },
-    { day: 'Day 4', focus: 'Shoulders — Lateral & Traps', muscles: ['lateral-delt', 'rear-delt', 'front-delt', 'traps', 'arms'] },
-    { day: 'Day 5', focus: 'Pull + Core', muscles: ['back', 'core', 'forearms'] },
-  ],
-  6: [
-    { day: 'Day 1', focus: 'Push A — Chest & Anterior Delt', muscles: ['chest', 'front-delt', 'arms'] },
-    { day: 'Day 2', focus: 'Pull A — Lats & Rear Delt', muscles: ['back', 'rear-delt', 'arms'] },
-    { day: 'Day 3', focus: 'Legs A — Squat & Quad', muscles: ['legs', 'calves', 'core'] },
-    { day: 'Day 4', focus: 'Push B — Lateral Delt & Traps', muscles: ['lateral-delt', 'front-delt', 'traps', 'arms'] },
-    { day: 'Day 5', focus: 'Pull B — Deadlift & Rear Delt', muscles: ['back', 'rear-delt', 'forearms'] },
-    { day: 'Day 6', focus: 'Legs B — Hinge, Glute & Calf', muscles: ['legs', 'glutes', 'calves', 'core'] },
-  ],
-};
+const WEEK_STRUCTURES = WEEK_SPLIT_DEFINITIONS;
 
 // ─── Manual Plan Builder (wger API + local EX fallback) ──────────────────────
 function ManualPlanBuilder({ setWeekPlan, onBack }) {
@@ -464,90 +455,50 @@ export default function WorkoutSection({ weekPlan, setWeekPlan }) {
 
   // Build fallback plan from local EX database
 
+  // Build fallback plan using intelligent workout engine
   const buildFallbackPlan = (daysN, goalV, levelV, equipV, injuryV) => {
-    const struct = WEEK_STRUCTURES[daysN] || WEEK_STRUCTURES[4];
-    const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
-    return struct.map(d => {
-      let pool = EX.filter(e => (e.cat === 'strength' || e.cat === 'bands' || e.cat === 'rehab') && d.muscles.includes(e.muscle));
-      if (injuryV) pool = pool.filter(e => e.level === 'beginner');
-      if (equipV === 'bodyweight') pool = pool.filter(e => e.equip === 'Bodyweight');
-      else if (equipV === 'dumbbell') pool = pool.filter(e => ['Dumbbell', 'Bodyweight'].includes(e.equip));
-      else if (equipV === 'barbell') pool = pool.filter(e => ['Barbell', 'Dumbbell', 'Bodyweight'].includes(e.equip));
-      if (levelV === 'foundation') {
-        // Try foundation-only first; if fewer than 3 exercises, fall back to beginner for that day
-        const fPool = pool.filter(e => e.level === 'foundation');
-        pool = fPool.length >= 3 ? fPool : pool.filter(e => ['foundation', 'beginner'].includes(e.level));
-      } else if (levelV === 'beginner') pool = pool.filter(e => e.level === 'beginner');
-      else if (levelV === 'intermediate') pool = pool.filter(e => ['beginner', 'intermediate'].includes(e.level));
-      // Pick 1–2 per muscle group proportionally then fill to 5
-      const byMuscle = {};
-      pool.forEach(e => { if (!byMuscle[e.muscle]) byMuscle[e.muscle] = []; byMuscle[e.muscle].push(e); });
-      let exercises = [];
-      d.muscles.forEach(m => {
-        const group = byMuscle[m] ? shuffle(byMuscle[m]) : [];
-        const quota = d.muscles.length <= 2 ? 2 : 1;
-        exercises.push(...group.slice(0, quota));
-      });
-      // If still under 5, fill with shuffled leftovers
-      if (exercises.length < 5) {
-        const used = new Set(exercises.map(e => e.name));
-        const extras = shuffle(pool.filter(e => !used.has(e.name)));
-        exercises.push(...extras.slice(0, 5 - exercises.length));
-      }
-      exercises = exercises.slice(0, 6);
-      return { day: d.day, focus: d.focus, duration: goalV === 'fat loss' ? '40–50 min' : '50–60 min', exercises };
+    return buildIntelligentWorkoutPlan({
+      days: daysN,
+      goal: goalV,
+      level: levelV,
+      equip: equipV,
+      injury: injuryV,
+      customPreferences: CUSTOM_PREFERRED_EXERCISES
     });
   };
 
   const generatePlan = async () => {
     setLoading(true); setWeekPlan(null);
     const hasInjury = injury && injuryArea;
-    const injuryNote = hasInjury ? `User has an injury: ${injuryArea}. Avoid exercises stressing this area.` : '';
-    const struct = WEEK_STRUCTURES[days] || WEEK_STRUCTURES[4];
-    const dayList = struct.map(d => `${d.day} (${d.focus}): target muscles [${d.muscles.join(', ')}]`).join(' | ');
-
-    // Build a compact exercise catalogue for AI to pick from
-    const catalogue = EX
-      .filter(e => e.cat === 'strength')
-      .filter(e => {
-        if (equip === 'bodyweight') return e.equip === 'Bodyweight';
-        if (equip === 'dumbbell')   return ['Dumbbell','Bodyweight'].includes(e.equip);
-        if (equip === 'barbell')    return ['Barbell','Dumbbell','Bodyweight'].includes(e.equip);
-        return true; // full gym
-      })
-      .filter(e => {
-        if (level === 'foundation') return e.level === 'foundation';
-        if (level === 'beginner') return e.level === 'beginner';
-        if (level === 'intermediate') return ['beginner','intermediate'].includes(e.level);
-        return true;
-      })
-      .map(e => `${e.name}|${e.muscle}`);
-    const catalogueStr = catalogue.join(', ');
+    const injuryTarget = hasInjury ? injuryArea : null;
 
     try {
-      const sys = `You are an expert personal trainer. Return ONLY valid JSON, no markdown. Schema: {"week_plan":[{"day":"string","focus":"string","duration":"string","exercises":["exercise_name"]}]}. Pick exercise names ONLY from the provided catalogue. Each exercise name must exactly match the catalogue.`;
-      const prompt = `Catalogue (name|muscle): ${catalogueStr}\n\nCreate a ${days}-day ${goal} plan for a ${level} using ${equip}. Plan: ${dayList}. Pick 5-6 exercises per day. Ensure each target muscle gets at least one exercise. ${injuryNote} Return ONLY the JSON.`;
-      const text = await callClaude(sys, prompt);
-      const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
+      const { systemPrompt, userPrompt } = buildAiPromptContext({
+        days,
+        goal,
+        level,
+        equip,
+        injury: injuryTarget,
+        customPreferences: CUSTOM_PREFERRED_EXERCISES
+      });
 
-      // Enrich exercise names with full local DB data
-      const byName = {};
-      EX.forEach(e => { byName[e.name.toLowerCase()] = e; });
-      const enriched = parsed.week_plan.map(d => ({
-        ...d,
-        exercises: (d.exercises || []).map(nameOrObj => {
-          const name = typeof nameOrObj === 'string' ? nameOrObj : nameOrObj.name;
-          const local = byName[name?.toLowerCase()];
-          if (local) return local;
-          // AI gave us a name not in DB — use AI object data if available
-          if (typeof nameOrObj === 'object') return nameOrObj;
-          // Last resort: create minimal shell so ExCard doesn't crash
-          return { name, muscle: 'general', primary: name, secondary: '', equip: equip === 'bodyweight' ? 'Bodyweight' : 'Any', level, sets: 3, reps: '10-12', rest: 60, steps: ['Focus on controlled movement', 'Full range of motion', 'Keep core braced'], tip: 'Perform with proper form.' };
-        }).filter(Boolean),
-      }));
-      setWeekPlan(enriched);
-    } catch {
-      setWeekPlan(buildFallbackPlan(days, goal, level, equip, hasInjury ? injuryArea : null));
+      const text = await callClaude(systemPrompt, userPrompt);
+      const cleaned = text.replace(/```json|```/g, '').trim();
+      const parsed = JSON.parse(cleaned);
+
+      const validatedPlan = sanitizeAndValidatePlan(parsed.week_plan, {
+        days,
+        goal,
+        level,
+        equip,
+        injury: injuryTarget,
+        customPreferences: CUSTOM_PREFERRED_EXERCISES
+      });
+
+      setWeekPlan(validatedPlan);
+    } catch (err) {
+      console.warn('AI plan generation error, falling back to intelligent workout engine:', err);
+      setWeekPlan(buildFallbackPlan(days, goal, level, equip, injuryTarget));
     }
     setLoading(false);
     setActiveDay(0);

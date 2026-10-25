@@ -137,6 +137,8 @@ export function ExCard({ ex }) {
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
             <span style={{ background: mc + '1A', color: mc, border: `1px solid ${mc}33`, fontSize: 10, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '3px 9px', borderRadius: 4 }}>Primary: {ex.primary}</span>
             {ex.secondary && <span style={{ background: C.s3, color: C.sub, fontSize: 10, fontFamily: fb, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '3px 9px', borderRadius: 4 }}>Also: {ex.secondary}</span>}
+            {ex.isCompound && <span style={{ background: '#f59e0b1A', color: '#f59e0b', border: '1px solid #f59e0b33', fontSize: 10, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '3px 9px', borderRadius: 4 }}>⚡ Compound Lift</span>}
+            {ex.isIsometric && <span style={{ background: '#06b6d41A', color: '#06b6d4', border: '1px solid #06b6d433', fontSize: 10, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '3px 9px', borderRadius: 4 }}>⏱ Isometric Hold</span>}
             <span style={{ background: C.s3, color: C.muted, fontSize: 10, fontFamily: fb, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '3px 9px', borderRadius: 4 }}>{ex.level}</span>
           </div>
 
