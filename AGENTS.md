@@ -9,7 +9,7 @@ Workspace: d:\AI_Project\msg-app (WSL: /mnt/d/AI_Project/msg-app)
 - No user → LoginScreen
 - No gymId → GymOnboarding  
 - role=owner → OwnerDashboard
-- role=trainer → TrainerView (STUB — empty)
+- role=trainer → TrainerView (Complete)
 - default → MemberApp
 
 ## Firestore Schema
