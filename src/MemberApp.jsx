@@ -171,7 +171,7 @@ export default function MemberApp({
         />
       </SectionErrorBoundary>
     ),
-    workout: <SectionErrorBoundary key="workout"><WorkoutSection weekPlan={weekPlan} setWeekPlan={setWeekPlan} /></SectionErrorBoundary>,
+    workout: <SectionErrorBoundary key="workout"><WorkoutSection weekPlan={weekPlan} setWeekPlan={setWeekPlan} user={user} gymId={gymId} setBackHandler={setChildBackHandler} /></SectionErrorBoundary>,
     diet:    <SectionErrorBoundary key="diet"><DietSection dietGoal={dietGoal} setDietGoal={setDietGoal} mealLog={mealLog} setMealLog={setMealLog} /></SectionErrorBoundary>,
     store:   <SectionErrorBoundary key="store"><StoreSection gymId={gymId} setBackHandler={setChildBackHandler} /></SectionErrorBoundary>,
     progress: <SectionErrorBoundary key="progress"><ProgressSection logs={progressLogs} onLogClick={() => setShowLogModal(true)} onDelete={i => setProgressLogs(l => l.filter((_, j) => j !== i))} /></SectionErrorBoundary>,

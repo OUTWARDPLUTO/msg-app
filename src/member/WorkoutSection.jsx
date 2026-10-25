@@ -6,6 +6,15 @@ import { Card, Tag, Lbl, Hd, ExCard } from './primitives.jsx';
 import { EX } from './constants.js';
 import { trackActivity } from '../shared/firebase.js';
 import ExploreSection from './ExploreSection.jsx';
+import WorkoutPlanLibrary from './WorkoutPlanLibrary.jsx';
+import ActiveWorkoutSession from './ActiveWorkoutSession.jsx';
+import {
+  savePlanToLibrary,
+  getSavedPlans,
+  getActivePlan,
+  getActiveWorkoutSession,
+  clearActiveWorkoutSession
+} from './workoutStorage.js';
 import {
   WEEK_SPLIT_DEFINITIONS,
   buildIntelligentWorkoutPlan,
@@ -422,8 +431,68 @@ function ExerciseConfirmCard({ ex, onAdd, onDismiss }) {
 
 
 // ─── Workout Section ─────────────────────────────────────────────────────────
-export default function WorkoutSection({ weekPlan, setWeekPlan }) {
+export default function WorkoutSection({ weekPlan, setWeekPlan, user, gymId, setBackHandler }) {
+  const [activeSession, setActiveSession] = useState(() => {
+    const existing = getActiveWorkoutSession();
+    return existing ? { plan: null, dayIndex: existing.dayIndex || 0, initialSession: existing } : null;
+  });
+
+  const startSession = (targetPlan, dayIdx = 0) => {
+    let planToUse = targetPlan;
+    if (!planToUse || !planToUse.days) {
+      planToUse = {
+        name: `${weekPlan?.length || 4}-Day Routine`,
+        days: weekPlan || []
+      };
+    }
+    setActiveSession({
+      plan: planToUse,
+      dayIndex: dayIdx,
+      initialSession: null
+    });
+  };
+
+  const resumeSession = (session) => {
+    const plans = getSavedPlans();
+    const matchedPlan = plans.find(p => p.id === session.planId) || {
+      name: session.planName || 'Workout Routine',
+      days: weekPlan || []
+    };
+    setActiveSession({
+      plan: matchedPlan,
+      dayIndex: session.dayIndex || 0,
+      initialSession: session
+    });
+  };
+
   const [planMode, setPlanMode] = useState(null); // null | 'ai' | 'manual'
+  const [view, setView] = useState('plan');
+
+  useEffect(() => {
+    if (!setBackHandler) return;
+    if (activeSession || planMode || (view !== 'plan' && view !== 'plans')) {
+      setBackHandler(() => () => {
+        if (activeSession) {
+          setActiveSession(null);
+          return true;
+        }
+        if (planMode) {
+          setPlanMode(null);
+          return true;
+        }
+        if (view !== 'plan' && view !== 'plans') {
+          setView('plan');
+          return true;
+        }
+        return false;
+      });
+    } else {
+      setBackHandler(null);
+    }
+    return () => {
+      setBackHandler(null);
+    };
+  }, [activeSession, planMode, view, setBackHandler]);
 
   // Wizard state
   const [wStep, setWStep] = useState(0);
@@ -440,7 +509,6 @@ export default function WorkoutSection({ weekPlan, setWeekPlan }) {
   const [activeDay, setActiveDay] = useState(0);
 
   // View state
-  const [view, setView] = useState('plan');
   const [libMuscle, setLibMuscle] = useState('all');
   const [libCat, setLibCat] = useState('strength');
   const [filter, setFilter] = useState('all');
@@ -495,10 +563,32 @@ export default function WorkoutSection({ weekPlan, setWeekPlan }) {
         customPreferences: CUSTOM_PREFERRED_EXERCISES
       });
 
+      savePlanToLibrary({
+        name: `${days}-Day ${goal ? (goal.charAt(0).toUpperCase() + goal.slice(1)) : 'Personalized'} Plan`,
+        splitDays: days,
+        focus: validatedPlan[0]?.focus || 'Strength & Hypertrophy',
+        level: level || 'Intermediate',
+        equip: equip || 'Gym',
+        days: validatedPlan
+      });
+
       setWeekPlan(validatedPlan);
+      setPlanMode(null);
+      setView('plan');
     } catch (err) {
       console.warn('AI plan generation error, falling back to intelligent workout engine:', err);
-      setWeekPlan(buildFallbackPlan(days, goal, level, equip, injuryTarget));
+      const fallbackPlan = buildFallbackPlan(days, goal, level, equip, injuryTarget);
+      savePlanToLibrary({
+        name: `${days}-Day ${goal ? (goal.charAt(0).toUpperCase() + goal.slice(1)) : 'Personalized'} Plan`,
+        splitDays: days,
+        focus: fallbackPlan[0]?.focus || 'Strength & Hypertrophy',
+        level: level || 'Intermediate',
+        equip: equip || 'Gym',
+        days: fallbackPlan
+      });
+      setWeekPlan(fallbackPlan);
+      setPlanMode(null);
+      setView('plan');
     }
     setLoading(false);
     setActiveDay(0);
@@ -594,12 +684,31 @@ export default function WorkoutSection({ weekPlan, setWeekPlan }) {
     </div>
   );
 
+  // ── Active Workout Session Screen ──
+  if (activeSession) {
+    return (
+      <ActiveWorkoutSession
+        plan={activeSession.plan}
+        dayIndex={activeSession.dayIndex}
+        initialSession={activeSession.initialSession}
+        onClose={() => setActiveSession(null)}
+        user={user}
+        gymId={gymId}
+      />
+    );
+  }
+
   // ── Main render ──
   return (
     <div>
       <Hd t="Workout" s="Week Plan · Library · Execute" />
       <div style={{ padding: '0 16px', display: 'flex', gap: 6, marginBottom: 16 }}>
-        {[['plan', 'Week Plan'], ['library', 'Exercise Library'], ['explore', 'Muscle Map']].map(([k, l]) => (
+        {[
+          ['plans', 'My Plans'],
+          ['plan', 'Current Plan'],
+          ['library', 'Exercise DB'],
+          ['explore', 'Muscle Map']
+        ].map(([k, l]) => (
           <button key={k} onClick={() => setView(k)} style={{
             flex: 1, padding: '10px 6px', background: view === k ? C.accent : C.s2,
             border: `1px solid ${view === k ? C.accent : C.border}`, borderRadius: 10,
@@ -608,6 +717,20 @@ export default function WorkoutSection({ weekPlan, setWeekPlan }) {
           }}>{l}</button>
         ))}
       </div>
+
+      {/* ── SAVED PLANS LIBRARY TAB ── */}
+      {view === 'plans' && (
+        <div style={{ padding: '0 16px' }}>
+          <WorkoutPlanLibrary
+            onSelectPlanDay={(planObj, dayIdx) => startSession(planObj, dayIdx)}
+            onCreateNewPlan={() => {
+              setPlanMode(null);
+              setView('plan');
+            }}
+            onResumeSession={(session) => resumeSession(session)}
+          />
+        </div>
+      )}
 
       {/* ── PLAN TAB ── */}
       {view === 'plan' && (
@@ -747,7 +870,22 @@ export default function WorkoutSection({ weekPlan, setWeekPlan }) {
                 return (
                   <div>
                     <div style={{ background: C.s2, border: `1px solid ${C.border}`, borderRadius: 14, padding: '12px 16px', marginBottom: 14 }}>
-                      <div style={{ fontFamily: fn, fontWeight: 800, fontSize: 16, color: C.text, letterSpacing: '-0.01em' }}>{d.focus || d.day}</div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                        <div style={{ fontFamily: fn, fontWeight: 800, fontSize: 16, color: C.text, letterSpacing: '-0.01em' }}>{d.focus || d.day}</div>
+                        <button
+                          onClick={() => startSession({ name: `${weekPlan.length}-Day Routine`, days: weekPlan }, activeDay)}
+                          className="msg-press"
+                          style={{
+                            background: C.accent, border: 'none', borderRadius: 10,
+                            padding: '8px 14px', color: '#111', fontFamily: fn,
+                            fontWeight: 800, fontSize: 12, cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', gap: 6
+                          }}
+                        >
+                          <span>🚀</span>
+                          <span>Start Guided Workout</span>
+                        </button>
+                      </div>
                       <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
                         <span style={{ fontSize: 10, color: C.sub, background: C.s3, padding: '2px 8px', borderRadius: 4 }}>⏱ {d.duration || '50–60 min'}</span>
                         <span style={{ fontSize: 10, color: C.sub, background: C.s3, padding: '2px 8px', borderRadius: 4 }}>💪 {(d.exercises || []).length} exercises</span>

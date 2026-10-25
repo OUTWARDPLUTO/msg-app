@@ -88,3 +88,47 @@
 .msg-scale-up {
   animation: msg-scale-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* ── Restrained Motion Design System Utilities ── */
+.msg-press {
+  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.12s ease !important;
+}
+.msg-press:active {
+  transform: scale(0.97) !important;
+  opacity: 0.88;
+}
+
+.msg-motion-card {
+  animation: msgCardEnter 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes msgCardEnter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.msg-motion-page {
+  animation: msgPageEnter 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes msgPageEnter {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.msg-motion-sheet {
+  animation: msgSheetEnter 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes msgSheetEnter {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Accessibility: Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
