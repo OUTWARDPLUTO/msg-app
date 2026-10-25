@@ -5,11 +5,10 @@
  *
  * Functions:
  *  1. onMemberJoined       — triggers on new members/{gymId_uid} create
- *  2. onMessageSent        — triggers on chats/{chatId}/messages create
- *  3. scheduledInactivity  — runs every 6 h, sends gentle reminders
- *  4. scheduledOwnerDigest — runs daily at 08:00 IST
- *  5. sendCampaign         — HTTPS callable — owner-initiated campaigns
- *  6. onMembershipChange   — triggers on membership plan changes
+ *  2. scheduledInactivity  — runs every 6 h, sends gentle reminders
+ *  3. scheduledOwnerDigest — runs daily at 08:00 IST
+ *  4. sendCampaign         — HTTPS callable — owner-initiated campaigns
+ *  5. onMembershipChange   — triggers on membership plan changes
  *
  * Security rules enforced here:
  *  - sendCampaign validates caller is gym owner via Admin SDK.
@@ -193,57 +192,9 @@ exports.onMemberJoined = onDocumentCreated(
   }
 );
 
-// ─── 2. On Message Sent → Notify Recipient ────────────────────────────────────
+// ─── 2. Messaging Feature Removed ─────────────────────────────────────────────
+// (onMessageSent trigger decommissioned)
 
-exports.onMessageSent = onDocumentCreated(
-  'chats/{chatId}/messages/{msgId}',
-  async (event) => {
-    const msg = event.data?.data();
-    if (!msg) return;
-    const { chatId } = event.params;
-
-    // Get chat metadata
-    const chatSnap = await db.doc(`chats/${chatId}`).get();
-    if (!chatSnap.exists) return;
-    const chat = chatSnap.data();
-
-    const { senderUid, senderRole, text } = msg;
-    const gymId = chat.gymId;
-
-    // Determine recipient(s) based on sender role
-    const recipients = [];
-    if (senderRole === 'member') {
-      // Notify owner and trainer (if any)
-      const gymSnap = await db.doc(`gyms/${gymId}`).get();
-      if (gymSnap.exists) recipients.push({ uid: gymSnap.data().ownerUid, role: 'owner', route: 'owner_inbox' });
-      if (chat.trainerUid) recipients.push({ uid: chat.trainerUid, role: 'trainer', route: 'owner_inbox' });
-    } else {
-      // Notify member
-      if (chat.memberUid) recipients.push({ uid: chat.memberUid, role: 'member', route: 'messages' });
-    }
-
-    for (const { uid, role, route } of recipients) {
-      if (!uid || uid === senderUid) continue;
-      const prefs = await getPrefs(uid, role);
-      const prefKey = role === 'member' ? 'trainerMessages' : 'unreadChats';
-      if (prefs[prefKey] === false) continue;
-      if (isQuietHour(prefs.quietHourStart ?? 22, prefs.quietHourEnd ?? 7)) continue;
-
-      // Use idempotency keyed by message ID + recipient to avoid double-send on retry
-      const iKey = `msg_${event.params.msgId}_${uid}`;
-      const fresh = await claimIdempotencyKey(iKey, 2 * 60 * 60 * 1000);
-      if (!fresh) continue;
-
-      const snippet = (text || '').slice(0, 80);
-      await sendToUser({
-        uid,
-        title: '💬 New Message',
-        body: snippet,
-        data: { route, chatId },
-      });
-    }
-  }
-);
 
 // ─── 3. Scheduled Inactivity Notifications ────────────────────────────────────
 // Runs every 6 hours. Checks all members; sends gentle reminders according to

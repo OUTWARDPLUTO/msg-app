@@ -51,8 +51,6 @@ import { LanguageScreen } from './member/SettingsScreen.jsx';
 import { ProfileDropdown, LogProgressModal, BottomNavAnimated } from './member/Navigation.jsx';
 import ProfileSetupScreen from './member/ProfileSetupScreen.jsx';
 import { TutorialOverlay } from './member/ProfileSetupScreen.jsx';
-import MessagingSection from './member/MessagingSection.jsx';
-import { listenToMemberChats } from './shared/firebase.js';
 
 export default function MemberApp({
   user, darkMode, onToggleTheme, onLogout,
@@ -70,17 +68,6 @@ export default function MemberApp({
 
   const [setupDone, setSetupDone] = useState(() => !!localStorage.getItem('msg_setup_done') || !!user?.profile);
   const [showTutorial, setShowTutorial] = useState(false);
-  const [unreadMessages, setUnreadMessages] = useState(0);
-
-  // Listen to unread message count for badge
-  useEffect(() => {
-    if (!gymId || !user?.uid || user?.uid === 'demo') return;
-    const unsub = listenToMemberChats(gymId, user.uid, chats => {
-      const total = chats.reduce((sum, c) => sum + (c.unreadMember || 0), 0);
-      setUnreadMessages(total);
-    });
-    return unsub;
-  }, [gymId, user?.uid]);
 
   // Push listeners are now attached centrally in App.jsx via NotificationService.
   // Notification tap routing comes through the 'msg_notif_route' custom event.
@@ -175,7 +162,6 @@ export default function MemberApp({
     diet:    <SectionErrorBoundary key="diet"><DietSection dietGoal={dietGoal} setDietGoal={setDietGoal} mealLog={mealLog} setMealLog={setMealLog} /></SectionErrorBoundary>,
     store:   <SectionErrorBoundary key="store"><StoreSection gymId={gymId} setBackHandler={setChildBackHandler} /></SectionErrorBoundary>,
     progress: <SectionErrorBoundary key="progress"><ProgressSection logs={progressLogs} onLogClick={() => setShowLogModal(true)} onDelete={i => setProgressLogs(l => l.filter((_, j) => j !== i))} /></SectionErrorBoundary>,
-    messages: <SectionErrorBoundary key="messages"><MessagingSection user={user} gymId={gymId} gymName={gymName} /></SectionErrorBoundary>,
   };
 
   if (!setupDone) {
@@ -205,28 +191,6 @@ export default function MemberApp({
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {/* Message button */}
-          <button
-            onClick={() => navigate('messages')}
-            style={{
-              width: 36, height: 36, borderRadius: '50%',
-              background: tab === 'messages' ? C.accent + '20' : C.s2,
-              border: `1px solid ${tab === 'messages' ? C.accent : C.border}`,
-              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              position: 'relative', transition: 'all 0.2s',
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={tab === 'messages' ? C.accent : C.sub} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-            {unreadMessages > 0 && (
-              <div style={{
-                position: 'absolute', top: 1, right: 1,
-                width: 8, height: 8, borderRadius: '50%',
-                background: C.accent, border: `2px solid ${C.bg}`,
-              }} />
-            )}
-          </button>
           {/* Profile button */}
           <button id="tut-profile-btn" onClick={() => setShowProfile(p => !p)} style={{ width: 36, height: 36, borderRadius: '50%', background: C.accent, border: `2px solid ${showProfile ? C.text : 'transparent'}`, cursor: 'pointer', fontFamily: fn, fontSize: 11, fontWeight: 800, color: '#111', transition: 'all 0.2s', boxShadow: C.accentShadow, overflow: 'hidden', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <UserAvatar user={{ ...user, photo: localStorage.getItem('msg_profile_photo') || user?.photo }} size={36} fontSize={11} />
@@ -263,7 +227,7 @@ export default function MemberApp({
       <div className="msg-scroll" style={{ flex: 1, overflowY: 'auto', paddingBottom: 100 }}>
         {views[tab]}
       </div>
-      <BottomNavAnimated tab={tab} setTab={navigate} darkMode={darkMode} unreadMessages={unreadMessages} />
+      <BottomNavAnimated tab={tab} setTab={navigate} darkMode={darkMode} />
     </div>
   );
 }

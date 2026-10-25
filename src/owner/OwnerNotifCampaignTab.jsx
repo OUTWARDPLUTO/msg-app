@@ -54,7 +54,6 @@ const ROUTE_OPTIONS = [
   { key: 'workout',    label: 'Workout section' },
   { key: 'progress',   label: 'Progress tracker' },
   { key: 'diet',       label: 'Nutrition / Diet' },
-  { key: 'messages',   label: 'Messages / Chat' },
   { key: 'membership', label: 'Membership info' },
 ];
 

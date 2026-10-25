@@ -7,9 +7,8 @@
  *  - Multi-tenant: See ONLY members assigned to this trainer (where trainerUid == user.uid && gymId == gymId).
  *  - Dashboard Summary: Total assigned, On Track (80+), Building (60-79), Needs Attention (35-59), Inactive (<35).
  *  - Today's Follow-ups: Highlights members needing immediate coaching intervention.
- *  - Member Roster: Search, engagement filter chips, quick message action, and profile launcher.
+ *  - Member Roster: Search, engagement filter chips, and profile launcher.
  *  - Member Detail Sheet: 4-pillar engagement breakdown, activity timeline, attendance, and coaching notes.
- *  - Messaging/Inbox: Embedded TrainerInbox with unread counter.
  *  - Link Member: 6-character link code verification.
  *  - Resilient states: Loading skeleton, offline banner, empty states, and error handling with retry.
  */
@@ -17,10 +16,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { Card, Lbl, Spinner, UserAvatar, Skeleton } from '../shared/primitives.jsx';
-import { getFBFirestore, listenToTrainerChats } from '../shared/firebase.js';
+import { getFBFirestore } from '../shared/firebase.js';
 import { getStatusFromScore } from '../shared/engagementScore.js';
 import MemberDetailSheet from './MemberDetailSheet.jsx';
-import TrainerInbox from './TrainerInbox.jsx';
 
 export default function TrainerView({ gymId, user, onLogout }) {
   const [members, setMembers] = useState([]);
@@ -28,11 +26,10 @@ export default function TrainerView({ gymId, user, onLogout }) {
   const [error, setError] = useState(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
-  // Navigation tab: 'dashboard' | 'members' | 'messages'
+  // Navigation tab: 'dashboard' | 'members'
   const [tab, setTab] = useState('dashboard');
   const [memberFilter, setMemberFilter] = useState('all'); // 'all' | 'needs_attention' | 'on_track' | 'inactive'
   const [searchQuery, setSearchQuery] = useState('');
-  const [unreadCount, setUnreadCount] = useState(0);
 
   // Member linking state
   const [linkCode, setLinkCode] = useState('');
@@ -112,16 +109,6 @@ export default function TrainerView({ gymId, user, onLogout }) {
   useEffect(() => {
     const unsub = fetchAssignedMembers();
     return () => unsub && unsub();
-  }, [gymId, user?.uid]);
-
-  // ── Real-time unread messages count ─────────────────────────────────────────
-  useEffect(() => {
-    if (!gymId || !user?.uid) return;
-    const unsub = listenToTrainerChats(gymId, user.uid, chatList => {
-      const count = chatList.reduce((sum, c) => sum + (c.unreadOwner || 0), 0);
-      setUnreadCount(count);
-    });
-    return unsub;
   }, [gymId, user?.uid]);
 
   // ── Handle linking a member by 6-char code ──────────────────────────────────
@@ -548,10 +535,7 @@ export default function TrainerView({ gymId, user, onLogout }) {
               </div>
             )}
           </div>
-        ) : (
-          /* ── 3. TRAINER INBOX / MESSAGING ── */
-          <TrainerInbox gymId={gymId} user={user} setBackHandler={setChildBackHandler} />
-        )}
+        ) : null}
       </div>
 
       {/* Bottom Navigation */}
@@ -583,25 +567,6 @@ export default function TrainerView({ gymId, user, onLogout }) {
         >
           <span style={{ fontSize: 20 }}>👥</span>
           Squad ({members.length})
-        </button>
-
-        <button
-          onClick={() => setTab('messages')}
-          style={{
-            flex: 1, background: 'none', border: 'none', cursor: 'pointer',
-            padding: '10px 0', color: tab === 'messages' ? C.accent : C.muted,
-            fontFamily: fb, fontWeight: 700, fontSize: 11,
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, position: 'relative',
-          }}
-        >
-          <span style={{ fontSize: 20 }}>💬</span>
-          Messages
-          {unreadCount > 0 && (
-            <div style={{
-              position: 'absolute', top: 6, right: 'calc(50% - 18px)',
-              width: 8, height: 8, borderRadius: '50%', background: C.accent,
-            }} />
-          )}
         </button>
       </div>
 

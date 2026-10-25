@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { Card, Lbl, ScoreRing, ModalShell, Spinner, Skeleton } from '../shared/primitives.jsx';
-import { getFBFirestore, getFBAuth, getChatId } from '../shared/firebase.js';
+import { getFBFirestore, getFBAuth } from '../shared/firebase.js';
 import { getStatusFromScore, computeEngagementScore } from '../shared/engagementScore.js';
-import ChatScreen from '../shared/ChatScreen.jsx';
 
 function getJsDate(field) {
   if (!field) return null;
@@ -192,25 +191,6 @@ export default function MemberDetailSheet({ member, gymId, onClose }) {
     getFBAuth().then(auth => setCurrentUser(auth.currentUser)).catch(() => {});
   }, []);
 
-  if (activeModal === 'message' && currentUser) {
-    const isTrainer = memberDetail?.trainerUid === currentUser.uid;
-    const senderRole = isTrainer ? 'trainer' : 'owner';
-    const chatId = getChatId(gymId, memberDetail.uid, senderRole, currentUser.uid);
-
-    return (
-      <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: C.bg, display: 'flex', flexDirection: 'column' }}>
-        <ChatScreen
-          chatId={chatId}
-          chatMeta={{ gymId, memberUid: memberDetail.uid, [senderRole === 'trainer' ? 'trainerUid' : 'ownerUid']: currentUser.uid, type: senderRole, otherName: firstName(memberDetail?.name) }}
-          senderUid={currentUser.uid}
-          senderRole={senderRole}
-          onClose={() => setActiveModal(null)}
-          otherUser={{ name: memberDetail?.name || 'Member', photo: memberDetail?.photo }}
-        />
-      </div>
-    );
-  }
-
   if (activeModal === 'edit') {
     return (
       <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: C.bg, display: 'flex', flexDirection: 'column', padding: 20 }}>
@@ -393,16 +373,8 @@ export default function MemberDetailSheet({ member, gymId, onClose }) {
               }}>
                 {(memberDetail?.name || '?').charAt(0).toUpperCase()}
               </div>
-              <div style={{ fontSize: 24, fontFamily: fb, fontWeight: 700, color: C.text, marginBottom: 16 }}>
+              <div style={{ fontSize: 24, fontFamily: fb, fontWeight: 700, color: C.text, marginBottom: 20 }}>
                 {memberDetail?.name || 'Unnamed Member'}
-              </div>
-
-              {/* Action Buttons */}
-              <div style={{ display: 'flex', gap: 12, width: '100%' }}>
-                <button onClick={() => setActiveModal('message')} style={{ flex: 1, background: 'none', border: `1px solid ${C.border}`, borderRadius: 12, padding: '12px', color: C.text, fontFamily: fb, fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                  Message
-                </button>
               </div>
             </div>
 

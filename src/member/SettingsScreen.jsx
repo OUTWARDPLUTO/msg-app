@@ -107,7 +107,7 @@ function NotificationSettings({ uid }) {
   const [pushLoading,  setPushLoading]  = useState(false);
   const [pushSaved,    setPushSaved]    = useState(false);
   const [pushPrefs,    setPushPrefs]    = useState({
-    workout: true, progress: true, trainerMessages: true,
+    workout: true, progress: true,
     inactivity: true, promotional: true,
     quietHourStart: 22, quietHourEnd: 7,
   });
@@ -199,7 +199,7 @@ function NotificationSettings({ uid }) {
           <div style={{ flex: 1, paddingRight: 12 }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>🔔 Push Notifications</div>
             <div style={{ fontSize: 11, color: C.muted, marginTop: 2, lineHeight: 1.4 }}>
-              Get alerts from your gym, trainer messages, and activity reminders. Permission is only requested when you turn this on.
+              Get alerts from your gym and activity reminders. Permission is only requested when you turn this on.
             </div>
           </div>
           <div
@@ -224,7 +224,6 @@ function NotificationSettings({ uid }) {
             {[
               { key: 'workout',         label: '🏋️ Workout Reminders',     sub: 'Workout plan and exercise tips' },
               { key: 'progress',        label: '📊 Progress Log Reminders', sub: 'Daily progress tracking prompts' },
-              { key: 'trainerMessages', label: '💬 Trainer Messages',       sub: 'Messages from your trainer and gym' },
               { key: 'inactivity',      label: '🔥 Come-back Nudges',       sub: "Gentle reminders when you haven't trained" },
               { key: 'promotional',     label: '📣 Gym Announcements',      sub: 'Campaigns and offers from your gym (optional)' },
             ].map(({ key, label, sub }) => (

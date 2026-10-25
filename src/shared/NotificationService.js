@@ -131,7 +131,6 @@ export const DEFAULT_PREFS = {
   member: {
     workout:           true,  // workout reminders
     progress:          true,  // progress log reminders
-    trainerMessages:   true,  // messages from trainers/owners
     membership:        true,  // membership/payment alerts (cannot be disabled)
     inactivity:        true,  // inactivity comeback nudges
     promotional:       true,  // owner custom campaign messages
@@ -142,13 +141,11 @@ export const DEFAULT_PREFS = {
     newMembers:        true,
     attendanceAlerts:  true,
     paymentExceptions: true,
-    unreadChats:       true,
     inactivityDigest:  'daily', // 'daily' | 'weekly' | 'off'
     quietHourStart:    23,
     quietHourEnd:      7,
   },
   trainer: {
-    memberMessages:    true,
     inactivityAlerts:  true,
     quietHourStart:    22,
     quietHourEnd:      7,
@@ -341,10 +338,6 @@ export function handleNotificationTap(data, onNavigate) {
   console.log('[MSG] Notification tap route:', route, data);
 
   switch (route) {
-    case 'messages':
-    case 'member_messages':
-      onNavigate('messages');
-      break;
     case 'attendance':
       onNavigate('attendance');
       break;
@@ -357,10 +350,6 @@ export function handleNotificationTap(data, onNavigate) {
       break;
     case 'workout':
       onNavigate('workout');
-      break;
-    case 'owner_inbox':
-    case 'owner_messages':
-      onNavigate('messages'); // owner nav
       break;
     case 'owner_alerts':
       onNavigate('dashboard');

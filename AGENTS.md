@@ -30,7 +30,7 @@ activityLogs/{gymId}/events → uid, gymId, type, points, timestamp
 - Member profile/stats page (own score, streak, history)
 - QR code gym join
 - FIXED: GymSettingsTab.jsx line 134 gymName sync effect bug
-- Production TrainerView.jsx: assigned squad, dashboard KPIs, roster search/filter, follow-ups, chat, member detail & coaching notes
+- Production TrainerView.jsx: assigned squad, dashboard KPIs, roster search/filter, follow-ups, member detail & coaching notes
 - Rebuilt Engagement Scoring Engine: 28-day rolling window, 4 pillars (Consistency 30, Workouts 30, Habits 25, Recency 15), tamper-resistant Cloud Functions v2 + Admin SDK
 - Automated daily score decay and activity event trigger functions
 
