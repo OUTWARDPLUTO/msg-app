@@ -91,7 +91,13 @@ export default function MSG() {
   const [gymName, setGymName]   = useState(() => load('msg_gym_name', ''));
   const [role, setRole]         = useState(() => load('msg_role', 'member'));
   // authStatus: 'initializing' | 'unauthenticated' | 'resolving_profile' | 'ready' | 'needs_onboarding' | 'profile_missing' | 'resolution_error'
-  const [authStatus, setAuthStatus] = useState(() => (load('msg_user', null) && load('msg_gym_id', null) ? 'initializing' : 'initializing'));
+  const [authStatus, setAuthStatus] = useState(() => {
+    const cachedUser = load('msg_user', null);
+    const cachedGymId = load('msg_gym_id', null);
+    if (cachedUser && cachedGymId) return 'ready';
+    if (!cachedUser) return 'unauthenticated';
+    return 'resolving_profile';
+  });
   const [resolutionError, setResolutionError] = useState(null);
   const [gymSubscriptionExpired, setGymSubscriptionExpired] = useState(false);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
@@ -260,7 +266,7 @@ export default function MSG() {
           save('msg_user', u);
           // Only trigger if not already resolved/resolving for this UID
           if (lastResolvedUidRef.current !== fbUser.uid) {
-            resolveUserProfile(u);
+            resolveUserProfile(u, false);
           }
         } else {
           // Firebase reports no active user
@@ -299,10 +305,18 @@ export default function MSG() {
     const uid = userObj.uid;
     lastResolvedUidRef.current = uid;
     profileResolvingRef.current = true;
-    setAuthStatus('resolving_profile');
+
+    const cachedUser = load('msg_user', null);
+    const cachedGymId = load('msg_gym_id', null);
+    const hasValidSession = cachedUser?.uid === uid && !!cachedGymId;
+
+    // Only show blocking loader if no valid cached session or user just submitted login form
+    if (!hasValidSession || isFreshLogin) {
+      setAuthStatus('resolving_profile');
+    }
     setResolutionError(null);
 
-    console.log(`[MSG Auth] Resolving profile for UID: ${uid} (freshLogin=${isFreshLogin})`);
+    console.log(`[MSG Auth] Resolving profile for UID: ${uid} (freshLogin=${isFreshLogin}, hasValidSession=${hasValidSession})`);
 
     try {
       const userDoc = await getUserDoc(uid);
@@ -333,38 +347,45 @@ export default function MSG() {
           setRole(resolvedRole);
           save('msg_role', resolvedRole);
 
-          try {
-            const db = await getFBFirestore();
-            const gymSnap = await db.doc(`gyms/${resolvedGymId}`).get();
-            if (gymSnap.exists) {
-              const gymData = gymSnap.data();
-              setGymName(gymData.name || '');
-              save('msg_gym_name', gymData.name || '');
-
-              if (resolvedRole === 'member' && gymData.ownerUid) {
-                const subDoc = await db.doc(`users/${gymData.ownerUid}`).get();
-                const subData = subDoc.data()?.subscription;
-                if (!subData || subData.status !== 'active' || (subData.expiresAt && subData.expiresAt < Date.now())) {
-                  setGymSubscriptionExpired(true);
-                } else {
-                  setGymSubscriptionExpired(false);
-                }
-              }
-            }
-          } catch (gymErr) {
-            console.warn('[MSG Auth] Failed to fetch gym details (proceeding with known gymId):', gymErr.message);
-          }
-
+          // Fast path: Immediately transition to ready state
           setAuthStatus('ready');
           profileResolvingRef.current = false;
+
+          // Non-blocking background sync of gym metadata
+          getFBFirestore().then(async (db) => {
+            try {
+              const gymSnap = await db.doc(`gyms/${resolvedGymId}`).get();
+              if (gymSnap.exists) {
+                const gymData = gymSnap.data();
+                if (gymData.name) {
+                  setGymName(gymData.name);
+                  save('msg_gym_name', gymData.name);
+                }
+                // Subscription check for gym owner
+                if (resolvedRole === 'owner') {
+                  const subData = userDoc.subscription;
+                  if (subData && subData.status === 'expired') {
+                    setGymSubscriptionExpired(true);
+                  }
+                }
+              }
+            } catch (gymErr) {
+              console.warn('[MSG Auth] Failed to fetch gym details (proceeding with known gymId):', gymErr.message);
+            }
+          }).catch(() => {});
+
           return;
         }
 
-        // userDoc exists but gymId is null: Self-healing lookup
-        const ownedGym = await findGymByOwnerUid(uid);
+        // userDoc exists but gymId is null: Self-healing lookup in parallel
+        const [ownedGym, memberRecord] = await Promise.all([
+          findGymByOwnerUid(uid),
+          findMemberRecordsByUid(uid),
+        ]);
+
         if (ownedGym) {
           console.log(`[MSG Auth] Self-healed missing gymId from owned gym: ${ownedGym.id}`);
-          await setUserDoc(uid, { gymId: ownedGym.id, role: 'owner' }, true);
+          setUserDoc(uid, { gymId: ownedGym.id, role: 'owner' }, true).catch(() => {});
           setGymId(ownedGym.id); save('msg_gym_id', ownedGym.id);
           setRole('owner'); save('msg_role', 'owner');
           setGymName(ownedGym.name || ''); save('msg_gym_name', ownedGym.name || '');
@@ -373,11 +394,10 @@ export default function MSG() {
           return;
         }
 
-        const memberRecord = await findMemberRecordsByUid(uid);
         if (memberRecord && memberRecord.gymId) {
           console.log(`[MSG Auth] Self-healed missing gymId from member record: ${memberRecord.gymId}`);
           const memRole = memberRecord.role || 'member';
-          await setUserDoc(uid, { gymId: memberRecord.gymId, role: memRole }, true);
+          setUserDoc(uid, { gymId: memberRecord.gymId, role: memRole }, true).catch(() => {});
           setGymId(memberRecord.gymId); save('msg_gym_id', memberRecord.gymId);
           setRole(memRole); save('msg_role', memRole);
           setAuthStatus('ready');
@@ -395,7 +415,11 @@ export default function MSG() {
 
       // userDoc is NOT in Firestore
       console.warn(`[MSG Auth] No user doc at users/${uid}. Performing self-healing check...`);
-      const ownedGym = await findGymByOwnerUid(uid);
+      const [ownedGym, memberRecord] = await Promise.all([
+        findGymByOwnerUid(uid),
+        findMemberRecordsByUid(uid),
+      ]);
+
       if (ownedGym) {
         console.log(`[MSG Auth] Self-healed user doc: user owns gym ${ownedGym.id}`);
         await setUserDoc(uid, {
@@ -416,7 +440,6 @@ export default function MSG() {
         return;
       }
 
-      const memberRecord = await findMemberRecordsByUid(uid);
       if (memberRecord && memberRecord.gymId) {
         console.log(`[MSG Auth] Self-healed user doc: member record in gym ${memberRecord.gymId}`);
         const memRole = memberRecord.role || 'member';
@@ -437,16 +460,27 @@ export default function MSG() {
         return;
       }
 
-      // Profile truly missing from Firestore with no existing records
-      console.warn(`[MSG Auth] No profile or gym record found for ${uid}. Presenting recovery state.`);
-      setAuthStatus('profile_missing');
+      // Automatically initialize new member profile & proceed directly to onboarding
+      console.log(`[MSG Auth] Initializing new member profile for ${uid}`);
+      await setUserDoc(uid, {
+        uid,
+        name: userObj.name || userObj.email?.split('@')[0] || 'Member',
+        email: userObj.email || '',
+        photo: userObj.photo || null,
+        role: 'member',
+        createdAt: serverTimestamp(),
+        lastActiveAt: serverTimestamp(),
+      });
+      setGymId(null); save('msg_gym_id', null);
+      setRole('member'); save('msg_role', 'member');
+      setAuthStatus('needs_onboarding');
       profileResolvingRef.current = false;
     } catch (err) {
       console.error(`[MSG Auth] Profile resolution error for ${uid}:`, err);
       // Fallback: Check if cached session matches this UID
-      const cachedUser = load('msg_user', null);
-      const cachedGymId = load('msg_gym_id', null);
-      if (cachedUser && cachedUser.uid === uid && cachedGymId) {
+      const currentCachedUser = load('msg_user', null);
+      const currentCachedGymId = load('msg_gym_id', null);
+      if (currentCachedUser && currentCachedUser.uid === uid && currentCachedGymId) {
         console.log('[MSG Auth] Network error during resolution. Using cached session as temporary fallback.');
         setAuthStatus('ready');
         profileResolvingRef.current = false;

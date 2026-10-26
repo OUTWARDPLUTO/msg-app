@@ -21,14 +21,9 @@ import { getFBFirestore } from '../shared/firebase.js';
 // ─── Callable Function Invoker ─────────────────────────────────────────────────
 // We call the Cloud Function via the Firebase compat SDK's functions().httpsCallable().
 async function callFunction(name, data) {
-  // Lazy-load Firebase Functions compat SDK
-  await new Promise((res, rej) => {
-    if (window.firebase?.functions) return res();
-    const s = document.createElement('script');
-    s.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js';
-    s.onload = res; s.onerror = rej;
-    document.head.appendChild(s);
-  });
+  if (!window.firebase?.functions) {
+    throw new Error('Firebase Functions SDK is not available.');
+  }
   const fn = window.firebase.functions();
   const callable = fn.httpsCallable(name);
   const result = await callable(data);

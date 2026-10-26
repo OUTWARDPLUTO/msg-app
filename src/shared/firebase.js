@@ -1,3 +1,14 @@
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
+import 'firebase/compat/firestore';
+import 'firebase/compat/storage';
+import 'firebase/compat/functions';
+
+// Expose on window for backwards compatibility with any window.firebase references
+if (typeof window !== 'undefined') {
+  window.firebase = firebase;
+}
+
 // ─── Firebase Config ──────────────────────────────────────────────────────────
 export const FB_CONFIG = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -9,55 +20,21 @@ export const FB_CONFIG = {
   measurementId: "G-N9K2PZHYCH",
 };
 
-// ─── Script Loader ────────────────────────────────────────────────────────────
-function loadScript(src) {
-  return new Promise((res, rej) => {
-    if (document.querySelector(`script[src="${src}"]`)) { res(); return; }
-    const s = document.createElement('script');
-    s.src = src; s.async = true;
-    s.onload = res;
-    s.onerror = () => rej(new Error(`Failed to load: ${src}`));
-    document.head.appendChild(s);
-  });
-}
-
-function pollFor(getter, timeout = 5000) {
-  return new Promise((res, rej) => {
-    const start = Date.now();
-    const t = setInterval(() => {
-      if (getter()) { clearInterval(t); res(); }
-      if (Date.now() - start > timeout) { clearInterval(t); rej(new Error('Firebase SDK timeout')); }
-    }, 100);
-  });
-}
-
 function ensureApp() {
-  if (!window.firebase.apps?.length) window.firebase.initializeApp(FB_CONFIG);
+  if (!firebase.apps.length) {
+    firebase.initializeApp(FB_CONFIG);
+  }
+  return firebase.app();
 }
 
 // ─── Firebase Auth ────────────────────────────────────────────────────────────
 let _fbAuth = null;
-let _fbAuthLoading = false;
-let _fbAuthCallbacks = [];
 
 export async function getFBAuth() {
   if (_fbAuth) return _fbAuth;
-  if (_fbAuthLoading) return new Promise((res, rej) => _fbAuthCallbacks.push({ res, rej }));
-  _fbAuthLoading = true;
-  try {
-    await loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
-    await pollFor(() => window.firebase?.app);
-    await loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js');
-    await pollFor(() => window.firebase?.auth);
-    ensureApp();
-    _fbAuth = window.firebase.auth();
-    _fbAuthCallbacks.forEach(cb => cb.res(_fbAuth));
-    return _fbAuth;
-  } catch (err) {
-    _fbAuthCallbacks.forEach(cb => cb.rej(err));
-    _fbAuthLoading = false; _fbAuth = null;
-    throw err;
-  }
+  ensureApp();
+  _fbAuth = firebase.auth();
+  return _fbAuth;
 }
 
 // ─── Firestore ────────────────────────────────────────────────────────────────
@@ -73,40 +50,29 @@ export async function getFBAuth() {
 //   → membershipPlanId (string), membershipPlanName (string), membershipStartDate (timestamp), membershipEndDate (timestamp), membershipStatus (string), updatedAt (timestamp)
 //
 let _db = null;
-let _dbLoading = false;
-let _dbCallbacks = [];
+let _persistenceInitialized = false;
 
 export async function getFBFirestore() {
   if (_db) return _db;
-  if (_dbLoading) return new Promise((res, rej) => _dbCallbacks.push({ res, rej }));
-  _dbLoading = true;
-  try {
-    // Auth compat must be loaded first (loads firebase-app-compat)
-    await getFBAuth();
-    await loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js');
-    await pollFor(() => window.firebase?.firestore);
-    ensureApp();
-    _db = window.firebase.firestore();
-    // Enable offline persistence — MUST assign _db first before this attempt
-    // failed-precondition = multiple tabs, unimplemented = WebView doesn't support it
-    // Either way we swallow the error and continue — app works online-only
-    try { await _db.enablePersistence({ synchronizeTabs: false }); } catch (persistErr) {
-      console.warn('[MSG] Persistence unavailable:', persistErr.code);
-    }
+  ensureApp();
+  _db = firebase.firestore();
 
-    _dbCallbacks.forEach(cb => cb.res(_db));
-    return _db;
-  } catch (err) {
-    _dbCallbacks.forEach(cb => cb.rej(err));
-    _dbLoading = false; _db = null;
-    throw err;
+  if (!_persistenceInitialized) {
+    _persistenceInitialized = true;
+    // Enable offline persistence non-blocking
+    _db.enablePersistence({ synchronizeTabs: false }).catch(persistErr => {
+      console.warn('[MSG] Persistence unavailable:', persistErr.code);
+    });
   }
+
+  return _db;
 }
 
 // ─── Server Timestamp Helper ──────────────────────────────────────────────────
 export function serverTimestamp() {
-  return window.firebase.firestore.FieldValue.serverTimestamp();
+  return firebase.firestore.FieldValue.serverTimestamp();
 }
+
 
 // ─── Gym Code Generator ───────────────────────────────────────────────────────
 export function generateGymCode() {
@@ -379,26 +345,12 @@ export async function importMembersFromCSV(gymId, mappedRows) {
 
 // ─── Firebase Storage ─────────────────────────────────────────────────────────
 let _storage = null;
-let _storageLoading = false;
-let _storageCallbacks = [];
 
 export async function getFBStorage() {
   if (_storage) return _storage;
-  if (_storageLoading) return new Promise((res, rej) => _storageCallbacks.push({ res, rej }));
-  _storageLoading = true;
-  try {
-    await getFBAuth();
-    await loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js');
-    await pollFor(() => window.firebase?.storage);
-    ensureApp();
-    _storage = window.firebase.storage();
-    _storageCallbacks.forEach(cb => cb.res(_storage));
-    return _storage;
-  } catch (err) {
-    _storageCallbacks.forEach(cb => cb.rej(err));
-    _storageLoading = false; _storage = null;
-    throw err;
-  }
+  ensureApp();
+  _storage = firebase.storage();
+  return _storage;
 }
 
 export async function uploadFile(path, file) {

@@ -61,7 +61,14 @@ export default defineConfig({
       output: {
         manualChunks: {
           react: ['react', 'react-dom'],
-          recharts: ['recharts']
+          recharts: ['recharts'],
+          firebase: [
+            'firebase/compat/app',
+            'firebase/compat/auth',
+            'firebase/compat/firestore',
+            'firebase/compat/storage',
+            'firebase/compat/functions'
+          ]
         }
       }
     }

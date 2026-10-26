@@ -12,12 +12,17 @@ export default function LoginScreen({ onLogin, darkMode }) {
   const [name, setName]       = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
-  const [fbStatus, setFbStatus] = useState('loading'); // 'loading' | 'ready' | 'error'
+  const [fbStatus, setFbStatus] = useState('ready'); // Bundled locally — ready immediately
 
   useEffect(() => {
-    getFBAuth()
-      .then(() => setFbStatus('ready'))
-      .catch(() => setFbStatus('error'));
+    // Pre-initialize GoogleAuth in background so clicking Google sign-in is instant
+    try {
+      GoogleAuth.initialize({
+        clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        scopes: ['profile', 'email'],
+        grantOfflineAccess: true,
+      }).catch(() => {});
+    } catch {}
   }, []);
 
   // Android back button: return to login if on signup tab

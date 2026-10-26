@@ -118,29 +118,33 @@ export default function GymOnboarding({ user, onGymJoined, darkMode, onBackToLog
 
       if (overrideRole === 'trainer') {
         // Trainer application
-        await setUserDoc(user.uid, {
-          uid: user.uid, name: user.name || '', email: user.email || '',
-          role: 'trainer', gymId: gym.id,
-          joinedAt: serverTimestamp(), lastActiveAt: serverTimestamp(),
-        });
         const db = await getFBFirestore();
-        await db.doc(`gyms/${gym.id}/trainers/${user.uid}`).set({
-          uid: user.uid, name: user.name || '', email: user.email || '',
-          status: 'pending', appliedAt: serverTimestamp()
-        });
+        await Promise.all([
+          setUserDoc(user.uid, {
+            uid: user.uid, name: user.name || '', email: user.email || '',
+            role: 'trainer', gymId: gym.id,
+            joinedAt: serverTimestamp(), lastActiveAt: serverTimestamp(),
+          }),
+          db.doc(`gyms/${gym.id}/trainers/${user.uid}`).set({
+            uid: user.uid, name: user.name || '', email: user.email || '',
+            status: 'pending', appliedAt: serverTimestamp()
+          }),
+        ]);
         onGymJoined(gym.id, 'trainer', gym.name);
       } else {
         // Member join
-        await setUserDoc(user.uid, {
-          uid: user.uid, name: user.name || '', email: user.email || '',
-          role: 'member', gymId: gym.id,
-          joinedAt: serverTimestamp(), lastActiveAt: serverTimestamp(),
-        });
-        await createMemberDoc(gym.id, user.uid, {
-          name: user.name || '', email: user.email || '', phone: '', role: 'member',
-        });
         const db = await getFBFirestore();
-        await db.doc(`gyms/${gym.id}/member_codes/${user.uid.substring(0,6).toUpperCase()}`).set({ uid: user.uid });
+        await Promise.all([
+          setUserDoc(user.uid, {
+            uid: user.uid, name: user.name || '', email: user.email || '',
+            role: 'member', gymId: gym.id,
+            joinedAt: serverTimestamp(), lastActiveAt: serverTimestamp(),
+          }),
+          createMemberDoc(gym.id, user.uid, {
+            name: user.name || '', email: user.email || '', phone: '', role: 'member',
+          }),
+          db.doc(`gyms/${gym.id}/member_codes/${user.uid.substring(0,6).toUpperCase()}`).set({ uid: user.uid }),
+        ]);
         onGymJoined(gym.id, 'member', gym.name);
       }
     } catch (e) {
