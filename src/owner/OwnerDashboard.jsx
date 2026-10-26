@@ -497,14 +497,17 @@ function DashboardTab({ gymId, user, gymName, onNavigate, onViewMemberProfile, s
 
   // ── Real-time listeners — all three update instantly on any data change ─────
   useEffect(() => {
-    if (!gymId) return;
+    if (!gymId) {
+      setLoading(false);
+      return;
+    }
     const unsubs = [];
     let membersDone = false, attendanceDone = false;
 
     // Safety timeout: ensure skeleton loader terminates even if network is slow/offline
     const safetyTimer = setTimeout(() => {
       setLoading(false);
-    }, 2500);
+    }, 1200);
 
     getFBFirestore().then(db => {
       // 1. Members — drives stats KPIs
@@ -547,12 +550,12 @@ function DashboardTab({ gymId, user, gymName, onNavigate, onViewMemberProfile, s
               console.warn('[DashboardTab] Error parsing members snapshot:', err);
             } finally {
               membersDone = true;
-              if (attendanceDone) setLoading(false);
+              setLoading(false);
             }
           }, (err) => {
             console.warn('[DashboardTab] Members listener error:', err);
             membersDone = true;
-            if (attendanceDone) setLoading(false);
+            setLoading(false);
           })
       );
 
@@ -571,12 +574,12 @@ function DashboardTab({ gymId, user, gymName, onNavigate, onViewMemberProfile, s
               console.warn('[DashboardTab] Error parsing attendance snapshot:', err);
             } finally {
               attendanceDone = true;
-              if (membersDone) setLoading(false);
+              setLoading(false);
             }
           }, (err) => {
             console.warn('[DashboardTab] Attendance listener error:', err);
             attendanceDone = true;
-            if (membersDone) setLoading(false);
+            setLoading(false);
           })
       );
 
