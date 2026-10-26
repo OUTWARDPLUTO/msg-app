@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { Card, Lbl, Spinner, Skeleton } from '../shared/primitives.jsx';
-import { getFBFirestore, serverTimestamp } from '../shared/firebase.js';
+import { getFBFirestore, serverTimestamp, recordManualCheckIn } from '../shared/firebase.js';
 
-export default function AttendanceTab({ gymId, onViewMemberProfile, onBack }) {
+export default function AttendanceTab({ gymId, onViewMemberProfile, onBack, initialDateFilter, onClearDateFilter }) {
   const [logs, setLogs]         = useState([]);
   const [members, setMembers]   = useState({});
   const [allMembers, setAllMembers] = useState([]);
@@ -13,6 +13,14 @@ export default function AttendanceTab({ gymId, onViewMemberProfile, onBack }) {
   const [manualMember, setManualMember] = useState(null);
   const [manualLoading, setManualLoading] = useState(false);
   const [manualDone, setManualDone] = useState(false);
+  const [manualError, setManualError] = useState(null);
+  const [selectedDateFilter, setSelectedDateFilter] = useState(initialDateFilter || null);
+
+  useEffect(() => {
+    if (initialDateFilter) {
+      setSelectedDateFilter(initialDateFilter);
+    }
+  }, [initialDateFilter]);
 
   // Reception QR States
   const [qrModal, setQrModal] = useState(false);
@@ -98,39 +106,37 @@ export default function AttendanceTab({ gymId, onViewMemberProfile, onBack }) {
     setLoading(false);
   }
 
-  // Manual check-in by owner
+  // Manual check-in by owner or authorized staff
   async function handleManualCheckIn() {
-    if (!manualMember) return;
+    if (!manualMember || manualLoading) return;
     setManualLoading(true);
+    setManualError(null);
     try {
-      const db = await getFBFirestore();
-      const today = new Date().toISOString().split('T')[0];
-      const existing = await db.collection(`attendance/${gymId}/logs`)
-        .where('uid', '==', manualMember.uid).where('date', '==', today).get();
-      if (!existing.empty) {
+      const res = await recordManualCheckIn(manualMember.uid, gymId, manualMember.name);
+      if (res.error) {
+        setManualError(res.error);
+        setManualLoading(false);
+        return;
+      }
+      if (res.alreadyCheckedIn) {
         setManualDone('already');
       } else {
-        await db.collection(`attendance/${gymId}/logs`).add({
-          uid: manualMember.uid,
-          gymId,
-          date: today,
-          checkedInAt: serverTimestamp(),
-          manual: true,
-        });
         setManualDone('success');
-        // Refresh logs
-        const snap = await db.collection(`attendance/${gymId}/logs`)
-          .where('date', '>=', new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0])
-          .orderBy('date', 'desc').get();
-        setLogs(snap.docs.map(d => d.data()));
       }
-    } catch (e) { console.warn(e); }
-    setManualLoading(false);
-    setTimeout(() => {
-      setManualDone(false);
-      setManualMember(null);
-      setManualModal(false);
-    }, 1500);
+      // Refresh logs immediately
+      await load();
+      setTimeout(() => {
+        setManualDone(false);
+        setManualMember(null);
+        setManualModal(false);
+        setManualError(null);
+      }, 1600);
+    } catch (e) {
+      console.warn('Manual check-in error:', e);
+      setManualError(e.message || 'An error occurred during manual check-in.');
+    } finally {
+      setManualLoading(false);
+    }
   }
 
   // Daily check-in counts (last 30 days)
@@ -164,13 +170,21 @@ export default function AttendanceTab({ gymId, onViewMemberProfile, onBack }) {
   const todayKey = new Date().toISOString().split('T')[0];
   const todayCount = daily.find(d => d.date === todayKey)?.count || 0;
 
-  // Filter check-in log by search
-  const filteredGrouped = search.trim()
-    ? grouped.map(([date, entries]) => [
+  // Filter check-in log by selectedDateFilter and search query
+  const filteredGrouped = (() => {
+    let list = grouped;
+    if (selectedDateFilter) {
+      list = list.filter(([date]) => date === selectedDateFilter);
+    }
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.map(([date, entries]) => [
         date,
-        entries.filter(e => (members[e.uid] || '').toLowerCase().includes(search.toLowerCase()))
-      ]).filter(([, entries]) => entries.length > 0)
-    : grouped;
+        entries.filter(e => (members[e.uid] || '').toLowerCase().includes(q))
+      ]).filter(([, entries]) => entries.length > 0);
+    }
+    return list;
+  })();
 
   const memberSearchResults = manualModal && manualMember === null
     ? allMembers.filter(m => {
@@ -200,7 +214,7 @@ export default function AttendanceTab({ gymId, onViewMemberProfile, onBack }) {
           }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
           </button>
-          <button onClick={() => { setManualModal(true); setManualMember(null); setManualDone(false); setSearch(''); }} style={{
+          <button onClick={() => { setManualModal(true); setManualMember(null); setManualDone(false); setManualError(null); setSearch(''); }} style={{
             background: C.text, border: 'none', borderRadius: 14,
             padding: '0 16px', color: C.bg, fontFamily: fb, fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.2s ease', boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
           }}>
@@ -231,10 +245,20 @@ export default function AttendanceTab({ gymId, onViewMemberProfile, onBack }) {
         <>
           {/* Today's quick stat */}
           <div style={{ padding: '0 20px', marginBottom: 24 }}>
-            <div style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: 20, padding: '24px' }}>
+            <div
+              className="msg-card-scale msg-hover-ring"
+              onClick={() => setSelectedDateFilter(prev => prev === todayKey ? null : todayKey)}
+              style={{
+                background: selectedDateFilter === todayKey ? 'rgba(229,57,53,0.12)' : C.s1,
+                border: `1px solid ${selectedDateFilter === todayKey ? C.accent : C.border}`,
+                borderRadius: 20, padding: '24px', cursor: 'pointer', transition: 'all 0.2s ease'
+              }}
+            >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
-                  <div style={{ fontSize: 13, color: C.sub, fontFamily: fb, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>Today's Check-ins</div>
+                  <div style={{ fontSize: 13, color: selectedDateFilter === todayKey ? C.accent : C.sub, fontFamily: fb, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>
+                    Today's Check-ins {selectedDateFilter === todayKey && '• FILTERED'}
+                  </div>
                   <div style={{ fontFamily: fb, fontSize: 48, fontWeight: 800, color: C.text, lineHeight: 1 }}>{todayCount}</div>
                 </div>
                 <div style={{ width: 48, height: 48, borderRadius: 16, background: C.bg, border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.accent }}>
@@ -244,28 +268,82 @@ export default function AttendanceTab({ gymId, onViewMemberProfile, onBack }) {
             </div>
           </div>
 
-          {/* 30-day bar chart */}
-          <div style={{ padding: '0 20px', marginBottom: 32 }}>
+          {/* 30-day bar chart with interactive bars */}
+          <div style={{ padding: '0 20px', marginBottom: 24 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <div style={{ fontFamily: fb, fontSize: 18, fontWeight: 700, color: C.text }}>Last 30 Days</div>
+              <div>
+                <div style={{ fontFamily: fb, fontSize: 18, fontWeight: 700, color: C.text }}>Last 30 Days</div>
+                <div style={{ fontSize: 11, fontFamily: fn, color: C.sub }}>Tap any bar to filter records by date</div>
+              </div>
               <div style={{ fontSize: 13, fontFamily: fn, color: C.sub }}>Avg {Math.round(daily.reduce((acc, d) => acc + d.count, 0) / 30)}/day</div>
             </div>
             <div style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: 20, padding: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: 100, gap: 4 }}>
-                {daily.map(d => (
-                  <div key={d.date} title={`${d.label}: ${d.count} check-ins`} style={{ flex: 1, display: 'flex', justifyContent: 'center', height: '100%', position: 'relative', group: 'bar' }}>
-                    <div style={{
-                      width: '100%', maxWidth: 6, borderRadius: 4,
-                      height: `${Math.max((d.count / maxCount) * 100, d.count > 0 ? 8 : 0)}%`,
-                      background: d.date === todayKey ? C.accent : C.s4,
-                      transition: 'height 0.4s ease',
-                      position: 'absolute', bottom: 0
-                    }} />
-                  </div>
-                ))}
+                {daily.map(d => {
+                  const isSelected = selectedDateFilter === d.date;
+                  return (
+                    <button
+                      key={d.date}
+                      type="button"
+                      onClick={() => setSelectedDateFilter(prev => prev === d.date ? null : d.date)}
+                      title={`${d.label}: ${d.count} check-ins (tap to filter)`}
+                      style={{
+                        flex: 1, display: 'flex', justifyContent: 'center', height: '100%',
+                        position: 'relative', background: 'none', border: 'none', padding: 0,
+                        cursor: 'pointer', outline: 'none'
+                      }}
+                    >
+                      <div style={{
+                        width: '100%', maxWidth: isSelected ? 8 : 6, borderRadius: 4,
+                        height: `${Math.max((d.count / maxCount) * 100, d.count > 0 ? 8 : 0)}%`,
+                        background: isSelected ? '#fff' : (d.date === todayKey ? C.accent : C.s4),
+                        boxShadow: isSelected ? `0 0 8px ${C.accent}` : 'none',
+                        transition: 'all 0.2s ease',
+                        position: 'absolute', bottom: 0
+                      }} />
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
+
+          {/* Active Date Filter Banner */}
+          {selectedDateFilter && (
+            <div style={{ padding: '0 20px', marginBottom: 16 }}>
+              <div style={{
+                background: 'rgba(229,57,53,0.12)', border: `1px solid ${C.accent}40`,
+                borderRadius: 14, padding: '10px 16px', display: 'flex',
+                alignItems: 'center', justifyContent: 'space-between',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 16 }}>📅</span>
+                  <div>
+                    <div style={{ fontSize: 13, fontFamily: fb, fontWeight: 700, color: C.text }}>
+                      Filtered to {selectedDateFilter === todayKey ? 'Today' : selectedDateFilter}
+                    </div>
+                    <div style={{ fontSize: 11, fontFamily: fn, color: C.sub }}>
+                      {logs.filter(l => l.date === selectedDateFilter).length} check-in(s) recorded
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedDateFilter(null);
+                    if (onClearDateFilter) onClearDateFilter();
+                  }}
+                  style={{
+                    background: C.bg, border: `1px solid ${C.border}`, borderRadius: 10,
+                    padding: '6px 12px', fontSize: 12, fontFamily: fb, fontWeight: 600,
+                    color: C.text, cursor: 'pointer',
+                  }}
+                >
+                  Show All
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Search */}
           <div style={{ padding: '0 20px', marginBottom: 24 }}>
@@ -275,7 +353,7 @@ export default function AttendanceTab({ gymId, onViewMemberProfile, onBack }) {
               </svg>
           <input
             value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Search check-ins..."
+            placeholder="Search check-ins by member name..."
             style={{
               width: '100%', boxSizing: 'border-box', background: C.bg,
               border: `1px solid ${C.border}`, borderRadius: 14, padding: '16px 16px 16px 44px',
@@ -290,11 +368,11 @@ export default function AttendanceTab({ gymId, onViewMemberProfile, onBack }) {
       {/* Check-in Log */}
       <div style={{ padding: '0 20px' }}>
         <div style={{ fontFamily: fb, fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 16 }}>
-          Recent Activity
+          {selectedDateFilter ? `Records for ${selectedDateFilter}` : 'Recent Activity'}
         </div>
         {filteredGrouped.length === 0 ? (
           <div style={{ color: C.muted, fontSize: 14, textAlign: 'center', padding: '24px 0', background: C.s1, borderRadius: 20, border: `1px dashed ${C.border}` }}>
-            {search ? 'No check-ins match your search.' : 'No check-ins recorded yet.'}
+            {search ? 'No check-ins match your search.' : selectedDateFilter ? `No check-ins recorded for ${selectedDateFilter}.` : 'No check-ins recorded yet.'}
           </div>
         ) : filteredGrouped.map(([date, entries]) => (
           <div key={date} style={{ marginBottom: 24 }}>
@@ -340,15 +418,25 @@ export default function AttendanceTab({ gymId, onViewMemberProfile, onBack }) {
       {/* Manual Check-in Modal */}
       {manualModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 600, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'flex-end', animation: 'msg-fadein 0.2s ease-out' }}
-          onClick={e => { if (e.target === e.currentTarget) setManualModal(false); }}>
+          onClick={e => { if (e.target === e.currentTarget && !manualLoading) setManualModal(false); }}>
           <div style={{ background: C.s1, borderRadius: '32px 32px 0 0', borderTop: `1px solid ${C.border}`, width: '100%', maxHeight: '90dvh', overflowY: 'auto', padding: '32px 20px calc(env(safe-area-inset-bottom,0) + 24px)' }} className="msg-scroll">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
               <div style={{ fontFamily: fb, fontSize: 24, fontWeight: 800, color: C.text }}>Manual Check-in</div>
-              <button onClick={() => setManualModal(false)} style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.text }}>
+              <button disabled={manualLoading} onClick={() => setManualModal(false)} style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.text }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
               </button>
             </div>
-            <div style={{ fontSize: 14, color: C.sub, marginBottom: 24, fontFamily: fn, lineHeight: 1.5 }}>Log a walk-in for today without scanning QR code.</div>
+            <div style={{ fontSize: 14, color: C.sub, marginBottom: 20, fontFamily: fn, lineHeight: 1.5 }}>Log a walk-in for today without scanning QR code.</div>
+
+            {manualError && (
+              <div style={{
+                marginBottom: 20, padding: '12px 16px', borderRadius: 14,
+                background: 'rgba(239, 68, 68, 0.15)', border: `1px solid ${C.red}40`,
+                color: C.red, fontSize: 13, fontFamily: fn, textAlign: 'center', lineHeight: 1.4
+              }}>
+                ⚠️ {manualError}
+              </div>
+            )}
 
             {manualDone ? (
               <div style={{ textAlign: 'center', padding: '40px 0' }}>
@@ -369,10 +457,10 @@ export default function AttendanceTab({ gymId, onViewMemberProfile, onBack }) {
                     <div style={{ fontSize: 16, fontWeight: 700, fontFamily: fb, color: C.text, marginBottom: 4 }}>{manualMember.name}</div>
                     <div style={{ fontSize: 13, fontFamily: fn, color: C.sub }}>Today, {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long' })}</div>
                   </div>
-                  <button onClick={() => setManualMember(null)} style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: 10, padding: '8px 12px', fontSize: 13, fontFamily: fb, fontWeight: 600, color: C.text, cursor: 'pointer', transition: 'all 0.2s ease' }}>Change</button>
+                  <button onClick={() => { setManualMember(null); setManualError(null); }} style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: 10, padding: '8px 12px', fontSize: 13, fontFamily: fb, fontWeight: 600, color: C.text, cursor: 'pointer', transition: 'all 0.2s ease' }}>Change</button>
                 </div>
-                <button onClick={handleManualCheckIn} disabled={manualLoading} style={{ width: '100%', padding: '16px', background: C.text, border: 'none', borderRadius: 16, color: C.bg, fontFamily: fb, fontWeight: 700, fontSize: 16, cursor: 'pointer', transition: 'all 0.2s ease', opacity: manualLoading ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                  {manualLoading ? 'Logging…' : <><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Check In Now</>}
+                <button onClick={handleManualCheckIn} disabled={manualLoading} style={{ width: '100%', padding: '16px', background: C.text, border: 'none', borderRadius: 16, color: C.bg, fontFamily: fb, fontWeight: 700, fontSize: 16, cursor: manualLoading ? 'not-allowed' : 'pointer', transition: 'all 0.2s ease', opacity: manualLoading ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                  {manualLoading ? 'Logging Check-in…' : <><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Confirm Check-In</>}
                 </button>
               </div>
             ) : (

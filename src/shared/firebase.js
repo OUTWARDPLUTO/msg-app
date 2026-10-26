@@ -301,6 +301,62 @@ export async function getTodayCheckIn(uid, gymId) {
   } catch { return false; }
 }
 
+export async function recordManualCheckIn(uid, gymId, memberName = '', recordedByUid = null) {
+  if (!uid || !gymId) {
+    return { error: 'Member and Gym ID are required.' };
+  }
+  try {
+    const db = await getFBFirestore();
+    const today = new Date().toISOString().split('T')[0];
+
+    // 1. Check if already checked in today (prevent duplicate submissions)
+    const existing = await db.collection(`attendance/${gymId}/logs`)
+      .where('uid', '==', uid)
+      .where('date', '==', today)
+      .get();
+
+    if (!existing.empty) {
+      return { alreadyCheckedIn: true, date: today };
+    }
+
+    const ts = serverTimestamp();
+
+    // 2. Add attendance log with complete metadata
+    const docRef = await db.collection(`attendance/${gymId}/logs`).add({
+      uid,
+      gymId,
+      name: memberName || '',
+      date: today,
+      checkedInAt: ts,
+      manual: true,
+      recordedBy: recordedByUid || 'staff',
+    });
+
+    // 3. Update member's lastActiveAt in members/{gymId}_{uid}
+    await db.doc(`members/${gymId}_${uid}`).set({
+      lastActiveAt: ts,
+    }, { merge: true }).catch(err => console.warn('[MSG] Failed to update member lastActiveAt:', err));
+
+    // 4. Update user's lastActiveAt
+    await db.doc(`users/${uid}`).update({
+      lastActiveAt: ts,
+      inactivity: {
+        lastNotifiedAt: null,
+        notifCountThisMonth: 0,
+        resetAt: ts,
+      },
+    }).catch(err => console.warn('[MSG] Failed to update user lastActiveAt:', err));
+
+    // 5. Track activity event for engagement scoring
+    await trackActivity(uid, gymId, 'checkin');
+
+    return { success: true, logId: docRef.id, date: today };
+  } catch (err) {
+    console.error('[MSG] recordManualCheckIn error:', err);
+    return { error: err.message || 'Failed to record manual check-in.' };
+  }
+}
+
 // ─── CSV Import ───────────────────────────────────────────────────────────────
 export function parseCSV(text) {
   // Strip BOM and normalize line endings

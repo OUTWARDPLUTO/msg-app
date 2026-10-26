@@ -31,7 +31,8 @@ service cloud.firestore {
     match /users/{uid} {
       allow read:   if isUser(uid);
       allow create: if isUser(uid) && !('subscription' in request.resource.data);
-      allow update: if isUser(uid) && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['subscription']));
+      allow update: if (isUser(uid) && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['subscription']))) ||
+                       (isAuth() && 'gymId' in resource.data && (isOwnerOf(resource.data.gymId) || isTrainerOf(resource.data.gymId)) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastActiveAt', 'inactivity']));
       allow delete: if false;
 
       // Device tokens — users may only manage their own devices
@@ -130,7 +131,7 @@ service cloud.firestore {
                         !('trainerUid' in resource.data) ||
                         resource.data.trainerUid == null
                       ) && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-                        'trainerUid', 'coachingNotes', 'workoutPlanText'
+                        'trainerUid', 'coachingNotes', 'workoutPlanText', 'lastActiveAt'
                       ]))
                     );
       allow delete: if isOwnerOf(resource.data.gymId);
@@ -139,7 +140,9 @@ service cloud.firestore {
     // ── Attendance ────────────────────────────────────────────────────────────
     match /attendance/{gymId}/logs/{logId} {
       allow read:   if isOwnerOf(gymId) || (isMemberOf(gymId) && isUser(resource.data.uid)) || isTrainerOf(gymId);
-      allow create: if isMemberOf(gymId) && isUser(request.resource.data.uid);
+      allow create: if (isMemberOf(gymId) && isUser(request.resource.data.uid)) ||
+                       isOwnerOf(gymId) ||
+                       isTrainerOf(gymId);
       allow update: if false;
       allow delete: if false;
     }
@@ -151,8 +154,9 @@ service cloud.firestore {
       allow read:   if isOwnerOf(gymId) ||
                        (isMemberOf(gymId) && isUser(resource.data.uid)) ||
                        isTrainerOf(gymId);
-      allow create: if isMemberOf(gymId) &&
-                       isUser(request.resource.data.uid) &&
+      allow create: if ((isMemberOf(gymId) && isUser(request.resource.data.uid)) ||
+                        isOwnerOf(gymId) ||
+                        isTrainerOf(gymId)) &&
                        request.resource.data.gymId == gymId &&
                        request.resource.data.type in ['workout', 'diet', 'checkin', 'progress'] &&
                        request.resource.data.points is number &&

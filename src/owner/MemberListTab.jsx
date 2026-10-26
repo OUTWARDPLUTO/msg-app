@@ -14,7 +14,7 @@ function getJsDate(field) {
   return isNaN(d.getTime()) ? null : d;
 }
 
-export default function MemberListTab({ gymId, gymCode = '', setBackHandler, onViewMemberProfile, subTab, setSubTab }) {
+export default function MemberListTab({ gymId, gymCode = '', setBackHandler, onViewMemberProfile, subTab, setSubTab, initialActiveTab }) {
   const _subTab = subTab || 'directory';
   const _setSubTab = setSubTab || (() => {});
   const [members, setMembers] = useState([]);
@@ -22,9 +22,15 @@ export default function MemberListTab({ gymId, gymCode = '', setBackHandler, onV
   const [error, setError] = useState(null);
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(null); // member for detail sheet
-  const [activeTab, setActiveTab] = useState('All');
+  const [activeTab, setActiveTab] = useState(initialActiveTab || 'All');
   const [showAddModal, setShowAddModal] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (initialActiveTab) {
+      setActiveTab(initialActiveTab);
+    }
+  }, [initialActiveTab]);
 
   useEffect(() => {
     if ((selected || showAddModal) && setBackHandler) {
@@ -91,7 +97,14 @@ export default function MemberListTab({ gymId, gymCode = '', setBackHandler, onV
 
   const filtered = members.filter(m => {
     const q = query.toLowerCase();
-    return (m.name || '').toLowerCase().includes(q) || (m.email || '').toLowerCase().includes(q) || (m.phone || '').includes(q);
+    const matchesQuery = (m.name || '').toLowerCase().includes(q) || (m.email || '').toLowerCase().includes(q) || (m.phone || '').includes(q);
+    if (!matchesQuery) return false;
+    const status = computeStatus(m);
+    if (activeTab === 'Active') return status === 'active';
+    if (activeTab === 'At-Risk') return status === 'at-risk';
+    if (activeTab === 'Inactive') return status === 'inactive';
+    if (activeTab === 'Freeze') return status === 'freeze';
+    return true;
   });
 
   // remove early return for loading
@@ -161,14 +174,14 @@ export default function MemberListTab({ gymId, gymCode = '', setBackHandler, onV
       </div>
 
       {/* Filter Tabs */}
-      <div style={{ padding: '0 20px', marginBottom: 24, display: 'flex', gap: 24, borderBottom: `1px solid ${C.border}` }}>
-        {['All', 'Active', 'Inactive', 'Freeze'].map(t => (
+      <div style={{ padding: '0 20px', marginBottom: 24, display: 'flex', gap: 16, borderBottom: `1px solid ${C.border}`, overflowX: 'auto' }} className="msg-scroll">
+        {['All', 'Active', 'At-Risk', 'Inactive', 'Freeze'].map(t => (
           <button key={t} onClick={() => setActiveTab(t)} style={{
             background: activeTab === t ? 'rgba(229,57,53,0.15)' : 'none',
             border: 'none', padding: '8px 16px', borderRadius: '8px 8px 0 0',
             color: activeTab === t ? C.text : C.sub,
             fontFamily: fb, fontSize: 13, fontWeight: activeTab === t ? 600 : 500,
-            cursor: 'pointer', position: 'relative'
+            cursor: 'pointer', position: 'relative', whiteSpace: 'nowrap'
           }}>
             {t}
             {activeTab === t && <div style={{ position: 'absolute', bottom: -1, left: 0, right: 0, height: 2, background: C.accent }} />}

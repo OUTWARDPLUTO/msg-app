@@ -294,6 +294,36 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
     window.history.pushState({ ownerTab: newTab }, '');
   }, [tab]);
 
+  const [membersActiveFilter, setMembersActiveFilter] = useState('All');
+  const [attendanceDateFilter, setAttendanceDateFilter] = useState(null);
+  const [membershipsFilter, setMembershipsFilter] = useState('All');
+
+  const navigateToMembers = useCallback((filter = 'All', sub = 'directory') => {
+    setMembersActiveFilter(filter);
+    setMembersSubTab(sub);
+    setMoreScreen(null);
+    setTab('members');
+  }, []);
+
+  const navigateToAttendance = useCallback((dateFilter = null) => {
+    setAttendanceDateFilter(dateFilter);
+    setMoreScreen(null);
+    setTab('attendance');
+  }, []);
+
+  const navigateToMemberships = useCallback((filter = 'All') => {
+    setMembershipsFilter(filter);
+    setMoreScreen('memberships');
+    setTab('more');
+    window.history.pushState({ ownerTab: 'more', moreScreen: 'memberships' }, '');
+  }, []);
+
+  const navigateToRevenue = useCallback(() => {
+    setMembersSubTab('stats');
+    setMoreScreen(null);
+    setTab('members');
+  }, []);
+
   const handleMoreNavigate = (screen) => {
     setMoreScreen(screen);
     setTab('more');
@@ -318,7 +348,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
   const onBack = () => setMoreScreen(null);
 
   function renderMoreScreen() {
-    if (moreScreen === 'memberships') return <MembershipsTab gymId={gymId} onBack={onBack} />;
+    if (moreScreen === 'memberships') return <MembershipsTab gymId={gymId} onBack={onBack} initialFilter={membershipsFilter} />;
     if (moreScreen === 'alerts')      return <AlertsTab gymId={gymId} onViewMemberProfile={setProfileMember} onBack={onBack} />;
     if (moreScreen === 'import')      return <CSVImport gymId={gymId} onBack={onBack} />;
     if (moreScreen === 'campaigns')   return <OwnerNotifCampaignTab gymId={gymId} ownerUid={user?.uid} onBack={onBack} />;
@@ -423,9 +453,41 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
             {tab === 'more' && !moreScreen && (
               <MoreTab gymId={gymId} gymName={gymName} ownerUid={user?.uid} onNavigate={handleMoreNavigate} pendingTrainersCount={pendingTrainersCount} />
             )}
-            {tab === 'dashboard'  && <DashboardTab gymId={gymId} user={user} gymName={gymName} onNavigate={handleMoreNavigate} onViewMemberProfile={setProfileMember} setTab={setTab} setMembersSubTab={setMembersSubTab} setBackHandler={setChildBackHandler} />}
-            {tab === 'members'    && <MemberListTab gymId={gymId} gymCode={gymCode} setBackHandler={setChildBackHandler} onViewMemberProfile={setProfileMember} subTab={membersSubTab} setSubTab={setMembersSubTab} />}
-            {tab === 'attendance' && <AttendanceTab gymId={gymId} onViewMemberProfile={setProfileMember} />}
+            {tab === 'dashboard'  && (
+              <DashboardTab
+                gymId={gymId}
+                user={user}
+                gymName={gymName}
+                onNavigate={handleMoreNavigate}
+                onViewMemberProfile={setProfileMember}
+                setTab={setTab}
+                setMembersSubTab={setMembersSubTab}
+                setBackHandler={setChildBackHandler}
+                navigateToMembers={navigateToMembers}
+                navigateToAttendance={navigateToAttendance}
+                navigateToMemberships={navigateToMemberships}
+                navigateToRevenue={navigateToRevenue}
+              />
+            )}
+            {tab === 'members'    && (
+              <MemberListTab
+                gymId={gymId}
+                gymCode={gymCode}
+                setBackHandler={setChildBackHandler}
+                onViewMemberProfile={setProfileMember}
+                subTab={membersSubTab}
+                setSubTab={setMembersSubTab}
+                initialActiveTab={membersActiveFilter}
+              />
+            )}
+            {tab === 'attendance' && (
+              <AttendanceTab
+                gymId={gymId}
+                onViewMemberProfile={setProfileMember}
+                initialDateFilter={attendanceDateFilter}
+                onClearDateFilter={() => setAttendanceDateFilter(null)}
+              />
+            )}
             {tab === 'store'      && <StoreTab gymId={gymId} setBackHandler={setChildBackHandler} />}
           </div>
         </ErrorBoundary>
@@ -474,26 +536,19 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
 }
 
 // ─── Dashboard Tab ─────────────────────────────────────────────────────────────
-function DashboardTab({ gymId, user, gymName, onNavigate, onViewMemberProfile, setTab, setMembersSubTab, setBackHandler }) {
+function DashboardTab({
+  gymId, user, gymName, onNavigate, onViewMemberProfile,
+  setTab, setMembersSubTab, setBackHandler,
+  navigateToMembers, navigateToAttendance, navigateToMemberships, navigateToRevenue
+}) {
   const [stats, setStats]           = useState(null);
   const [attendanceLogs, setAttendanceLogs] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading]       = useState(true);
   const [chartPeriod, setChartPeriod] = useState('week');
   const [showPeriodPicker, setShowPeriodPicker] = useState(false);
-  const [tileOverlay, setTileOverlay] = useState(null);
   const [todayCheckIns, setTodayCheckIns] = useState(0);
   const isDark = !C.isLight;
-
-  useEffect(() => {
-    if (setBackHandler) {
-      if (tileOverlay) {
-        setBackHandler(() => () => { setTileOverlay(null); return true; });
-      } else {
-        setBackHandler(null);
-      }
-    }
-  }, [tileOverlay, setBackHandler]);
 
   // ── Real-time listeners — all three update instantly on any data change ─────
   useEffect(() => {
@@ -587,7 +642,7 @@ function DashboardTab({ gymId, user, gymName, onNavigate, onViewMemberProfile, s
       try {
         unsubs.push(
           db.collection(`activityLogs/${gymId}/events`)
-            .orderBy('timestamp', 'desc').limit(5)
+            .orderBy('timestamp', 'desc').limit(6)
             .onSnapshot(snap => {
               setRecentActivity(snap.docs.map(d => d.data()));
             }, () => setRecentActivity([]))
@@ -629,9 +684,10 @@ function DashboardTab({ gymId, user, gymName, onNavigate, onViewMemberProfile, s
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload?.length) {
       return (
-        <div style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: 12, padding: '8px 12px', boxShadow: '0 4px 16px rgba(0,0,0,0.3)' }}>
+        <div style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: 12, padding: '8px 12px', boxShadow: '0 4px 16px rgba(0,0,0,0.3)', pointerEvents: 'none' }}>
           <div style={{ color: C.sub, fontSize: 10, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', marginBottom: 2 }}>{payload[0].payload.date}</div>
-          <div style={{ color: C.text, fontSize: 16, fontFamily: fn, fontWeight: 800 }}>{payload[0].value} check-ins</div>
+          <div style={{ color: C.text, fontSize: 15, fontFamily: fn, fontWeight: 800 }}>{payload[0].value} check-in{payload[0].value === 1 ? '' : 's'}</div>
+          <div style={{ color: C.accent, fontSize: 10, fontFamily: fb, fontWeight: 600, marginTop: 4 }}>Tap point to view date logs →</div>
         </div>
       );
     }
@@ -642,12 +698,12 @@ function DashboardTab({ gymId, user, gymName, onNavigate, onViewMemberProfile, s
     return (
       <div style={{ padding: '0 20px', paddingBottom: 110 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
-          {[1,2,3,4].map(i => <div key={i} className={`msg-skeleton${isDark ? '-dark' : ''} msg-stagger-${i}`} style={{ height: 110 }} />)}
+          {[1,2,3,4].map(i => <div key={i} className={`msg-skeleton${isDark ? '-dark' : ''} msg-stagger-${i}`} style={{ height: 110, borderRadius: 16 }} />)}
         </div>
-        <div className={`msg-skeleton${isDark ? '-dark' : ''} msg-stagger-2`} style={{ height: 200, marginBottom: 28 }} />
-        <div style={{ display: 'flex', gap: 12 }}>
-          {[1,2,3,4].map(i => <div key={i} className={`msg-skeleton${isDark ? '-dark' : ''} msg-stagger-${i}`} style={{ flex: 1, height: 90 }} />)}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 24 }}>
+          {[1,2,3,4].map(i => <div key={i} className={`msg-skeleton${isDark ? '-dark' : ''} msg-stagger-${i}`} style={{ height: 72, borderRadius: 14 }} />)}
         </div>
+        <div className={`msg-skeleton${isDark ? '-dark' : ''} msg-stagger-2`} style={{ height: 200, marginBottom: 28, borderRadius: 16 }} />
       </div>
     );
   }
@@ -657,56 +713,174 @@ function DashboardTab({ gymId, user, gymName, onNavigate, onViewMemberProfile, s
 
   return (
     <div style={{ paddingBottom: 110 }}>
-      {/* 2×2 KPI Grid — all cards are clickable */}
-      <div style={{ padding: '0 20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
-        {/* Check-ins → Attendance */}
-        <button onClick={() => setTileOverlay('attendance')} className={`msg-card-scale msg-hover-ring ${isDark ? 'msg-glass' : 'msg-glass-light'} msg-fadein-up msg-stagger-1`} style={{ borderRadius: 16, padding: '16px', textAlign: 'left', cursor: 'pointer' }}>
-          <div style={{ fontSize: 12, color: C.sub, fontFamily: fn, fontWeight: 500, marginBottom: 8 }}>Check-ins</div>
+      {/* 2×2 KPI Grid — all cards are clickable with direct drilldown */}
+      <div style={{ padding: '0 20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
+        {/* Check-ins → Today's Attendance */}
+        <button
+          type="button"
+          onClick={() => navigateToAttendance ? navigateToAttendance(todayKey) : setTab('attendance')}
+          className={`msg-card-scale msg-hover-ring ${isDark ? 'msg-glass' : 'msg-glass-light'} msg-fadein-up msg-stagger-1`}
+          style={{
+            borderRadius: 16, padding: '16px', textAlign: 'left', cursor: 'pointer',
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
+            background: isDark ? 'rgba(26, 26, 26, 0.45)' : 'rgba(255, 255, 255, 0.55)',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
+          }}
+          title="View today's check-ins"
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <div style={{ fontSize: 30, fontFamily: fb, fontWeight: 800, color: C.text, lineHeight: 1 }}>{todayCheckIns}</div>
+            <span style={{ fontSize: 12, color: C.sub, fontFamily: fn, fontWeight: 600 }}>Check-ins</span>
+            <span style={{ fontSize: 11, color: C.accent, fontFamily: fb, fontWeight: 700 }}>View →</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <div style={{ fontSize: 32, fontFamily: fb, fontWeight: 800, color: C.text, lineHeight: 1 }}>{todayCheckIns}</div>
             <svg width="40" height="16" viewBox="0 0 40 16" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round"><path d="M0 12 L8 8 L16 14 L24 4 L32 10 L40 2" /></svg>
           </div>
-          <div style={{ fontSize: 10, fontFamily: fb, fontWeight: 600, color: C.green }}>Today's total</div>
+          <div style={{ fontSize: 11, fontFamily: fb, fontWeight: 600, color: C.green }}>Today's total</div>
         </button>
 
-        {/* Revenue Today → RevenueDetail */}
-        <button onClick={() => setTileOverlay('revenue')} className={`msg-card-scale msg-hover-ring ${isDark ? 'msg-glass' : 'msg-glass-light'} msg-fadein-up msg-stagger-2`} style={{ borderRadius: 16, padding: '16px', textAlign: 'left', cursor: 'pointer' }}>
-          <div style={{ fontSize: 12, color: C.sub, fontFamily: fn, fontWeight: 500, marginBottom: 8 }}>Revenue</div>
+        {/* Revenue Today → Revenue Stats */}
+        <button
+          type="button"
+          onClick={() => navigateToRevenue ? navigateToRevenue() : (setMembersSubTab('stats'), setTab('members'))}
+          className={`msg-card-scale msg-hover-ring ${isDark ? 'msg-glass' : 'msg-glass-light'} msg-fadein-up msg-stagger-2`}
+          style={{
+            borderRadius: 16, padding: '16px', textAlign: 'left', cursor: 'pointer',
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
+            background: isDark ? 'rgba(26, 26, 26, 0.45)' : 'rgba(255, 255, 255, 0.55)',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
+          }}
+          title="View revenue analytics"
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <div style={{ fontSize: 30, fontFamily: fb, fontWeight: 800, color: C.text, lineHeight: 1 }}>₹0</div>
+            <span style={{ fontSize: 12, color: C.sub, fontFamily: fn, fontWeight: 600 }}>Revenue</span>
+            <span style={{ fontSize: 11, color: C.blue, fontFamily: fb, fontWeight: 700 }}>View →</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <div style={{ fontSize: 32, fontFamily: fb, fontWeight: 800, color: C.text, lineHeight: 1 }}>₹0</div>
             <svg width="40" height="16" viewBox="0 0 40 16" fill="none" stroke={C.blue} strokeWidth="1.5" strokeLinecap="round"><path d="M0 10 L8 14 L16 4 L24 8 L32 2 L40 12" /></svg>
           </div>
-          <div style={{ fontSize: 10, fontFamily: fb, fontWeight: 600, color: C.sub }}>Today</div>
+          <div style={{ fontSize: 11, fontFamily: fb, fontWeight: 600, color: C.sub }}>Today</div>
         </button>
 
-        {/* Renewals Due → Memberships */}
-        <button onClick={() => setTileOverlay('memberships')} className={`msg-card-scale msg-hover-ring ${isDark ? 'msg-glass' : 'msg-glass-light'} msg-fadein-up msg-stagger-3`} style={{ borderRadius: 16, padding: '16px', textAlign: 'left', cursor: 'pointer' }}>
-          <div style={{ fontSize: 12, color: C.sub, fontFamily: fn, fontWeight: 500, marginBottom: 8 }}>Renewals Due</div>
+        {/* Renewals Due → Memberships Expiring Soon */}
+        <button
+          type="button"
+          onClick={() => navigateToMemberships ? navigateToMemberships('Expiring Soon') : onNavigate('memberships')}
+          className={`msg-card-scale msg-hover-ring ${isDark ? 'msg-glass' : 'msg-glass-light'} msg-fadein-up msg-stagger-3`}
+          style={{
+            borderRadius: 16, padding: '16px', textAlign: 'left', cursor: 'pointer',
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
+            background: isDark ? 'rgba(26, 26, 26, 0.45)' : 'rgba(255, 255, 255, 0.55)',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
+          }}
+          title="View expiring memberships"
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <div style={{ fontSize: 30, fontFamily: fb, fontWeight: 800, color: C.text, lineHeight: 1 }}>{stats?.expiringCount ?? 0}</div>
+            <span style={{ fontSize: 12, color: C.sub, fontFamily: fn, fontWeight: 600 }}>Renewals Due</span>
+            <span style={{ fontSize: 11, color: C.accent, fontFamily: fb, fontWeight: 700 }}>View →</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <div style={{ fontSize: 32, fontFamily: fb, fontWeight: 800, color: C.text, lineHeight: 1 }}>{stats?.expiringCount ?? 0}</div>
             <svg width="40" height="16" viewBox="0 0 40 16" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round"><path d="M0 4 L8 10 L16 6 L24 14 L32 8 L40 12" /></svg>
           </div>
-          <div style={{ fontSize: 10, fontFamily: fb, fontWeight: 600, color: C.accent }}>expiring this week</div>
+          <div style={{ fontSize: 11, fontFamily: fb, fontWeight: 600, color: C.accent }}>expiring this week</div>
         </button>
 
-        {/* At-Risk → Alerts */}
-        <button onClick={() => setTileOverlay('alerts')} className={`msg-card-scale msg-hover-ring ${isDark ? 'msg-glass' : 'msg-glass-light'} msg-fadein-up msg-stagger-4`} style={{ borderRadius: 16, padding: '16px', textAlign: 'left', cursor: 'pointer' }}>
-          <div style={{ fontSize: 12, color: C.sub, fontFamily: fn, fontWeight: 500, marginBottom: 8 }}>At-Risk Members</div>
+        {/* At-Risk → At-Risk Member Alerts */}
+        <button
+          type="button"
+          onClick={() => navigateToMembers ? navigateToMembers('At-Risk', 'alerts') : (setMembersSubTab('alerts'), setTab('members'))}
+          className={`msg-card-scale msg-hover-ring ${isDark ? 'msg-glass' : 'msg-glass-light'} msg-fadein-up msg-stagger-4`}
+          style={{
+            borderRadius: 16, padding: '16px', textAlign: 'left', cursor: 'pointer',
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
+            background: isDark ? 'rgba(26, 26, 26, 0.45)' : 'rgba(255, 255, 255, 0.55)',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
+          }}
+          title="View at-risk members"
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <div style={{ fontSize: 30, fontFamily: fb, fontWeight: 800, color: C.text, lineHeight: 1 }}>{stats?.atRisk ?? 0}</div>
+            <span style={{ fontSize: 12, color: C.sub, fontFamily: fn, fontWeight: 600 }}>At-Risk Members</span>
+            <span style={{ fontSize: 11, color: C.orange, fontFamily: fb, fontWeight: 700 }}>View →</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <div style={{ fontSize: 32, fontFamily: fb, fontWeight: 800, color: C.text, lineHeight: 1 }}>{stats?.atRisk ?? 0}</div>
             <svg width="40" height="16" viewBox="0 0 40 16" fill="none" stroke={C.orange} strokeWidth="1.5" strokeLinecap="round"><path d="M0 12 L8 2 L16 8 L24 4 L32 14 L40 6" /></svg>
           </div>
-          <div style={{ fontSize: 10, fontFamily: fb, fontWeight: 600, color: stats?.atRisk > 0 ? '#f87171' : C.muted }}>
-            {stats?.atRisk > 0 ? 'need attention' : 'all good'}
+          <div style={{ fontSize: 11, fontFamily: fb, fontWeight: 600, color: (stats?.atRisk || 0) > 0 ? '#f87171' : C.muted }}>
+            {(stats?.atRisk || 0) > 0 ? 'need attention' : 'all good'}
           </div>
         </button>
       </div>
 
-      {/* Check-ins Chart */}
+      {/* Member Overview Strip — all 4 indicators are interactive drilldowns */}
+      <div className="msg-fadein-up msg-stagger-2" style={{ padding: '0 20px', marginBottom: 24 }}>
+        <div style={{
+          background: isDark ? 'rgba(26, 26, 26, 0.45)' : 'rgba(255, 255, 255, 0.55)',
+          backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+          border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)'}`,
+          borderRadius: 20, padding: '16px 14px',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, padding: '0 4px' }}>
+            <div style={{ fontSize: 13, fontFamily: fb, fontWeight: 700, color: C.text, letterSpacing: '-0.01em' }}>Member Overview</div>
+            <button
+              type="button"
+              onClick={() => navigateToMembers ? navigateToMembers('All', 'directory') : setTab('members')}
+              style={{ background: 'none', border: 'none', color: C.accent, fontSize: 11, fontFamily: fb, fontWeight: 700, cursor: 'pointer', padding: 0 }}
+            >
+              View Roster →
+            </button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+            {[
+              { label: 'Total', count: stats?.total ?? 0, filter: 'All', color: C.text, sub: 'All registered' },
+              { label: 'Active', count: stats?.active ?? 0, filter: 'Active', color: C.green, sub: 'Score ≥ 60' },
+              { label: 'Inactive', count: stats?.inactive ?? 0, filter: 'Inactive', color: C.muted, sub: 'Score < 35' },
+              { label: 'Avg Score', count: stats?.avgScore ?? 0, filter: 'All', color: C.accent, sub: 'Engagement' },
+            ].map(item => (
+              <button
+                key={item.label}
+                type="button"
+                onClick={() => navigateToMembers ? navigateToMembers(item.filter, 'directory') : setTab('members')}
+                className="msg-card-scale"
+                style={{
+                  background: isDark ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.7)',
+                  border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'}`,
+                  borderRadius: 14, padding: '12px 6px', textAlign: 'center', cursor: 'pointer',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  transition: 'all 0.2s ease', position: 'relative'
+                }}
+                title={`Filter member list by ${item.label}`}
+                onMouseEnter={e => {
+                  e.currentTarget.style.borderColor = C.accent + '88';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+              >
+                <div style={{ fontFamily: fb, fontSize: 20, fontWeight: 800, color: item.color, lineHeight: 1.1, marginBottom: 4 }}>
+                  {item.count}
+                </div>
+                <div style={{ fontSize: 10, fontFamily: fb, fontWeight: 700, color: C.sub, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  {item.label}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Check-ins Chart — interactive with clickable data points */}
       <div className="msg-fadein-up msg-stagger-2" style={{ padding: '0 20px', marginBottom: 28 }}>
         <div className={isDark ? 'msg-glass' : 'msg-glass-light'} style={{ borderRadius: 16, padding: '20px 0 10px' }}>
           <div style={{ padding: '0 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-            <div style={{ fontSize: 16, fontFamily: fb, fontWeight: 600, color: C.text }}>Check-ins Overview</div>
+            <div>
+              <div style={{ fontSize: 16, fontFamily: fb, fontWeight: 600, color: C.text }}>Check-ins Overview</div>
+              <div style={{ fontSize: 11, fontFamily: fn, color: C.sub, marginTop: 2 }}>Tap any point or bar to inspect logs</div>
+            </div>
             <div style={{ position: 'relative' }}>
               <button onClick={() => setShowPeriodPicker(p => !p)} style={{
                 fontSize: 12, fontFamily: fn, color: C.sub, background: C.bg,
@@ -738,9 +912,21 @@ function DashboardTab({ gymId, user, gymName, onNavigate, onViewMemberProfile, s
               )}
             </div>
           </div>
-          <div style={{ height: 140, padding: '0 10px' }}>
+          <div style={{ height: 140, padding: '0 10px', cursor: 'pointer' }}>
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <AreaChart
+                data={chartData}
+                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                onClick={(e) => {
+                  if (e && e.activePayload && e.activePayload[0]) {
+                    const dateStr = e.activePayload[0].payload.date;
+                    if (dateStr) {
+                      if (navigateToAttendance) navigateToAttendance(dateStr);
+                      else setTab('attendance');
+                    }
+                  }
+                }}
+              >
                 <defs>
                   <linearGradient id="colorRedFigma" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor={C.accent} stopOpacity={0.4}/>
@@ -750,7 +936,16 @@ function DashboardTab({ gymId, user, gymName, onNavigate, onViewMemberProfile, s
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={C.border} opacity={0.5} />
                 <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: C.sub, fontFamily: fn }} dy={10} />
                 <Tooltip content={<CustomTooltip />} cursor={{ stroke: C.accent, strokeWidth: 1, strokeDasharray: '4 4' }} />
-                <Area type="monotone" dataKey="visitors" stroke={C.accent} strokeWidth={2.5} fillOpacity={1} fill="url(#colorRedFigma)" activeDot={{ r: 6, fill: C.bg, stroke: C.accent, strokeWidth: 2 }} dot={false} />
+                <Area
+                  type="monotone"
+                  dataKey="visitors"
+                  stroke={C.accent}
+                  strokeWidth={2.5}
+                  fillOpacity={1}
+                  fill="url(#colorRedFigma)"
+                  activeDot={{ r: 7, fill: C.accent, stroke: C.bg, strokeWidth: 2, cursor: 'pointer' }}
+                  dot={{ r: 3, fill: C.accent, strokeWidth: 0, cursor: 'pointer' }}
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -762,7 +957,12 @@ function DashboardTab({ gymId, user, gymName, onNavigate, onViewMemberProfile, s
         <div style={{ fontSize: 16, fontFamily: fb, fontWeight: 600, color: C.text, marginBottom: 16 }}>Quick Actions</div>
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
           {/* Add Member */}
-          <button onClick={() => setTab('members')} className="msg-card-scale msg-hover-ring" style={{ flex: 1, background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+          <button
+            type="button"
+            onClick={() => navigateToMembers ? navigateToMembers('All', 'directory') : setTab('members')}
+            className="msg-card-scale msg-hover-ring"
+            style={{ flex: 1, background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}
+          >
             <div className={isDark ? 'msg-glass' : 'msg-glass-light'} style={{ width: 64, height: 64, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
             </div>
@@ -770,7 +970,12 @@ function DashboardTab({ gymId, user, gymName, onNavigate, onViewMemberProfile, s
           </button>
 
           {/* Mark Attendance */}
-          <button onClick={() => setTab('attendance')} className="msg-card-scale msg-hover-ring" style={{ flex: 1, background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+          <button
+            type="button"
+            onClick={() => navigateToAttendance ? navigateToAttendance(todayKey) : setTab('attendance')}
+            className="msg-card-scale msg-hover-ring"
+            style={{ flex: 1, background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}
+          >
             <div className={isDark ? 'msg-glass' : 'msg-glass-light'} style={{ width: 64, height: 64, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14v2a2 2 0 0 0 2 2h2"/><path d="M4 10V8a2 2 0 0 1 2-2h2"/><path d="M20 14v2a2 2 0 0 1-2 2h-2"/><path d="M20 10V8a2 2 0 0 0-2-2h-2"/><line x1="12" y1="11" x2="12" y2="17"/><polyline points="10 13 12 11 14 13"/></svg>
             </div>
@@ -778,7 +983,12 @@ function DashboardTab({ gymId, user, gymName, onNavigate, onViewMemberProfile, s
           </button>
 
           {/* New Membership */}
-          <button onClick={() => onNavigate('memberships')} className="msg-card-scale msg-hover-ring" style={{ flex: 1, background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+          <button
+            type="button"
+            onClick={() => navigateToMemberships ? navigateToMemberships('All') : onNavigate('memberships')}
+            className="msg-card-scale msg-hover-ring"
+            style={{ flex: 1, background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}
+          >
             <div className={isDark ? 'msg-glass' : 'msg-glass-light'} style={{ width: 64, height: 64, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>
             </div>
@@ -786,7 +996,12 @@ function DashboardTab({ gymId, user, gymName, onNavigate, onViewMemberProfile, s
           </button>
 
           {/* Gym Settings */}
-          <button onClick={() => onNavigate('settings')} className="msg-card-scale msg-hover-ring" style={{ flex: 1, background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+          <button
+            type="button"
+            onClick={() => onNavigate('settings')}
+            className="msg-card-scale msg-hover-ring"
+            style={{ flex: 1, background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}
+          >
             <div className={isDark ? 'msg-glass' : 'msg-glass-light'} style={{ width: 64, height: 64, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
             </div>
@@ -795,18 +1010,48 @@ function DashboardTab({ gymId, user, gymName, onNavigate, onViewMemberProfile, s
         </div>
       </div>
       
-      {/* Recent Activity */}
+      {/* Recent Activity — tapping checkin opens attendance date, tapping workout/diet opens member profile */}
       {recentActivity.length > 0 && (
         <div className="msg-fadein-up msg-stagger-4" style={{ padding: '24px 20px 0' }}>
-          <div style={{ fontSize: 16, fontFamily: fb, fontWeight: 600, color: C.text, marginBottom: 16 }}>Recent Activity</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <div style={{ fontSize: 16, fontFamily: fb, fontWeight: 600, color: C.text }}>Recent Activity</div>
+            <button
+              type="button"
+              onClick={() => navigateToAttendance ? navigateToAttendance() : setTab('attendance')}
+              style={{ background: 'none', border: 'none', color: C.accent, fontSize: 12, fontFamily: fb, fontWeight: 600, cursor: 'pointer', padding: 0 }}
+            >
+              See all →
+            </button>
+          </div>
           <div className={isDark ? 'msg-glass' : 'msg-glass-light'} style={{ borderRadius: 16, padding: '8px 16px' }}>
             {recentActivity.map((act, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: i < recentActivity.length - 1 ? `1px solid ${C.border}` : 'none' }}>
+              <div
+                key={i}
+                onClick={() => {
+                  if (act.type === 'checkin') {
+                    const actDate = act.timestamp?.toDate ? act.timestamp.toDate().toISOString().split('T')[0] : todayKey;
+                    if (navigateToAttendance) navigateToAttendance(actDate);
+                    else setTab('attendance');
+                  } else if (act.uid) {
+                    onViewMemberProfile?.({ uid: act.uid, name: act.memberName || 'Member' });
+                  }
+                }}
+                className="msg-card-scale"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0',
+                  borderBottom: i < recentActivity.length - 1 ? `1px solid ${C.border}` : 'none',
+                  cursor: 'pointer'
+                }}
+                title={act.type === 'checkin' ? 'View attendance for this day' : 'View member profile'}
+              >
                 <div style={{ width: 36, height: 36, borderRadius: '50%', background: C.s2, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
                   {act.type === 'workout' ? '🏋️' : act.type === 'diet' ? '🥗' : act.type === 'checkin' ? '📅' : '⚡'}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontFamily: fb, color: C.text }}>{act.type === 'workout' ? 'Logged a workout' : act.type === 'diet' ? 'Logged diet' : 'Checked in'}</div>
+                  <div style={{ fontSize: 13, fontFamily: fb, color: C.text }}>
+                    {act.memberName ? `${act.memberName} ` : ''}
+                    {act.type === 'workout' ? 'Logged a workout' : act.type === 'diet' ? 'Logged diet' : 'Checked in'}
+                  </div>
                   <div style={{ fontSize: 11, fontFamily: fn, color: C.sub }}>{act.timestamp?.toDate ? new Date(act.timestamp.toDate()).toLocaleString() : 'Just now'}</div>
                 </div>
                 <div style={{ fontSize: 13, fontFamily: fb, color: C.accent }}>+{act.points} pts</div>
@@ -815,133 +1060,6 @@ function DashboardTab({ gymId, user, gymName, onNavigate, onViewMemberProfile, s
           </div>
         </div>
       )}
-      
-      {/* Expanded Tile Overlay */}
-      {tileOverlay && createPortal(
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 99999,
-          background: 'rgba(0,0,0,0.1)', backdropFilter: 'blur(1px)', WebkitBackdropFilter: 'blur(1px)',
-          display: 'flex', alignItems: 'flex-start', justifyContent: 'center', 
-          padding: 'calc(env(safe-area-inset-top, 0px) + 140px) 20px 20px',
-          animation: 'msg-fadein 0.2s ease',
-        }} onClick={(e) => { if (e.target === e.currentTarget) setTileOverlay(null); }}>
-          <div className="msg-scale-up" style={{
-            background: C.bg,
-            width: '100%', maxWidth: 400,
-            maxHeight: 'calc(100vh - 190px)',
-            borderRadius: 32,
-            display: 'flex', flexDirection: 'column',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
-            border: `1px solid ${C.border}`,
-            position: 'relative', overflow: 'hidden'
-          }}>
-             {/* Header with Title and 3-dot button */}
-             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px', borderBottom: `1px solid ${C.border}` }}>
-                <div style={{ fontSize: 22, fontFamily: fb, fontWeight: 800, color: C.text }}>
-                  {tileOverlay === 'attendance' && 'Attendance'}
-                  {tileOverlay === 'revenue' && 'Revenue'}
-                  {tileOverlay === 'memberships' && 'Memberships'}
-                  {tileOverlay === 'alerts' && 'At-Risk Members'}
-                </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                   <button onClick={() => { 
-                     if (tileOverlay === 'attendance') setTab('attendance');
-                     else if (tileOverlay === 'revenue') { setMembersSubTab('stats'); setTab('members'); }
-                     else if (tileOverlay === 'memberships') { setMembersSubTab('directory'); setTab('members'); }
-                     else if (tileOverlay === 'alerts') { setMembersSubTab('alerts'); setTab('members'); }
-                     setTileOverlay(null); 
-                   }} style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: '50%', color: C.text, width: 44, height: 44, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s' }}>
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                         <circle cx="5" cy="12" r="2.5"/>
-                         <circle cx="12" cy="12" r="2.5"/>
-                         <circle cx="19" cy="12" r="2.5"/>
-                      </svg>
-                   </button>
-                   <button onClick={() => setTileOverlay(null)} style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: '50%', color: C.text, width: 44, height: 44, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s' }}>
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                   </button>
-                </div>
-             </div>
-
-             {/* Content */}
-             <div style={{ padding: '24px', overflowY: 'auto' }} className="msg-scroll">
-                {tileOverlay === 'attendance' && (
-                  <div>
-                    <div style={{ fontSize: 48, fontFamily: fb, fontWeight: 800, color: C.text, lineHeight: 1, marginBottom: 8 }}>{todayCheckIns}</div>
-                    <div style={{ fontSize: 14, color: C.green, fontFamily: fb, fontWeight: 700, marginBottom: 32 }}>Check-ins Today</div>
-                    
-                    <div style={{ fontSize: 16, fontFamily: fb, fontWeight: 700, color: C.text, marginBottom: 16 }}>This Week's Trend</div>
-                    <div style={{ height: 160 }}>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={chartData} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
-                          <defs>
-                            <linearGradient id="colorAttPopup" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor={C.accent} stopOpacity={isDark ? 0.3 : 0.15}/>
-                              <stop offset="95%" stopColor={C.accent} stopOpacity={0}/>
-                            </linearGradient>
-                          </defs>
-                          <Area type="monotone" dataKey="visitors" stroke={C.accent} strokeWidth={3} fillOpacity={1} fill="url(#colorAttPopup)" />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-                )}
-                
-                {tileOverlay === 'revenue' && (
-                  <div>
-                    <div style={{ fontSize: 48, fontFamily: fb, fontWeight: 800, color: C.text, lineHeight: 1, marginBottom: 8 }}>₹0</div>
-                    <div style={{ fontSize: 14, color: C.blue, fontFamily: fb, fontWeight: 700, marginBottom: 32 }}>Collected Today</div>
-                    <div style={{ padding: '24px', background: C.s1, borderRadius: 16, textAlign: 'center', border: `1px dashed ${C.border}` }}>
-                       <div style={{ fontSize: 32, marginBottom: 12 }}>📊</div>
-                       <div style={{ fontSize: 14, color: C.text, fontFamily: fb, marginBottom: 8 }}>Not enough data</div>
-                       <div style={{ fontSize: 13, color: C.sub, fontFamily: fn, lineHeight: 1.5 }}>Check back later once payments are processed.</div>
-                    </div>
-                  </div>
-                )}
-
-                {tileOverlay === 'memberships' && (
-                  <div>
-                    <div style={{ fontSize: 48, fontFamily: fb, fontWeight: 800, color: C.text, lineHeight: 1, marginBottom: 8 }}>{stats?.expiringCount || 0}</div>
-                    <div style={{ fontSize: 14, color: C.accent, fontFamily: fb, fontWeight: 700, marginBottom: 32 }}>Expiring This Week</div>
-                    
-                    <div style={{ display: 'flex', gap: 16, marginBottom: 24 }}>
-                      <div style={{ flex: 1, background: C.s1, borderRadius: 20, padding: '20px', border: `1px solid ${C.border}` }}>
-                         <div style={{ fontSize: 28, fontFamily: fb, fontWeight: 800, color: C.text, marginBottom: 4 }}>{stats?.active || 0}</div>
-                         <div style={{ fontSize: 12, fontFamily: fb, color: C.sub, textTransform: 'uppercase' }}>Active</div>
-                      </div>
-                      <div style={{ flex: 1, background: C.s1, borderRadius: 20, padding: '20px', border: `1px solid ${C.border}` }}>
-                         <div style={{ fontSize: 28, fontFamily: fb, fontWeight: 800, color: C.text, marginBottom: 4 }}>{stats?.inactive || 0}</div>
-                         <div style={{ fontSize: 12, fontFamily: fb, color: C.sub, textTransform: 'uppercase' }}>Inactive</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {tileOverlay === 'alerts' && (
-                  <div>
-                    <div style={{ fontSize: 48, fontFamily: fb, fontWeight: 800, color: C.text, lineHeight: 1, marginBottom: 8 }}>{stats?.atRisk || 0}</div>
-                    <div style={{ fontSize: 14, color: C.orange, fontFamily: fb, fontWeight: 700, marginBottom: 32 }}>Members At-Risk</div>
-                    
-                    {stats?.atRisk > 0 ? (
-                       <div style={{ background: C.orange + '15', border: `1px solid ${C.orange}30`, borderRadius: 16, padding: '20px' }}>
-                          <div style={{ fontSize: 15, color: C.text, fontFamily: fn, lineHeight: 1.5 }}>
-                            <strong>{stats?.atRisk}</strong> members haven't visited in a few days. Click the 3 dots to view the full list and send them a message!
-                          </div>
-                       </div>
-                    ) : (
-                       <div style={{ background: C.green + '15', border: `1px solid ${C.green}30`, borderRadius: 16, padding: '20px', display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <div style={{ color: C.green }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-                          <div style={{ fontSize: 15, color: C.text, fontFamily: fb }}>All members are highly engaged!</div>
-                       </div>
-                    )}
-                  </div>
-                )}
-             </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
     </div>
   );
 }

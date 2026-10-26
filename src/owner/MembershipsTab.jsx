@@ -261,12 +261,16 @@ function PlanForm({ gymId, initial, onSave, onClose }) {
 // ─── Members Membership View ──────────────────────────────────────────────────
 const STATUS_FILTER = ['All', 'Live', 'Expiring Soon', 'Expired', 'No Plan'];
 
-function MembersView({ gymId }) {
+function MembersView({ gymId, initialFilter }) {
   const [members, setMembers] = useState([]);
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('All');
+  const [filter, setFilter] = useState(initialFilter || 'All');
   const [assignModal, setAssignModal] = useState(null); // member obj
+
+  useEffect(() => {
+    if (initialFilter) setFilter(initialFilter);
+  }, [initialFilter]);
 
   useEffect(() => { if (gymId) load(); }, [gymId]);
 
@@ -504,8 +508,16 @@ function AssignPlanModal({ gymId, member, plans, onSave, onClose }) {
 }
 
 // ─── Main Memberships Tab ─────────────────────────────────────────────────────
-export default function MembershipsTab({ gymId, onBack }) {
+export default function MembershipsTab({ gymId, onBack, initialFilter }) {
   const [subTab, setSubTab] = useState('members');
+  const [activeFilter, setActiveFilter] = useState(initialFilter || 'All');
+
+  useEffect(() => {
+    if (initialFilter) {
+      setActiveFilter(initialFilter);
+      setSubTab('members');
+    }
+  }, [initialFilter]);
 
   // Quick stats
   const [stats, setStats] = useState(null);
@@ -548,12 +560,22 @@ export default function MembershipsTab({ gymId, onBack }) {
       {stats && (
         <div style={{ padding: '0 20px', marginBottom: 24, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
           {[
-            { l: 'Live', v: stats.live, c: C.green },
-            { l: 'Expiring', v: stats.expiring, c: C.orange },
-            { l: 'Expired', v: stats.expired, c: C.red },
-            { l: 'No Plan', v: stats.noPlan, c: C.sub },
+            { l: 'Live', v: stats.live, c: C.green, f: 'Live' },
+            { l: 'Expiring', v: stats.expiring, c: C.orange, f: 'Expiring Soon' },
+            { l: 'Expired', v: stats.expired, c: C.red, f: 'Expired' },
+            { l: 'No Plan', v: stats.noPlan, c: C.sub, f: 'No Plan' },
           ].map(s => (
-            <div key={s.l} style={{ padding: '16px 8px', textAlign: 'center', background: C.s1, border: `1px solid ${C.border}`, borderRadius: 16 }}>
+            <div
+              key={s.l}
+              onClick={() => { setActiveFilter(s.f); setSubTab('members'); }}
+              style={{
+                padding: '16px 8px', textAlign: 'center', background: C.s1,
+                border: `1px solid ${activeFilter === s.f && subTab === 'members' ? s.c : C.border}`,
+                borderRadius: 16, cursor: 'pointer', transition: 'transform 0.15s ease, border-color 0.15s ease'
+              }}
+              onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+              onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+            >
               <div style={{ fontFamily: fb, fontSize: 24, fontWeight: 800, color: s.c, lineHeight: 1 }}>{s.v}</div>
               <div style={{ fontSize: 10, color: C.muted, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginTop: 8 }}>{s.l}</div>
             </div>
@@ -577,7 +599,7 @@ export default function MembershipsTab({ gymId, onBack }) {
         </div>
       </div>
 
-      {subTab === 'members' ? <MembersView gymId={gymId} /> : <PlansView gymId={gymId} />}
+      {subTab === 'members' ? <MembersView gymId={gymId} initialFilter={activeFilter} /> : <PlansView gymId={gymId} />}
     </div>
   );
 }

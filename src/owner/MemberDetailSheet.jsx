@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { Card, Lbl, ScoreRing, ModalShell, Spinner, Skeleton } from '../shared/primitives.jsx';
-import { getFBFirestore, getFBAuth } from '../shared/firebase.js';
+import { getFBFirestore, getFBAuth, recordManualCheckIn, getTodayCheckIn } from '../shared/firebase.js';
 import { getStatusFromScore, computeEngagementScore } from '../shared/engagementScore.js';
 
 function getJsDate(field) {
@@ -41,6 +41,43 @@ export default function MemberDetailSheet({ member, gymId, onClose }) {
   const [coachingNotes, setCoachingNotes] = useState(member?.coachingNotes || '');
   const [savingNotes, setSavingNotes] = useState(false);
   const [notesSaved, setNotesSaved] = useState(false);
+
+  // Manual Check-in State
+  const [checkedInToday, setCheckedInToday] = useState(false);
+  const [checkingIn, setCheckingIn] = useState(false);
+  const [checkInMsg, setCheckInMsg] = useState(null);
+
+  useEffect(() => {
+    if (member?.uid && gymId) {
+      getTodayCheckIn(member.uid, gymId).then(v => setCheckedInToday(v)).catch(() => {});
+    }
+  }, [member?.uid, gymId]);
+
+  const handleManualCheckIn = async () => {
+    if (checkingIn || checkedInToday) return;
+    setCheckingIn(true);
+    setCheckInMsg(null);
+    try {
+      const res = await recordManualCheckIn(member.uid, gymId, memberDetail?.name || member?.name);
+      if (res.error) {
+        setCheckInMsg({ type: 'error', text: res.error });
+      } else if (res.alreadyCheckedIn) {
+        setCheckedInToday(true);
+        setCheckInMsg({ type: 'info', text: 'Already checked in today.' });
+      } else {
+        setCheckedInToday(true);
+        setCheckInMsg({ type: 'success', text: 'Checked in successfully!' });
+        setAttendance(prev => [{
+          uid: member.uid, gymId, date: res.date, manual: true, checkedInAt: new Date()
+        }, ...prev]);
+      }
+    } catch (err) {
+      setCheckInMsg({ type: 'error', text: err.message || 'Check-in failed.' });
+    } finally {
+      setCheckingIn(false);
+      setTimeout(() => setCheckInMsg(null), 3000);
+    }
+  };
 
   useEffect(() => {
     if (memberDetail?.coachingNotes !== undefined) {
@@ -373,8 +410,59 @@ export default function MemberDetailSheet({ member, gymId, onClose }) {
               }}>
                 {(memberDetail?.name || '?').charAt(0).toUpperCase()}
               </div>
-              <div style={{ fontSize: 24, fontFamily: fb, fontWeight: 700, color: C.text, marginBottom: 20 }}>
+              <div style={{ fontSize: 24, fontFamily: fb, fontWeight: 700, color: C.text, marginBottom: 16 }}>
                 {memberDetail?.name || 'Unnamed Member'}
+              </div>
+
+              {/* Contextual Manual Check-In Card */}
+              <div style={{ width: '100%', maxWidth: 360, marginBottom: 20 }}>
+                <div style={{
+                  background: checkedInToday ? 'rgba(74, 222, 128, 0.1)' : C.s1,
+                  border: `1px solid ${checkedInToday ? 'rgba(74, 222, 128, 0.3)' : C.border}`,
+                  borderRadius: 16, padding: '12px 16px', display: 'flex',
+                  alignItems: 'center', justifyContent: 'space-between', gap: 12
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{
+                      width: 36, height: 36, borderRadius: 10,
+                      background: checkedInToday ? 'rgba(74, 222, 128, 0.15)' : C.s2,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 16
+                    }}>
+                      {checkedInToday ? '✅' : '📅'}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 13, fontFamily: fb, fontWeight: 700, color: C.text }}>
+                        {checkedInToday ? 'Checked In Today' : 'Not Checked In Today'}
+                      </div>
+                      <div style={{ fontSize: 11, fontFamily: fn, color: checkInMsg?.type === 'error' ? C.red : C.sub }}>
+                        {checkInMsg ? checkInMsg.text : (checkedInToday ? 'Attendance logged for today' : 'Tap to log walk-in attendance')}
+                      </div>
+                    </div>
+                  </div>
+                  {!checkedInToday ? (
+                    <button
+                      onClick={handleManualCheckIn}
+                      disabled={checkingIn}
+                      style={{
+                        background: C.accent, color: '#111', border: 'none',
+                        borderRadius: 10, padding: '8px 14px', fontFamily: fb,
+                        fontWeight: 700, fontSize: 12, cursor: checkingIn ? 'not-allowed' : 'pointer',
+                        display: 'flex', alignItems: 'center', gap: 6, opacity: checkingIn ? 0.7 : 1,
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      {checkingIn ? 'Checking…' : 'Check In'}
+                    </button>
+                  ) : (
+                    <span style={{
+                      background: 'rgba(74, 222, 128, 0.2)', color: C.green,
+                      padding: '3px 8px', borderRadius: 6, fontSize: 10, fontFamily: fb, fontWeight: 800
+                    }}>
+                      LOGGED
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 
