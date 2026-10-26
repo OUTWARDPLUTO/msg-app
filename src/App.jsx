@@ -104,6 +104,24 @@ export default function MSG() {
   const profileResolvingRef = useRef(false);
   const lastResolvedUidRef = useRef(null);
 
+  // ── Network status listener & offline awareness ────────────────────────────
+  const [isOnline, setIsOnline] = useState(() => (typeof navigator !== 'undefined' ? navigator.onLine : true));
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      if (user?.uid) {
+        resolveUserProfile(user, false);
+      }
+    };
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [user]);
+
   // ── Member state (persisted) ────────────────────────────────────────────────
   const [dietGoal, setDietGoalRaw]       = useState(() => load('msg_diet_goal', null));
   const [mealLog, setMealLogRaw]         = useState(() => load('msg_meal_log', []));
@@ -271,6 +289,16 @@ export default function MSG() {
         } else {
           // Firebase reports no active user
           lastResolvedUidRef.current = null;
+          const cachedUser = load('msg_user', null);
+          const cachedGymId = load('msg_gym_id', null);
+
+          // If offline and we have a valid cached session, preserve it!
+          if (typeof navigator !== 'undefined' && !navigator.onLine && cachedUser && cachedGymId) {
+            console.log('[MSG Auth] Device is offline, preserving active session.');
+            setAuthStatus('ready');
+            return;
+          }
+
           if (!profileResolvingRef.current) {
             setUser(null);          save('msg_user', null);
             setGymId(null);         save('msg_gym_id', null);
@@ -414,6 +442,13 @@ export default function MSG() {
       }
 
       // userDoc is NOT in Firestore
+      if (typeof navigator !== 'undefined' && !navigator.onLine && cachedGymId) {
+        console.log('[MSG Auth] Offline and user doc not in Firestore cache, preserving local session.');
+        setAuthStatus('ready');
+        profileResolvingRef.current = false;
+        return;
+      }
+
       console.warn(`[MSG Auth] No user doc at users/${uid}. Performing self-healing check...`);
       const [ownedGym, memberRecord] = await Promise.all([
         findGymByOwnerUid(uid),
@@ -785,42 +820,66 @@ export default function MSG() {
   );
 
   // 6. Role-based routing
-  if (role === 'owner') return (
-    <ErrorBoundary C={C} fn={fn} onRetry={() => { /* just reset error state — don't clear gymId */ }}>
-      <OwnerDashboard
+  const appContent = (() => {
+    if (role === 'owner') return (
+      <ErrorBoundary C={C} fn={fn} onRetry={() => { /* just reset error state — don't clear gymId */ }}>
+        <OwnerDashboard
+          gymId={gymId}
+          gymName={gymName}
+          user={user}
+          onLogout={handleLogout}
+          darkMode={darkMode}
+          onToggleTheme={toggleTheme}
+        />
+      </ErrorBoundary>
+    );
+
+    if (role === 'trainer') return (
+      <TrainerView
         gymId={gymId}
-        gymName={gymName}
         user={user}
         onLogout={handleLogout}
-        darkMode={darkMode}
-        onToggleTheme={toggleTheme}
       />
-    </ErrorBoundary>
-  );
+    );
 
-  if (role === 'trainer') return (
-    <TrainerView
-      gymId={gymId}
-      user={user}
-      onLogout={handleLogout}
-    />
-  );
+    // Default: member app
+    return (
+      <ErrorBoundary C={C} fn={fn} onRetry={() => { /* just reset error state — don't clear gymId */ }}>
+        <MemberApp
+          user={user}
+          gymId={gymId}
+          gymName={gymName}
+          darkMode={darkMode}
+          onToggleTheme={toggleTheme}
+          onLogout={handleLogout}
+          dietGoal={dietGoal}       setDietGoal={setDietGoal}
+          mealLog={mealLog}         setMealLog={setMealLog}
+          weekPlan={weekPlan}       setWeekPlan={setWeekPlan}
+          progressLogs={progressLogs} setProgressLogs={setProgressLogs}
+        />
+      </ErrorBoundary>
+    );
+  })();
 
-  // 6. Default: member app
   return (
-    <ErrorBoundary C={C} fn={fn} onRetry={() => { /* just reset error state — don't clear gymId */ }}>
-      <MemberApp
-        user={user}
-        gymId={gymId}
-        gymName={gymName}
-        darkMode={darkMode}
-        onToggleTheme={toggleTheme}
-        onLogout={handleLogout}
-        dietGoal={dietGoal}       setDietGoal={setDietGoal}
-        mealLog={mealLog}         setMealLog={setMealLog}
-        weekPlan={weekPlan}       setWeekPlan={setWeekPlan}
-        progressLogs={progressLogs} setProgressLogs={setProgressLogs}
-      />
-    </ErrorBoundary>
+    <>
+      {!isOnline && (
+        <div style={{
+          position: 'fixed', top: 'calc(env(safe-area-inset-top, 0px) + 8px)',
+          left: '50%', transform: 'translateX(-50%)', zIndex: 9999,
+          background: 'rgba(26, 26, 30, 0.94)', border: '1px solid rgba(255, 255, 255, 0.15)',
+          backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+          borderRadius: 20, padding: '5px 12px', display: 'flex', alignItems: 'center', gap: 6,
+          boxShadow: '0 4px 16px rgba(0,0,0,0.35)', pointerEvents: 'none',
+        }}>
+          <span style={{ fontSize: 11 }}>📡</span>
+          <span style={{ fontFamily: fn, fontSize: 11, fontWeight: 700, color: '#f59e0b', letterSpacing: '0.02em' }}>
+            Offline Mode
+          </span>
+          <span style={{ fontSize: 10, color: '#888' }}>· local data</span>
+        </div>
+      )}
+      {appContent}
+    </>
   );
 }

@@ -50,20 +50,26 @@ export async function getFBAuth() {
 //   → membershipPlanId (string), membershipPlanName (string), membershipStartDate (timestamp), membershipEndDate (timestamp), membershipStatus (string), updatedAt (timestamp)
 //
 let _db = null;
-let _persistenceInitialized = false;
+let _persistencePromise = null;
 
 export async function getFBFirestore() {
   if (_db) return _db;
   ensureApp();
   _db = firebase.firestore();
 
-  if (!_persistenceInitialized) {
-    _persistenceInitialized = true;
-    // Enable offline persistence non-blocking
-    _db.enablePersistence({ synchronizeTabs: false }).catch(persistErr => {
+  if (!_persistencePromise) {
+    _persistencePromise = _db.enablePersistence({ synchronizeTabs: true }).catch(persistErr => {
+      if (persistErr.code === 'failed-precondition') {
+        // Multiple tabs open; fallback to single-tab persistence
+        return _db.enablePersistence({ synchronizeTabs: false }).catch(() => {});
+      }
       console.warn('[MSG] Persistence unavailable:', persistErr.code);
     });
   }
+
+  try {
+    await _persistencePromise;
+  } catch {}
 
   return _db;
 }
