@@ -501,44 +501,59 @@ function DashboardTab({ gymId, user, gymName, onNavigate, onViewMemberProfile, s
     const unsubs = [];
     let membersDone = false, attendanceDone = false;
 
+    // Safety timeout: ensure skeleton loader terminates even if network is slow/offline
+    const safetyTimer = setTimeout(() => {
+      setLoading(false);
+    }, 2500);
+
     getFBFirestore().then(db => {
       // 1. Members — drives stats KPIs
       unsubs.push(
         db.collection('members').where('gymId', '==', gymId)
           .onSnapshot(snap => {
-            const members = snap.docs.map(d => d.data());
-            const total = members.length;
-            const threeDaysAgo = now - 3 * 86400000;
-            const sevenDaysAgo = now - 7 * 86400000;
-            const active   = members.filter(m => {
-              const la = m.lastActiveAt?.toDate?.()?.getTime() || 0;
-              const score = m.engagementScore !== undefined ? m.engagementScore : null;
-              if (score !== null) return score >= 60;
-              return la > threeDaysAgo;
-            }).length;
-            const atRisk   = members.filter(m => {
-              const la = m.lastActiveAt?.toDate?.()?.getTime() || 0;
-              const score = m.engagementScore !== undefined ? m.engagementScore : null;
-              if (score !== null) return score >= 35 && score < 60;
-              return la <= threeDaysAgo && la > sevenDaysAgo;
-            }).length;
-            const inactive = Math.max(0, total - active - atRisk);
-            const avgScore = total > 0 ? Math.round(members.reduce((s, m) => s + (m.engagementScore || 0), 0) / total) : 0;
-            const weekAgo  = new Date(now - 7 * 86400000);
-            const newMembers = members.filter(m => { const j = m.joinedAt?.toDate?.(); return j && j > weekAgo; }).length;
-            const nowDate = new Date();
-            let liveCount = 0, expiringCount = 0;
-            members.forEach(m => {
-              if (!m.membershipEndDate) return;
-              const end = m.membershipEndDate?.toDate ? m.membershipEndDate.toDate() : new Date(m.membershipEndDate);
-              const daysLeft = Math.ceil((end - nowDate) / 86400000);
-              if (daysLeft >= 0) liveCount++;
-              if (daysLeft >= 0 && daysLeft <= 7) expiringCount++;
-            });
-            setStats({ total, active, atRisk, inactive, avgScore, newMembers, liveCount, expiringCount });
+            try {
+              const now = Date.now();
+              const members = snap.docs.map(d => d.data());
+              const total = members.length;
+              const threeDaysAgo = now - 3 * 86400000;
+              const sevenDaysAgo = now - 7 * 86400000;
+              const active   = members.filter(m => {
+                const la = m.lastActiveAt?.toDate?.()?.getTime() || 0;
+                const score = m.engagementScore !== undefined ? m.engagementScore : null;
+                if (score !== null) return score >= 60;
+                return la > threeDaysAgo;
+              }).length;
+              const atRisk   = members.filter(m => {
+                const la = m.lastActiveAt?.toDate?.()?.getTime() || 0;
+                const score = m.engagementScore !== undefined ? m.engagementScore : null;
+                if (score !== null) return score >= 35 && score < 60;
+                return la <= threeDaysAgo && la > sevenDaysAgo;
+              }).length;
+              const inactive = Math.max(0, total - active - atRisk);
+              const avgScore = total > 0 ? Math.round(members.reduce((s, m) => s + (m.engagementScore || 0), 0) / total) : 0;
+              const weekAgo  = new Date(now - 7 * 86400000);
+              const newMembers = members.filter(m => { const j = m.joinedAt?.toDate?.(); return j && j > weekAgo; }).length;
+              const nowDate = new Date(now);
+              let liveCount = 0, expiringCount = 0;
+              members.forEach(m => {
+                if (!m.membershipEndDate) return;
+                const end = m.membershipEndDate?.toDate ? m.membershipEndDate.toDate() : new Date(m.membershipEndDate);
+                const daysLeft = Math.ceil((end - nowDate) / 86400000);
+                if (daysLeft >= 0) liveCount++;
+                if (daysLeft >= 0 && daysLeft <= 7) expiringCount++;
+              });
+              setStats({ total, active, atRisk, inactive, avgScore, newMembers, liveCount, expiringCount });
+            } catch (err) {
+              console.warn('[DashboardTab] Error parsing members snapshot:', err);
+            } finally {
+              membersDone = true;
+              if (attendanceDone) setLoading(false);
+            }
+          }, (err) => {
+            console.warn('[DashboardTab] Members listener error:', err);
             membersDone = true;
             if (attendanceDone) setLoading(false);
-          }, () => { membersDone = true; if (attendanceDone) setLoading(false); })
+          })
       );
 
       // 2. Attendance logs — drives chart + today's KPI (last 365 days)
@@ -548,12 +563,21 @@ function DashboardTab({ gymId, user, gymName, onNavigate, onViewMemberProfile, s
         db.collection(`attendance/${gymId}/logs`)
           .where('date', '>=', maxDaysAgo)
           .onSnapshot(snap => {
-            const logs = snap.docs.map(d => d.data());
-            setAttendanceLogs(logs);
-            setTodayCheckIns(logs.filter(l => l.date === todayKey).length);
+            try {
+              const logs = snap.docs.map(d => d.data());
+              setAttendanceLogs(logs);
+              setTodayCheckIns(logs.filter(l => l.date === todayKey).length);
+            } catch (err) {
+              console.warn('[DashboardTab] Error parsing attendance snapshot:', err);
+            } finally {
+              attendanceDone = true;
+              if (membersDone) setLoading(false);
+            }
+          }, (err) => {
+            console.warn('[DashboardTab] Attendance listener error:', err);
             attendanceDone = true;
             if (membersDone) setLoading(false);
-          }, () => { attendanceDone = true; if (membersDone) setLoading(false); })
+          })
       );
 
       // 3. Recent activity — drives activity feed
@@ -569,7 +593,10 @@ function DashboardTab({ gymId, user, gymName, onNavigate, onViewMemberProfile, s
 
     }).catch(() => setLoading(false));
 
-    return () => unsubs.forEach(u => u && u());
+    return () => {
+      clearTimeout(safetyTimer);
+      unsubs.forEach(u => u && u());
+    };
   }, [gymId]);
 
   const PERIODS = [
