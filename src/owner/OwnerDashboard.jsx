@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+﻿import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { C, fn, fb } from '../shared/theme.js';
@@ -509,32 +509,46 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
         </ErrorBoundary>
       </div>
 
-      {/* Bottom Nav */}
+      {/* Bottom Nav — pill indicator */}
       <div style={{
-        flexShrink: 0, background: C.bg, borderTop: `1px solid ${C.border}`,
-        display: 'flex', padding: '10px 0 calc(env(safe-area-inset-bottom, 20px) + 6px)',
+        flexShrink: 0,
+        background: isDark ? 'rgba(12,12,12,0.92)' : 'rgba(255,255,255,0.92)',
+        backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+        borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'}`,
+        display: 'flex', padding: '8px 4px calc(env(safe-area-inset-bottom, 16px) + 4px)',
         zIndex: 100,
       }}>
         {NAV.map(n => {
           const active = tab === n.key;
           return (
             <button key={n.key} onClick={() => handleTabChange(n.key)} style={{
-              flex: 1, padding: '10px 4px 8px', background: 'none', border: 'none',
+              flex: 1, padding: '8px 4px 6px', background: 'none', border: 'none',
               cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
               position: 'relative',
             }}>
+              {/* Active pill background */}
+              {active && (
+                <div style={{
+                  position: 'absolute', top: 4, left: '50%', transform: 'translateX(-50%)',
+                  width: 48, height: 32, borderRadius: 12,
+                  background: `${C.accent}18`,
+                  transition: 'all 0.3s cubic-bezier(.22,.68,0,1.2)',
+                }} />
+              )}
               <div style={{
-                transform: active ? 'scale(1.15) translateY(-2px)' : 'scale(1) translateY(0)',
-                transition: 'transform 0.25s cubic-bezier(.22,.68,0,1.4)',
+                position: 'relative',
+                transform: active ? 'scale(1.1) translateY(-1px)' : 'scale(1) translateY(0)',
+                transition: 'transform 0.28s cubic-bezier(.22,.68,0,1.4)',
               }}>
                 <OwnerNavIcon id={n.key} active={active} />
                 {n.key === 'more' && pendingTrainersCount > 0 && (
-                  <div style={{ position: 'absolute', top: -2, right: -4, width: 8, height: 8, borderRadius: '50%', background: C.orange, border: `2px solid ${C.bg}` }} />
+                  <div style={{ position: 'absolute', top: -3, right: -5, width: 8, height: 8, borderRadius: '50%', background: C.orange, border: `2px solid ${isDark ? '#0c0c0c' : '#fff'}` }} />
                 )}
               </div>
               <span style={{
-                fontSize: 10, fontFamily: fb, fontWeight: active ? 600 : 500,
-                color: active ? C.accent : C.muted, transition: 'color 0.2s',
+                fontSize: 10, fontFamily: fb, fontWeight: active ? 700 : 500,
+                color: active ? C.accent : C.muted,
+                transition: 'color 0.2s, font-weight 0.2s',
               }}>
                 {t(`nav.${n.key}`, n.label)}
               </span>
@@ -735,96 +749,96 @@ function DashboardTab({
         <button
           type="button"
           onClick={() => navigateToAttendance ? navigateToAttendance(todayKey) : setTab('attendance')}
-          className={`msg-card-scale msg-hover-ring ${isDark ? 'msg-glass' : 'msg-glass-light'} msg-fadein-up msg-stagger-1`}
+          className={`msg-card-scale msg-fadein-up msg-stagger-1`}
           style={{
-            borderRadius: 16, padding: '16px', textAlign: 'left', cursor: 'pointer',
-            border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
-            background: isDark ? 'rgba(26, 26, 26, 0.45)' : 'rgba(255, 255, 255, 0.55)',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
+            borderRadius: 20, padding: '16px', textAlign: 'left', cursor: 'pointer',
+            border: `1px solid ${isDark ? 'rgba(229,57,53,0.2)' : 'rgba(229,57,53,0.15)'}`,
+            background: isDark ? 'rgba(22, 10, 10, 0.7)' : 'rgba(255, 245, 245, 0.85)',
+            backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+            boxShadow: isDark ? '0 4px 20px rgba(229,57,53,0.12)' : '0 4px 16px rgba(229,57,53,0.08)',
           }}
           title="View today's check-ins"
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <span style={{ fontSize: 12, color: C.sub, fontFamily: fn, fontWeight: 600 }}>Check-ins</span>
-            <span style={{ fontSize: 11, color: C.accent, fontFamily: fb, fontWeight: 700 }}>View →</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 10, background: `${C.accent}22`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <span style={{ fontSize: 10, color: C.accent, fontFamily: fb, fontWeight: 700, letterSpacing: '0.04em' }}>TODAY →</span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <div style={{ fontSize: 32, fontFamily: fb, fontWeight: 800, color: C.text, lineHeight: 1 }}>{todayCheckIns}</div>
-            <svg width="40" height="16" viewBox="0 0 40 16" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round"><path d="M0 12 L8 8 L16 14 L24 4 L32 10 L40 2" /></svg>
-          </div>
-          <div style={{ fontSize: 11, fontFamily: fb, fontWeight: 600, color: C.green }}>Today's total</div>
+          <div style={{ fontSize: 34, fontFamily: fb, fontWeight: 800, color: C.text, lineHeight: 1, marginBottom: 4 }}>{todayCheckIns}</div>
+          <div style={{ fontSize: 11, fontFamily: fb, fontWeight: 600, color: C.sub }}>check-ins today</div>
         </button>
 
         {/* Revenue Today → Revenue Stats */}
         <button
           type="button"
           onClick={() => navigateToRevenue ? navigateToRevenue() : (setMembersSubTab('stats'), setTab('members'))}
-          className={`msg-card-scale msg-hover-ring ${isDark ? 'msg-glass' : 'msg-glass-light'} msg-fadein-up msg-stagger-2`}
+          className={`msg-card-scale msg-fadein-up msg-stagger-2`}
           style={{
-            borderRadius: 16, padding: '16px', textAlign: 'left', cursor: 'pointer',
-            border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
-            background: isDark ? 'rgba(26, 26, 26, 0.45)' : 'rgba(255, 255, 255, 0.55)',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
+            borderRadius: 20, padding: '16px', textAlign: 'left', cursor: 'pointer',
+            border: `1px solid ${isDark ? 'rgba(51,136,255,0.2)' : 'rgba(46,127,223,0.15)'}`,
+            background: isDark ? 'rgba(8, 14, 26, 0.7)' : 'rgba(240, 246, 255, 0.85)',
+            backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+            boxShadow: isDark ? '0 4px 20px rgba(51,136,255,0.10)' : '0 4px 16px rgba(46,127,223,0.08)',
           }}
           title="View revenue analytics"
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <span style={{ fontSize: 12, color: C.sub, fontFamily: fn, fontWeight: 600 }}>Revenue</span>
-            <span style={{ fontSize: 11, color: C.blue, fontFamily: fb, fontWeight: 700 }}>View →</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 10, background: `${C.blue}22`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.blue} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <span style={{ fontSize: 10, color: C.blue, fontFamily: fb, fontWeight: 700, letterSpacing: '0.04em' }}>STATS →</span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <div style={{ fontSize: 32, fontFamily: fb, fontWeight: 800, color: C.text, lineHeight: 1 }}>₹0</div>
-            <svg width="40" height="16" viewBox="0 0 40 16" fill="none" stroke={C.blue} strokeWidth="1.5" strokeLinecap="round"><path d="M0 10 L8 14 L16 4 L24 8 L32 2 L40 12" /></svg>
-          </div>
-          <div style={{ fontSize: 11, fontFamily: fb, fontWeight: 600, color: C.sub }}>Today</div>
+          <div style={{ fontSize: 34, fontFamily: fb, fontWeight: 800, color: C.text, lineHeight: 1, marginBottom: 4 }}>₹0</div>
+          <div style={{ fontSize: 11, fontFamily: fb, fontWeight: 600, color: C.sub }}>today's revenue</div>
         </button>
 
         {/* Renewals Due → Memberships Expiring Soon */}
         <button
           type="button"
           onClick={() => navigateToMemberships ? navigateToMemberships('Expiring Soon') : onNavigate('memberships')}
-          className={`msg-card-scale msg-hover-ring ${isDark ? 'msg-glass' : 'msg-glass-light'} msg-fadein-up msg-stagger-3`}
+          className={`msg-card-scale msg-fadein-up msg-stagger-3`}
           style={{
-            borderRadius: 16, padding: '16px', textAlign: 'left', cursor: 'pointer',
-            border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
-            background: isDark ? 'rgba(26, 26, 26, 0.45)' : 'rgba(255, 255, 255, 0.55)',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
+            borderRadius: 20, padding: '16px', textAlign: 'left', cursor: 'pointer',
+            border: `1px solid ${isDark ? 'rgba(255,92,51,0.2)' : 'rgba(229,90,60,0.15)'}`,
+            background: isDark ? 'rgba(22, 13, 8, 0.7)' : 'rgba(255, 248, 244, 0.85)',
+            backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+            boxShadow: isDark ? '0 4px 20px rgba(255,92,51,0.10)' : '0 4px 16px rgba(229,90,60,0.08)',
           }}
           title="View expiring memberships"
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <span style={{ fontSize: 12, color: C.sub, fontFamily: fn, fontWeight: 600 }}>Renewals Due</span>
-            <span style={{ fontSize: 11, color: C.accent, fontFamily: fb, fontWeight: 700 }}>View →</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 10, background: `${C.orange}22`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.orange} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <span style={{ fontSize: 10, color: C.orange, fontFamily: fb, fontWeight: 700, letterSpacing: '0.04em' }}>VIEW →</span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <div style={{ fontSize: 32, fontFamily: fb, fontWeight: 800, color: C.text, lineHeight: 1 }}>{stats?.expiringCount ?? 0}</div>
-            <svg width="40" height="16" viewBox="0 0 40 16" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round"><path d="M0 4 L8 10 L16 6 L24 14 L32 8 L40 12" /></svg>
-          </div>
-          <div style={{ fontSize: 11, fontFamily: fb, fontWeight: 600, color: C.accent }}>expiring this week</div>
+          <div style={{ fontSize: 34, fontFamily: fb, fontWeight: 800, color: C.text, lineHeight: 1, marginBottom: 4 }}>{stats?.expiringCount ?? 0}</div>
+          <div style={{ fontSize: 11, fontFamily: fb, fontWeight: 600, color: C.sub }}>expiring this week</div>
         </button>
 
         {/* At-Risk → At-Risk Member Alerts */}
         <button
           type="button"
           onClick={() => navigateToMembers ? navigateToMembers('At-Risk', 'alerts') : (setMembersSubTab('alerts'), setTab('members'))}
-          className={`msg-card-scale msg-hover-ring ${isDark ? 'msg-glass' : 'msg-glass-light'} msg-fadein-up msg-stagger-4`}
+          className={`msg-card-scale msg-fadein-up msg-stagger-4`}
           style={{
-            borderRadius: 16, padding: '16px', textAlign: 'left', cursor: 'pointer',
-            border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
-            background: isDark ? 'rgba(26, 26, 26, 0.45)' : 'rgba(255, 255, 255, 0.55)',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
+            borderRadius: 20, padding: '16px', textAlign: 'left', cursor: 'pointer',
+            border: `1px solid ${(stats?.atRisk || 0) > 0 ? (isDark ? 'rgba(229,57,53,0.3)' : 'rgba(229,57,53,0.2)') : (isDark ? 'rgba(34,197,94,0.2)' : 'rgba(45,181,98,0.15)')}`,
+            background: (stats?.atRisk || 0) > 0 ? (isDark ? 'rgba(22, 10, 10, 0.7)' : 'rgba(255, 245, 245, 0.85)') : (isDark ? 'rgba(8, 20, 12, 0.7)' : 'rgba(244, 255, 248, 0.85)'),
+            backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+            boxShadow: (stats?.atRisk || 0) > 0 ? (isDark ? '0 4px 20px rgba(229,57,53,0.12)' : '0 4px 16px rgba(229,57,53,0.08)') : (isDark ? '0 4px 20px rgba(34,197,94,0.08)' : '0 4px 16px rgba(45,181,98,0.06)'),
           }}
           title="View at-risk members"
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <span style={{ fontSize: 12, color: C.sub, fontFamily: fn, fontWeight: 600 }}>At-Risk Members</span>
-            <span style={{ fontSize: 11, color: C.orange, fontFamily: fb, fontWeight: 700 }}>View →</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 10, background: `${(stats?.atRisk || 0) > 0 ? C.red : C.green}22`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={(stats?.atRisk || 0) > 0 ? C.red : C.green} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <span style={{ fontSize: 10, color: (stats?.atRisk || 0) > 0 ? C.red : C.green, fontFamily: fb, fontWeight: 700, letterSpacing: '0.04em' }}>VIEW →</span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <div style={{ fontSize: 32, fontFamily: fb, fontWeight: 800, color: C.text, lineHeight: 1 }}>{stats?.atRisk ?? 0}</div>
-            <svg width="40" height="16" viewBox="0 0 40 16" fill="none" stroke={C.orange} strokeWidth="1.5" strokeLinecap="round"><path d="M0 12 L8 2 L16 8 L24 4 L32 14 L40 6" /></svg>
-          </div>
-          <div style={{ fontSize: 11, fontFamily: fb, fontWeight: 600, color: (stats?.atRisk || 0) > 0 ? '#f87171' : C.muted }}>
+          <div style={{ fontSize: 34, fontFamily: fb, fontWeight: 800, color: C.text, lineHeight: 1, marginBottom: 4 }}>{stats?.atRisk ?? 0}</div>
+          <div style={{ fontSize: 11, fontFamily: fb, fontWeight: 600, color: (stats?.atRisk || 0) > 0 ? C.red : C.green }}>
             {(stats?.atRisk || 0) > 0 ? 'need attention' : 'all good'}
           </div>
         </button>
@@ -970,59 +984,37 @@ function DashboardTab({
 
       {/* Quick Actions */}
       <div className="msg-fadein-up msg-stagger-3" style={{ padding: '0 20px' }}>
-        <div style={{ fontSize: 16, fontFamily: fb, fontWeight: 600, color: C.text, marginBottom: 16 }}>Quick Actions</div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-          {/* Add Member */}
-          <button
-            type="button"
-            onClick={() => navigateToMembers ? navigateToMembers('All', 'directory') : setTab('members')}
-            className="msg-card-scale msg-hover-ring"
-            style={{ flex: 1, background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}
-          >
-            <div className={isDark ? 'msg-glass' : 'msg-glass-light'} style={{ width: 64, height: 64, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-            </div>
-            <div style={{ fontSize: 10, fontFamily: fn, color: C.text, textAlign: 'center', fontWeight: 500 }}>Add Member</div>
-          </button>
-
-          {/* Mark Attendance */}
-          <button
-            type="button"
-            onClick={() => navigateToAttendance ? navigateToAttendance(todayKey) : setTab('attendance')}
-            className="msg-card-scale msg-hover-ring"
-            style={{ flex: 1, background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}
-          >
-            <div className={isDark ? 'msg-glass' : 'msg-glass-light'} style={{ width: 64, height: 64, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14v2a2 2 0 0 0 2 2h2"/><path d="M4 10V8a2 2 0 0 1 2-2h2"/><path d="M20 14v2a2 2 0 0 1-2 2h-2"/><path d="M20 10V8a2 2 0 0 0-2-2h-2"/><line x1="12" y1="11" x2="12" y2="17"/><polyline points="10 13 12 11 14 13"/></svg>
-            </div>
-            <div style={{ fontSize: 10, fontFamily: fn, color: C.text, textAlign: 'center', fontWeight: 500 }}>Mark<br/>Attendance</div>
-          </button>
-
-          {/* New Membership */}
-          <button
-            type="button"
-            onClick={() => navigateToMemberships ? navigateToMemberships('All') : onNavigate('memberships')}
-            className="msg-card-scale msg-hover-ring"
-            style={{ flex: 1, background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}
-          >
-            <div className={isDark ? 'msg-glass' : 'msg-glass-light'} style={{ width: 64, height: 64, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>
-            </div>
-            <div style={{ fontSize: 10, fontFamily: fn, color: C.text, textAlign: 'center', fontWeight: 500 }}>New<br/>Membership</div>
-          </button>
-
-          {/* Gym Settings */}
-          <button
-            type="button"
-            onClick={() => onNavigate('settings')}
-            className="msg-card-scale msg-hover-ring"
-            style={{ flex: 1, background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}
-          >
-            <div className={isDark ? 'msg-glass' : 'msg-glass-light'} style={{ width: 64, height: 64, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            </div>
-            <div style={{ fontSize: 10, fontFamily: fn, color: C.text, textAlign: 'center', fontWeight: 500 }}>Gym<br/>Settings</div>
-          </button>
+        <div style={{ fontSize: 14, fontFamily: fb, fontWeight: 700, color: C.sub, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 14 }}>Quick Actions</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+          {[
+            { label: 'Add Member', color: C.accent, bg: `${C.accent}18`, onClick: () => navigateToMembers ? navigateToMembers('All', 'directory') : setTab('members'),
+              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> },
+            { label: 'Attendance', color: C.blue, bg: `${C.blue}18`, onClick: () => navigateToAttendance ? navigateToAttendance(todayKey) : setTab('attendance'),
+              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.blue} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 16l2 2 4-4"/></svg> },
+            { label: 'Membership', color: C.green, bg: `${C.green}18`, onClick: () => navigateToMemberships ? navigateToMemberships('All') : onNavigate('memberships'),
+              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> },
+            { label: 'Settings', color: C.purple, bg: `${C.purple}18`, onClick: () => onNavigate('settings'),
+              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.purple} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 3.4a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 3.13a1.65 1.65 0 0 0 1-1.51V1a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> },
+          ].map(item => (
+            <button
+              key={item.label}
+              type="button"
+              onClick={item.onClick}
+              className="msg-card-scale"
+              style={{ flex: 1, background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7 }}
+            >
+              <div style={{
+                width: 56, height: 56, borderRadius: 16,
+                background: item.bg,
+                border: `1px solid ${item.color}28`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'transform 0.2s',
+              }}>
+                {item.icon}
+              </div>
+              <div style={{ fontSize: 10, fontFamily: fb, color: C.sub, textAlign: 'center', fontWeight: 600, lineHeight: 1.3 }}>{item.label}</div>
+            </button>
+          ))}
         </div>
       </div>
       
@@ -1060,7 +1052,10 @@ function DashboardTab({
                 }}
                 title={act.type === 'checkin' ? 'View attendance for this day' : 'View member profile'}
               >
-                <div style={{ width: 36, height: 36, borderRadius: '50%', background: C.s2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <div style={{ width: 38, height: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: act.type === 'workout' ? `${C.accent}20` : act.type === 'diet' ? `${C.green}20` : act.type === 'checkin' ? `${C.blue}20` : 'rgba(245,158,11,0.18)',
+                  border: `1px solid ${act.type === 'workout' ? C.accent + '28' : act.type === 'diet' ? C.green + '28' : act.type === 'checkin' ? C.blue + '28' : 'rgba(245,158,11,0.25)'}`,
+                }}>
                   {act.type === 'workout' ? <DumbbellIcon size={16} color={C.accent} /> : act.type === 'diet' ? <SaladIcon size={16} color={C.green} /> : act.type === 'checkin' ? <CalendarIcon size={16} color={C.blue} /> : <ZapIcon size={16} color="#f59e0b" />}
                 </div>
                 <div style={{ flex: 1 }}>

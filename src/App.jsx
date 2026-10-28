@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, lazy, Suspense, Component } from 'react';
-import { THEMES, C, fn } from './shared/theme.js';
+﻿import { useState, useEffect, useRef, lazy, Suspense, Component } from 'react';
+import { THEMES, C, fn, applyThemeVars } from './shared/theme.js';
 import {
   AnimatedWarning,
   AnimatedSignal,
@@ -85,32 +85,36 @@ const save = (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)
 export default function MSG() {
   // ── Theme ──────────────────────────────────────────────────────────────────
   const [darkMode, setDarkMode] = useState(() => load('msg_dark', true));
+
   const toggleTheme = () => {
-    const performTransition = () => {
-      document.documentElement.classList.add('msg-theme-transitioning');
-      setDarkMode(d => {
-        const n = !d;
-        save('msg_dark', n);
-        Object.assign(C, THEMES[n ? 'dark' : 'light']);
-        return n;
-      });
-      setTimeout(() => {
-        document.documentElement.classList.remove('msg-theme-transitioning');
-      }, 420);
+    const next = !darkMode;
+    const nextTheme = THEMES[next ? 'dark' : 'light'];
+
+    const perform = () => {
+      // 1. Write CSS variables FIRST — the browser's CSS engine starts
+      //    interpolating all var(--msg-*) usages before React re-renders.
+      applyThemeVars(nextTheme);
+      // 2. Update the mutable C so components reading C get correct values.
+      Object.assign(C, nextTheme);
+      // 3. Persist & trigger React re-render.
+      save('msg_dark', next);
+      setDarkMode(next);
     };
 
     if (typeof document !== 'undefined' && 'startViewTransition' in document) {
-      document.startViewTransition(() => {
-        performTransition();
-      });
+      // View Transition API: snapshots old frame, runs perform (React re-renders
+      // + CSS vars update), then compositor cross-fades old → new.
+      document.startViewTransition(perform);
     } else {
-      performTransition();
+      perform();
     }
   };
 
+  // Sync body background and theme-color meta on mount + theme change
   useEffect(() => {
-    document.body.style.backgroundColor = C.bg;
-    document.documentElement.style.backgroundColor = C.bg;
+    applyThemeVars(C);
+    document.body.style.background = C.bg;
+    document.documentElement.style.background = C.bg;
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', C.bg);
   }, [darkMode]);
 
@@ -181,8 +185,24 @@ export default function MSG() {
         .msg-bottom-nav { padding-bottom: env(safe-area-inset-bottom, 0px) !important; }
         @supports (height: 100dvh) { .msg-root { height: 100dvh !important; } }
         @supports not (height: 100dvh) { .msg-root { height: 100vh !important; height: -webkit-fill-available !important; } }
-        .msg-root, .msg-root * { transition: background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1), color 0.18s cubic-bezier(0.16, 1, 0.3, 1); }
+        /* Theme color transitions are handled by CSS custom properties (--msg-bg etc.) and View Transition API */
         .msg-scroll::-webkit-scrollbar { display: none; }
+
+        /* ── CSS variable transitions — this is the primary smooth-theme mechanism ── */
+        /* Any element can use var(--msg-bg), var(--msg-text) etc. and get free transitions. */
+        :root {
+          transition:
+            --msg-bg      0s,
+            background-color 0.42s cubic-bezier(0.25, 1, 0.5, 1),
+            color            0.35s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        html, body, #root {
+          background-color: var(--msg-bg, #080808) !important;
+          color: var(--msg-text, #fff);
+          transition:
+            background-color 0.42s cubic-bezier(0.25, 1, 0.5, 1),
+            color            0.35s cubic-bezier(0.25, 1, 0.5, 1);
+        }
 
         /* ── Premium spring animation keyframes ── */
         @keyframes msgFadeSlideUp {

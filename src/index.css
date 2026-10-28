@@ -133,32 +133,34 @@
 }
 
 /* ─── Ultra-Smooth Theme Transition Engine ─── */
-html,
-body,
-#root,
-.msg-root {
-  transition: background-color 0.38s cubic-bezier(0.25, 1, 0.5, 1),
-              color 0.38s cubic-bezier(0.25, 1, 0.5, 1);
+/*
+ * Primary mechanism: CSS custom properties set by applyThemeVars() in theme.js.
+ * When --msg-bg, --msg-text, etc. are updated, any element using them transitions.
+ * Secondary: View Transition API cross-fade via document.startViewTransition().
+ */
+
+/* Give html/body a CSS-var-driven background that transitions */
+html, body, #root, .msg-root {
+  background-color: var(--msg-bg, #080808) !important;
+  color: var(--msg-text, #ffffff);
+  transition:
+    background-color 0.42s cubic-bezier(0.25, 1, 0.5, 1),
+    color            0.35s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* Coordinated hardware-accelerated surface transition during theme toggling */
-.msg-theme-transitioning,
-.msg-theme-transitioning *,
-.msg-theme-transitioning *::before,
-.msg-theme-transitioning *::after {
-  transition: background 0.38s cubic-bezier(0.25, 1, 0.5, 1) !important,
-              background-color 0.38s cubic-bezier(0.25, 1, 0.5, 1) !important,
-              color 0.38s cubic-bezier(0.25, 1, 0.5, 1) !important,
-              border-color 0.38s cubic-bezier(0.25, 1, 0.5, 1) !important,
-              box-shadow 0.38s cubic-bezier(0.25, 1, 0.5, 1) !important,
-              fill 0.38s cubic-bezier(0.25, 1, 0.5, 1) !important,
-              stroke 0.38s cubic-bezier(0.25, 1, 0.5, 1) !important;
+/* View Transition API cross-fade — smooth compositor-level swap */
+::view-transition-old(root) {
+  animation: msg-theme-out 0.32s cubic-bezier(0.4, 0, 1, 1) forwards;
 }
-
-/* Native View Transition API cross-fade (Chromium, Android WebView, Edge, Safari 18+) */
-::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 0.35s;
-  animation-timing-function: cubic-bezier(0.25, 1, 0.5, 1);
+  animation: msg-theme-in 0.38s cubic-bezier(0, 0, 0.2, 1) forwards;
+}
+@keyframes msg-theme-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+@keyframes msg-theme-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 

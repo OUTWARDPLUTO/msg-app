@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { C, fn, fb } from './theme.js';
 
@@ -37,16 +37,19 @@ export function UserAvatar({ user, size = 36, fontSize = 12 }) {
 
 // ─── Card ─────────────────────────────────────────────────────────────────────
 export const Card = ({ children, style: s = {}, onClick, className: c = '' }) => {
+  const dk = !(C.isLight);
   return (
     <div
       onClick={onClick}
       className={`msg-card-scale ${c}`}
       style={{
-        background: C.s3,
-        border: `1px solid ${C.border}`,
-        borderRadius: 24,
+        background: dk ? 'rgba(22,22,22,0.72)' : 'rgba(255,255,255,0.82)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: `1px solid ${dk ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'}`,
+        borderRadius: 20,
         padding: 16,
-        boxShadow: C.cardShadow,
+        boxShadow: dk ? '0 4px 24px rgba(0,0,0,0.4)' : '0 4px 16px rgba(0,0,0,0.05)',
         cursor: onClick ? 'pointer' : 'default',
         ...s,
       }}
@@ -224,15 +227,15 @@ export function SettingsToggle({ on, onTap }) {
     <div
       onClick={onTap}
       style={{
-        width: 44, height: 24, borderRadius: 12,
-        background: on ? C.accent : C.s4, cursor: 'pointer',
-        position: 'relative', transition: 'background 0.25s', flexShrink: 0,
+        width: 48, height: 28, borderRadius: 14,
+        background: on ? C.accent : (C.isLight ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.12)'), cursor: 'pointer',
+        position: 'relative', transition: 'background 0.28s cubic-bezier(.22,.68,0,1.2)', flexShrink: 0,
       }}
     >
       <div style={{
-        position: 'absolute', top: 3, left: on ? 23 : 3,
-        width: 18, height: 18, borderRadius: '50%',
-        background: on ? '#000' : C.muted, transition: 'left 0.25s',
+        position: 'absolute', top: 4, left: on ? 24 : 4,
+        width: 20, height: 20, borderRadius: '50%',
+        background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.3)', transition: 'left 0.28s cubic-bezier(.22,.68,0,1.2)',
       }} />
     </div>
   );
