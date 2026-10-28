@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
+import { EmptyTrainersIllustration } from '../components/visuals/index.js';
 import { Card, Spinner, Skeleton } from '../shared/primitives.jsx';
 import { getFBFirestore } from '../shared/firebase.js';
 
@@ -105,7 +106,7 @@ export default function GymTrainersTab({ gymId, onBack }) {
               <div style={{ fontSize: 13, color: C.sub, fontFamily: fb, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 16 }}>Active Trainers ({active.length})</div>
               {active.length === 0 ? (
                 <div style={{ background: C.s1, border: `1px dashed ${C.border}`, borderRadius: 16, padding: '40px 20px', textAlign: 'center' }}>
-                  <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.5 }}>👟</div>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><EmptyTrainersIllustration size={56} /></div>
                   <div style={{ fontFamily: fb, fontSize: 16, color: C.text, marginBottom: 4 }}>No Active Trainers</div>
                   <div style={{ color: C.sub, fontSize: 13, fontFamily: fn }}>Trainers will appear here once approved.</div>
                 </div>

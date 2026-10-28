@@ -3,14 +3,15 @@ import { C, fn, fb } from '../shared/theme.js';
 import { UserAvatar } from '../shared/primitives.jsx';
 import { sanitizeString, validateNumber } from '../shared/security.js';
 import { Lbl } from './primitives.jsx';
+import { DiamondIcon, UserIcon, SettingsIcon, GlobeIcon, LogoutIcon } from '../components/visuals';
 // ─── Profile Dropdown ────────────────────────────────────────────────────────
 export function ProfileDropdown({ onClose, onNavigate, onLogout, user, darkMode }) {
   const items = [
-    { icon: '💎', label: 'MSG Premium', sub: 'Unlock advanced AI & analytics', action: 'premium' },
-    { icon: '👤', label: 'View Profile', sub: 'Stats, achievements & goals', action: 'profile' },
-    { icon: '⚙️', label: 'Settings', sub: 'Units, notifications, preferences', action: 'settings' },
-    { icon: '🌐', label: 'Language', sub: 'English (IN) · change anytime', action: 'language' },
-    { icon: '🚪', label: 'Logout', sub: 'Sign out of MSG', action: 'logout', danger: true },
+    { icon: <DiamondIcon size={18} color="#38BDF8" />, label: 'MSG Premium', sub: 'Unlock advanced AI & analytics', action: 'premium' },
+    { icon: <UserIcon size={18} color={C.text} />, label: 'View Profile', sub: 'Stats, achievements & goals', action: 'profile' },
+    { icon: <SettingsIcon size={18} color={C.text} />, label: 'Settings', sub: 'Units, notifications, preferences', action: 'settings' },
+    { icon: <GlobeIcon size={18} color={C.text} />, label: 'Language', sub: 'English (IN) · change anytime', action: 'language' },
+    { icon: <LogoutIcon size={18} color={C.red} />, label: 'Logout', sub: 'Sign out of MSG', action: 'logout', danger: true },
   ];
   return (
     <>
@@ -41,7 +42,7 @@ export function ProfileDropdown({ onClose, onNavigate, onLogout, user, darkMode 
           }}
             onMouseEnter={e => e.currentTarget.style.background = C.s3}
             onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-            <span style={{ fontSize: 17 }}>{item.icon}</span>
+            <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 22, flexShrink: 0 }}>{item.icon}</span>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 500, color: item.danger ? C.red : C.text }}>{item.label}</div>
               <div style={{ fontSize: 11, color: C.muted, marginTop: 1 }}>{item.sub}</div>

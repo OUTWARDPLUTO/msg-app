@@ -1,10 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
+import {
+  ProductCategoryIcon,
+  EmptyStoreIllustration
+} from '../components/visuals/index.js';
 import { Card, Lbl, Spinner, ModalShell, Skeleton } from '../shared/primitives.jsx';
 import { getFBFirestore, serverTimestamp, uploadFile } from '../shared/firebase.js';
 
 const CATS = ['Protein', 'Creatine', 'Vitamins', 'Pre-Workout', 'BCAA', 'Fat Burner', 'Accessories', 'Other'];
-const CAT_ICONS = { Protein: '🥛', Creatine: '⚡', Vitamins: '💊', 'Pre-Workout': '🔥', BCAA: '💉', 'Fat Burner': '🌡️', Accessories: '🎽', Other: '📦' };
+const CAT_ICONS = { Protein: 'Protein', Creatine: 'Creatine', Vitamins: 'Vitamins', 'Pre-Workout': 'Pre-Workout', BCAA: 'BCAA', 'Fat Burner': 'Fat Burner', Accessories: 'Accessories', Other: 'Other' };
 
 const EMPTY_FORM = { name: '', description: '', price: '', category: 'Protein', inStock: true, imageUrl: '' };
 
@@ -120,7 +124,7 @@ function ProductModal({ gymId, initial, onSave, onClose }) {
               }}>
                 {imagePreview
                   ? <img src={imagePreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setImagePreview('')} />
-                  : <span style={{ fontSize: 32, opacity: 0.4 }}>📦</span>
+                  : <ProductCategoryIcon category="Other" size={32} color={C.muted} />
                 }
               </div>
               <div style={{ flex: 1 }}>
@@ -338,7 +342,7 @@ export default function StoreTab({ gymId, setBackHandler }) {
       ) : filtered.length === 0 ? (
         <div style={{ padding: '40px 20px', textAlign: 'center' }}>
           <div style={{ background: C.s1, border: `1px dashed ${C.border}`, borderRadius: 24, padding: '48px 24px' }}>
-            <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.8 }}>🛒</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}><EmptyStoreIllustration size={64} /></div>
             <div style={{ fontFamily: fb, fontSize: 18, color: C.text, marginBottom: 8 }}>Empty Store</div>
             <div style={{ fontSize: 14, color: C.sub, fontFamily: fn, marginBottom: 24, lineHeight: 1.5, maxWidth: 260, margin: '0 auto 24px' }}>
               Add supplements and merchandise for members to purchase.
@@ -365,7 +369,7 @@ export default function StoreTab({ gymId, setBackHandler }) {
               }}>
                 {p.imageUrl
                   ? <img src={p.imageUrl} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.currentTarget.style.display = 'none'; }} />
-                  : <span style={{ fontSize: 32, opacity: 0.5 }}>{CAT_ICONS[p.category] || '📦'}</span>
+                  : <ProductCategoryIcon category={p.category} size={32} color={C.muted} />
                 }
               </div>
               

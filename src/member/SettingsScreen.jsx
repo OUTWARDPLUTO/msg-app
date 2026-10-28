@@ -1,5 +1,19 @@
 import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
+import {
+  BellIcon,
+  WarningIcon,
+  DumbbellIcon,
+  BarChartIcon,
+  AnimatedFlame,
+  MegaphoneIcon,
+  LockIcon,
+  ClockIcon,
+  WaterDropIcon,
+  MoonIcon,
+  SunIcon,
+  UndoIcon
+} from '../components/visuals/index.js';
 import { Card, Lbl } from './primitives.jsx';
 import { ModalShell } from './ProfileScreen.jsx';
 import {
@@ -43,7 +57,7 @@ async function scheduleProgressReminder(timeStr) {
     await LocalNotifications.schedule({
       notifications: [{
         id: NOTIF_PROGRESS_ID,
-        title: '📊 Time to log your progress!',
+        title: 'Time to log your progress!',
         body: 'Record your weight, measurements & notes for today.',
         schedule: { on: { hour: h, minute: m }, allowWhileIdle: true, repeats: true },
         smallIcon: 'ic_launcher_foreground', channelId: 'msg_reminders',
@@ -73,7 +87,7 @@ async function scheduleWaterReminders(intervalHours, dndStart, dndEnd) {
       if (inDND) continue;
       notifications.push({
         id: nid++,
-        title: '💧 Drink some water!',
+        title: 'Drink some water!',
         body: 'Staying hydrated keeps your energy up and performance sharp.',
         schedule: { on: { hour: h, minute: min }, allowWhileIdle: true, repeats: true },
         smallIcon: 'ic_launcher_foreground', channelId: 'msg_reminders',
@@ -197,7 +211,7 @@ function NotificationSettings({ uid }) {
       <div style={{ background: C.s2, border: `1px solid ${C.border}`, borderRadius: 16, padding: '16px 16px 14px', marginBottom: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
           <div style={{ flex: 1, paddingRight: 12 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>🔔 Push Notifications</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.text, display: 'flex', alignItems: 'center', gap: 8 }}><BellIcon size={16} color={C.accent} /><span>Push Notifications</span></div>
             <div style={{ fontSize: 11, color: C.muted, marginTop: 2, lineHeight: 1.4 }}>
               Get alerts from your gym and activity reminders. Permission is only requested when you turn this on.
             </div>
@@ -212,7 +226,7 @@ function NotificationSettings({ uid }) {
 
         {permDenied && (
           <div style={{ fontSize: 11, color: C.red, marginBottom: 10, padding: '8px 12px', background: C.red + '18', borderRadius: 8, lineHeight: 1.5 }}>
-            ⚠️ Notification permission denied. Go to Android Settings → Apps → MSG → Notifications to enable it.
+            Notification permission denied. Go to Android Settings → Apps → MSG → Notifications to enable it.
           </div>
         )}
 
@@ -222,14 +236,14 @@ function NotificationSettings({ uid }) {
               Notification Categories
             </div>
             {[
-              { key: 'workout',         label: '🏋️ Workout Reminders',     sub: 'Workout plan and exercise tips' },
-              { key: 'progress',        label: '📊 Progress Log Reminders', sub: 'Daily progress tracking prompts' },
-              { key: 'inactivity',      label: '🔥 Come-back Nudges',       sub: "Gentle reminders when you haven't trained" },
-              { key: 'promotional',     label: '📣 Gym Announcements',      sub: 'Campaigns and offers from your gym (optional)' },
-            ].map(({ key, label, sub }) => (
+              { key: 'workout',         label: 'Workout Reminders',         sub: 'Workout plan and exercise tips', icon: <DumbbellIcon size={14} color={C.accent} /> },
+              { key: 'progress',        label: 'Progress Log Reminders',    sub: 'Daily progress tracking prompts', icon: <BarChartIcon size={14} color={C.accent} /> },
+              { key: 'inactivity',      label: 'Come-back Nudges',          sub: "Gentle reminders when you haven't trained", icon: <AnimatedFlame size={14} /> },
+              { key: 'promotional',     label: 'Gym Announcements',         sub: 'Campaigns and offers from your gym (optional)', icon: <MegaphoneIcon size={14} color={C.accent} /> },
+            ].map(({ key, label, sub, icon }) => (
               <div key={key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: `1px solid ${C.border}` }}>
                 <div>
-                  <div style={{ fontSize: 13, color: C.text, fontWeight: 500 }}>{label}</div>
+                  <div style={{ fontSize: 13, color: C.text, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>{icon}<span>{label}</span></div>
                   <div style={{ fontSize: 11, color: C.muted, marginTop: 1 }}>{sub}</div>
                 </div>
                 <div onClick={() => togglePushPref(key)} style={{ width: 44, height: 24, borderRadius: 12, background: pushPrefs[key] ? C.accent : C.s4, cursor: 'pointer', position: 'relative', transition: 'background 0.25s', flexShrink: 0 }}>
@@ -238,7 +252,7 @@ function NotificationSettings({ uid }) {
               </div>
             ))}
             <div style={{ fontSize: 11, color: C.muted, marginTop: 8, padding: '6px 0' }}>
-              🔒 Membership &amp; payment alerts are always delivered.
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><LockIcon size={11} color={C.muted} /> Membership &amp; payment alerts are always delivered.</span>
             </div>
             <button onClick={savePushPrefs} style={{ width: '100%', background: pushSaved ? C.green + '22' : C.accent, border: 'none', borderRadius: 12, padding: '11px', color: pushSaved ? C.green : '#000', fontFamily: fn, fontWeight: 800, fontSize: 12, cursor: 'pointer', marginTop: 10, transition: 'all 0.3s' }}>
               {pushSaved ? '✓ Preferences Saved!' : 'Save Notification Preferences'}
@@ -249,21 +263,21 @@ function NotificationSettings({ uid }) {
 
       {/* ── Local Reminders Card ─────────────────────────────────────────── */}
       <div style={{ background: C.s2, border: `1px solid ${C.border}`, borderRadius: 16, padding: '16px 16px 14px' }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 4 }}>⏰ Local Reminders</div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}><ClockIcon size={16} color={C.accent} /><span>Local Reminders</span></div>
         <div style={{ fontSize: 11, color: C.muted, marginBottom: 14 }}>
           Water and progress reminders run offline on-device — no internet needed.
         </div>
 
         {/* Progress reminder */}
         <div style={{ marginBottom: 18 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 3 }}>📊 Daily Progress Reminder</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 3, display: 'flex', alignItems: 'center', gap: 6 }}><BarChartIcon size={14} color={C.accent} /><span>Daily Progress Reminder</span></div>
           <div style={{ fontSize: 11, color: C.muted, marginBottom: 8 }}>Pick a time — you'll get a daily reminder to log your weight &amp; measurements.</div>
           <input type="time" value={progressTime} onChange={e => setProgressTime(e.target.value)} style={{ ...selStyle, width: 'auto' }} />
         </div>
 
         {/* Water reminder interval */}
         <div style={{ marginBottom: 18 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 3 }}>💧 Water Reminder Interval</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 3, display: 'flex', alignItems: 'center', gap: 6 }}><WaterDropIcon size={14} color="#06b6d4" /><span>Water Reminder Interval</span></div>
           <div style={{ fontSize: 11, color: C.muted, marginBottom: 8 }}>How often should we remind you to drink water? (6 AM – 10 PM)</div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {[
@@ -285,7 +299,7 @@ function NotificationSettings({ uid }) {
         {/* DND window */}
         {waterInterval !== 'off' && (
           <div style={{ marginBottom: 18, background: C.s3, borderRadius: 12, padding: '12px 14px' }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 3 }}>🌙 Do Not Disturb</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 3, display: 'flex', alignItems: 'center', gap: 6 }}><MoonIcon size={14} color={C.sub} /><span>Do Not Disturb</span></div>
             <div style={{ fontSize: 11, color: C.muted, marginBottom: 10 }}>No reminders (local or push) during these hours.</div>
             <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
               <div style={{ flex: 1 }}>
@@ -307,7 +321,7 @@ function NotificationSettings({ uid }) {
 
         {localDenied && (
           <div style={{ fontSize: 11, color: C.red, marginBottom: 10, padding: '8px 12px', background: C.red + '18', borderRadius: 8 }}>
-            ⚠️ Notification permission denied. Enable it in Android Settings → Apps → MSG → Notifications.
+            Notification permission denied. Enable it in Android Settings → Apps → MSG → Notifications.
           </div>
         )}
 
@@ -350,7 +364,7 @@ export default function SettingsScreen({ onClose, onResetDiet, onResetWorkout, d
         {
           label: 'Theme', sub: darkMode ? 'Dark mode — tap to switch to Light' : 'Light mode — tap to switch to Dark', custom: (
             <button onClick={onToggleTheme} style={{ padding: '5px 16px', borderRadius: 10, background: C.accent, color: '#111', border: 'none', fontFamily: fb, fontWeight: 700, fontSize: 11, cursor: 'pointer', boxShadow: C.accentShadow }}>
-              {darkMode ? '☀️ Light' : '🌙 Dark'}
+              {darkMode ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><SunIcon size={13} color={C.text} />Light</span> : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><MoonIcon size={13} color={C.text} />Dark</span>}
             </button>
           )
         },
@@ -410,7 +424,7 @@ export default function SettingsScreen({ onClose, onResetDiet, onResetWorkout, d
           <div style={{ background: C.s2, border: `1px solid ${C.border}`, borderRadius: 14, padding: '14px 16px' }}>
             <div style={{ fontSize: 14, color: C.text, fontWeight: 500, marginBottom: 4 }}>Reconfigure Nutrition Plan</div>
             <div style={{ fontSize: 12, color: C.muted, marginBottom: 14, lineHeight: 1.5 }}>Reset your goal, calorie target, macro split, and dietary preferences.</div>
-            <button onClick={() => { onResetDiet(); onClose(); }} style={{ width: '100%', background: C.orange + '18', border: `1px solid ${C.orange}44`, borderRadius: 10, padding: '11px', color: C.orange, fontFamily: fb, fontWeight: 700, fontSize: 12, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer' }}>↩ Reset &amp; Reconfigure</button>
+            <button onClick={() => { onResetDiet(); onClose(); }} style={{ width: '100%', background: C.orange + '18', border: `1px solid ${C.orange}44`, borderRadius: 10, padding: '11px', color: C.orange, fontFamily: fb, fontWeight: 700, fontSize: 12, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer' }}><span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><UndoIcon size={13} color={C.orange} />Reset &amp; Reconfigure</span></button>
           </div>
         </div>
         <div style={{ marginTop: 8, padding: '12px 14px', background: C.s2, borderRadius: 12, border: `1px solid ${C.border}` }}>

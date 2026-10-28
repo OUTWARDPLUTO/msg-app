@@ -1,5 +1,5 @@
 /* src/index.css */
-/* Legacy ambient glow and embers removed in favor of minimalist styling in components */
+@import './components/visuals/visuals.css';
 
 
 /* Card Hover/Active Scale */

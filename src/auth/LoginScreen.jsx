@@ -4,6 +4,7 @@ import { getFBAuth, setUserDoc, serverTimestamp } from '../shared/firebase.js';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import msgLogoExact from '../assets/msg_logo_exact.svg';
 import msgLogoWhite from '../assets/msg_logo_white.svg';
+import { WarningIcon, AnimatedSpinner } from '../components/visuals';
 
 export default function LoginScreen({ onLogin, darkMode }) {
   const [mode, setMode]       = useState('login');
@@ -206,12 +207,14 @@ export default function LoginScreen({ onLogin, darkMode }) {
         {inp(pass, setPass, 'password', '••••••••', 'new-password')}
 
         {error && (
-          <div style={{ fontSize: 12, color: C.red, marginBottom: 12, padding: '9px 12px', background: C.red + '18', borderRadius: 10, lineHeight: 1.5 }} className="msg-anim-fadein">
-            ⚠️ {error}
+          <div style={{ fontSize: 12, color: C.red, marginBottom: 12, padding: '9px 12px', background: C.red + '18', borderRadius: 10, lineHeight: 1.5, display: 'flex', alignItems: 'center', gap: 6 }} className="msg-anim-fadein">
+            <WarningIcon size={14} color={C.red} /> <span>{error}</span>
           </div>
         )}
         {fbStatus === 'loading' && (
-          <div style={{ fontSize: 11, color: C.muted, marginBottom: 10, textAlign: 'center' }}>Loading Firebase… ⏳</div>
+          <div style={{ fontSize: 11, color: C.muted, marginBottom: 10, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <AnimatedSpinner size={12} color={C.muted} /> Loading Firebase…
+          </div>
         )}
 
         <button onClick={handleEmail} disabled={loading || fbStatus === 'loading'} style={{

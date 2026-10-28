@@ -1,5 +1,10 @@
 import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
+import {
+  AnimatedWarning,
+  CalendarIcon,
+  WarningIcon
+} from '../components/visuals/index.js';
 import { Card, Lbl, Spinner, Skeleton } from '../shared/primitives.jsx';
 import { getFBFirestore, serverTimestamp, recordManualCheckIn } from '../shared/firebase.js';
 
@@ -226,7 +231,7 @@ export default function AttendanceTab({ gymId, onViewMemberProfile, onBack, init
 
       {error ? (
         <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-          <div style={{ fontSize: 36, marginBottom: 12 }}>⚠️</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><AnimatedWarning size={36} /></div>
           <div style={{ fontFamily: fb, fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 8 }}>Unable to load attendance</div>
           <div style={{ color: C.sub, fontSize: 13, fontFamily: fn, marginBottom: 20 }}>{error}</div>
           <button onClick={load} style={{ background: C.accent, color: '#111', border: 'none', borderRadius: 12, padding: '10px 24px', fontFamily: fn, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
@@ -317,7 +322,7 @@ export default function AttendanceTab({ gymId, onViewMemberProfile, onBack, init
                 alignItems: 'center', justifyContent: 'space-between',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 16 }}>📅</span>
+                  <CalendarIcon size={16} color={C.accent} />
                   <div>
                     <div style={{ fontSize: 13, fontFamily: fb, fontWeight: 700, color: C.text }}>
                       Filtered to {selectedDateFilter === todayKey ? 'Today' : selectedDateFilter}
@@ -434,14 +439,14 @@ export default function AttendanceTab({ gymId, onViewMemberProfile, onBack, init
                 background: 'rgba(239, 68, 68, 0.15)', border: `1px solid ${C.red}40`,
                 color: C.red, fontSize: 13, fontFamily: fn, textAlign: 'center', lineHeight: 1.4
               }}>
-                ⚠️ {manualError}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><WarningIcon size={14} color={C.red} />{manualError}</span>
               </div>
             )}
 
             {manualDone ? (
               <div style={{ textAlign: 'center', padding: '40px 0' }}>
                 <div style={{ width: 80, height: 80, borderRadius: '50%', background: manualDone === 'already' ? C.orange + '20' : C.green + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
-                  {manualDone === 'already' ? <span style={{ fontSize: 40 }}>⚠️</span> : <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                  {manualDone === 'already' ? <AnimatedWarning size={40} /> : <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
                 </div>
                 <div style={{ fontFamily: fb, fontSize: 18, fontWeight: 700, color: C.text }}>
                   {manualDone === 'already' ? 'Already checked in today' : `${manualMember?.name} checked in!`}
@@ -549,7 +554,7 @@ export default function AttendanceTab({ gymId, onViewMemberProfile, onBack, init
             {/* Helper warning if QR Verification is not turned on in Gym Settings */}
             {!useQrSetting && (
               <div style={{ background: 'rgba(229,57,53,0.1)', color: C.accent, borderRadius: 16, padding: '12px 16px', fontSize: 13, fontFamily: fn, marginTop: 12, textAlign: 'center', maxWidth: 280 }}>
-                ⚠️ QR check-in is disabled in your Gym Settings. Members cannot scan this right now.
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><WarningIcon size={14} color={C.orange} /> QR check-in is disabled in your Gym Settings. Members cannot scan this right now.</span>
               </div>
             )}
           </div>

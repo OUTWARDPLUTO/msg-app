@@ -1,5 +1,16 @@
 import { useState, useEffect } from 'react';
 import { C, fn, fb, MC } from '../shared/theme.js';
+import {
+  ProductCategoryIcon,
+  PaymentMethodIcon,
+  EmptyStoreIllustration,
+  AnimatedSpinner,
+  LocationPinIcon,
+  CreditCardIcon,
+  WarningIcon,
+  ClockIcon,
+  CheckCircleIcon
+} from '../components/visuals/index.js';
 import { AnatomicalFigure } from '../AnatomicalFigure';
 import { Card, Tag, Lbl, ExCard } from './primitives.jsx';
 import { EX } from './constants.js';
@@ -122,11 +133,11 @@ export function AttendanceHeatMap({ uid, gymId }) {
 }
 
 // ─── Store Section (Member View) ──────────────────────────────────────────────
-const CAT_ICONS_M = { Protein: '🥛', Creatine: '⚡', Vitamins: '💊', 'Pre-Workout': '🔥', BCAA: '💉', 'Fat Burner': '🌡️', Accessories: '🎽', Other: '📦' };
+const CAT_ICONS_M = { Protein: 'Protein', Creatine: 'Creatine', Vitamins: 'Vitamins', 'Pre-Workout': 'Pre-Workout', BCAA: 'BCAA', 'Fat Burner': 'Fat Burner', Accessories: 'Accessories', Other: 'Other' };
 const PAYMENT_METHODS = [
-  { key: 'qr', label: 'Scan & Pay', icon: '📲', sub: 'Scan QR at the counter' },
-  { key: 'razorpay', label: 'Online Pay', icon: '💳', sub: 'Pay via Razorpay' },
-  { key: 'bank', label: 'Bank Transfer', icon: '🏦', sub: 'Direct bank transfer' },
+  { key: 'qr', label: 'Scan & Pay', sub: 'Scan QR at the counter' },
+  { key: 'razorpay', label: 'Online Pay', sub: 'Pay via Razorpay' },
+  { key: 'bank', label: 'Bank Transfer', sub: 'Direct bank transfer' },
 ];
 
 export default function StoreSection({ gymId, setBackHandler }) {
@@ -169,7 +180,7 @@ export default function StoreSection({ gymId, setBackHandler }) {
 
   if (loading) return (
     <div style={{ padding: '40px 0', textAlign: 'center' }}>
-      <div style={{ fontSize: 24, color: C.muted }}>⏳</div>
+      <div style={{ display: 'flex', justifyContent: 'center' }}><AnimatedSpinner size={32} color={C.accent} /></div>
     </div>
   );
 
@@ -201,7 +212,7 @@ export default function StoreSection({ gymId, setBackHandler }) {
 
       {filtered.length === 0 ? (
         <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-          <div style={{ fontSize: 48, marginBottom: 12 }}>🛒</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}><EmptyStoreIllustration size={80} /></div>
           <div style={{ fontFamily: fn, fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 6 }}>
             {products.length === 0 ? 'No products yet' : 'No products in this category'}
           </div>
@@ -229,8 +240,8 @@ export default function StoreSection({ gymId, setBackHandler }) {
               {/* Image */}
               <div style={{ width: '100%', aspectRatio: '1', background: C.s3, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderBottom: `1px solid ${C.border}` }}>
                 {p.imageUrl
-                  ? <img src={p.imageUrl} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement.innerHTML = `<span style="font-size:36px;opacity:0.4">${CAT_ICONS_M[p.category] || '📦'}</span>`; }} />
-                  : <span style={{ fontSize: 36, opacity: 0.4 }}>{CAT_ICONS_M[p.category] || '📦'}</span>
+                  ? <img src={p.imageUrl} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.currentTarget.style.display = 'none'; }} />
+                  : <ProductCategoryIcon category={p.category} size={36} color={C.accent} />
                 }
               </div>
               {/* Info */}
@@ -275,7 +286,7 @@ function ProductDetailSheet({ product, gymInfo, onClose }) {
       <div style={{ margin: '14px 16px 0', borderRadius: 16, overflow: 'hidden', aspectRatio: '16/9', background: C.s3, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {product.imageUrl
           ? <img src={product.imageUrl} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          : <span style={{ fontSize: 56, opacity: 0.3 }}>{CAT_ICONS_M[product.category] || '📦'}</span>
+          : <ProductCategoryIcon category={product.category} size={64} color={C.accent} />
         }
       </div>
 
@@ -322,7 +333,7 @@ function ProductDetailSheet({ product, gymInfo, onClose }) {
                   borderRadius: 12, cursor: 'pointer', textAlign: 'left',
                   transition: 'border-color 0.2s, background 0.2s',
                 }}>
-                  <span style={{ fontSize: 22, flexShrink: 0 }}>{pm.icon}</span>
+                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><PaymentMethodIcon method={pm.key} size={22} color={payMethod === pm.key ? C.accent : C.muted} /></span>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{pm.label}</div>
                     <div style={{ fontSize: 11, color: C.muted, marginTop: 1 }}>{pm.sub}</div>
@@ -335,7 +346,7 @@ function ProductDetailSheet({ product, gymInfo, onClose }) {
             {payMethod === 'qr' && (
               <div style={{ marginTop: 12, padding: '14px', background: C.s3, border: `1px solid ${C.border}`, borderRadius: 12, textAlign: 'center' }}>
                 <div style={{ fontSize: 11, color: C.muted, marginBottom: 8 }}>Ask the gym desk to scan the QR code for payment.</div>
-                <div style={{ fontSize: 13, color: C.sub, fontWeight: 600 }}>📍 Visit the gym counter to pay</div>
+                <div style={{ fontSize: 13, color: C.sub, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><LocationPinIcon size={14} color={C.accent} /><span>Visit the gym counter to pay</span></div>
               </div>
             )}
             {payMethod === 'razorpay' && (
@@ -343,14 +354,14 @@ function ProductDetailSheet({ product, gymInfo, onClose }) {
                 <div style={{ fontSize: 11, color: C.sub, marginBottom: 10, lineHeight: 1.5 }}>Online payment via Razorpay. You'll be directed to a secure payment page.</div>
                 <button style={{ width: '100%', padding: '11px', background: C.blue, border: 'none', borderRadius: 10, color: '#fff', fontFamily: fn, fontWeight: 800, fontSize: 13, cursor: 'pointer' }}
                   onClick={() => { alert('Contact gym for payment link. Integration coming soon!'); }}>
-                  💳 Pay ₹{product.price?.toLocaleString?.()} Now
+                  <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><CreditCardIcon size={15} color="#fff" />Pay ₹{product.price?.toLocaleString?.()} Now</span>
                 </button>
               </div>
             )}
             {payMethod === 'bank' && (
               <div style={{ marginTop: 12, padding: '14px', background: C.s3, border: `1px solid ${C.border}`, borderRadius: 12 }}>
                 <div style={{ fontSize: 11, color: C.muted, marginBottom: 8 }}>Transfer the amount and show confirmation to the gym desk.</div>
-                <div style={{ fontSize: 13, color: C.sub, fontWeight: 600 }}>🏦 Ask gym staff for bank account details</div>
+                <div style={{ fontSize: 13, color: C.sub, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}><PaymentMethodIcon method="bank" size={15} color={C.accent} /><span>Ask gym staff for bank account details</span></div>
               </div>
             )}
           </div>
@@ -406,7 +417,7 @@ export function MembershipCard({ uid, gymId, setBackHandler }) {
           border: `1.5px dashed ${C.border}`, borderRadius: 14, cursor: 'pointer',
           display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left',
         }}>
-          <span style={{ fontSize: 22 }}>💳</span>
+          <CreditCardIcon size={22} color={C.accent} />
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>No active membership</div>
             <div style={{ fontSize: 11, color: C.accent, marginTop: 2, fontWeight: 600 }}>View plans →</div>
@@ -436,7 +447,7 @@ export function MembershipCard({ uid, gymId, setBackHandler }) {
             width: 40, height: 40, borderRadius: 12, flexShrink: 0,
             background: color + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
           }}>
-            {expired ? '⚠️' : expiringSoon ? '⏰' : '✅'}
+            {expired ? <WarningIcon size={16} color={C.red} /> : expiringSoon ? <ClockIcon size={16} color={C.orange} /> : <CheckCircleIcon size={16} color={C.green} />}
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: C.text }}>

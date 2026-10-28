@@ -1,6 +1,15 @@
 import { useState, useEffect, useRef, lazy, Suspense, Component } from 'react';
 import { THEMES, C, fn } from './shared/theme.js';
 import {
+  AnimatedWarning,
+  AnimatedSignal,
+  AnimatedSearch,
+  AnimatedLock,
+  ZapIcon,
+  RefreshIcon,
+  SparklesIcon,
+} from './components/visuals';
+import {
   getFBAuth,
   getFBFirestore,
   getUserDoc,
@@ -36,7 +45,7 @@ export class ErrorBoundary extends Component {
         alignItems: 'center', justifyContent: 'center', padding: '32px 24px',
         fontFamily: fontName || 'sans-serif', textAlign: 'center',
       }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
+        <div style={{ marginBottom: 16 }}><AnimatedWarning size={52} color={colors?.accent || '#E53935'} /></div>
         <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>Something went wrong</div>
         <div style={{ fontSize: 13, color: colors?.sub || '#aaa', marginBottom: 28, lineHeight: 1.6 }}>
           {this.state.error?.message || 'An unexpected error occurred.'}
@@ -671,8 +680,8 @@ export default function MSG() {
 
   const fullPageLoader = (
     <div style={{ background: C.bg, height: '100dvh', maxWidth: 430, margin: '0 auto', padding: 'env(safe-area-inset-top) 20px 20px', display: 'flex', flexDirection: 'column', gap: 24, justifyContent: 'center', alignItems: 'center' }}>
-      <div className="msg-shimmer" style={{ width: 68, height: 68, borderRadius: '50%', background: C.s2, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, marginBottom: 8 }}>
-        ⚡
+      <div className="msg-shimmer" style={{ width: 68, height: 68, borderRadius: '50%', background: C.s2, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+        <ZapIcon size={32} color={C.accent} fill />
       </div>
       <div style={{ fontFamily: fn, fontSize: 18, fontWeight: 700, color: C.text }}>
         Verifying Account…
@@ -697,7 +706,7 @@ export default function MSG() {
   if (authStatus === 'resolution_error') {
     return (
       <div style={{ background: C.bg, height: '100dvh', maxWidth: 430, margin: '0 auto', padding: '32px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', fontFamily: fn }}>
-        <div style={{ fontSize: 52, marginBottom: 16 }}>📡</div>
+        <div style={{ marginBottom: 16 }}><AnimatedSignal size={56} color={C.accent} /></div>
         <div style={{ fontSize: 20, fontWeight: 800, color: C.text, marginBottom: 8 }}>Connection Problem</div>
         <div style={{ fontSize: 13, color: C.sub, marginBottom: 20, lineHeight: 1.6, maxWidth: 320 }}>
           {resolutionError || 'Unable to connect to the database to verify your gym profile.'}
@@ -710,7 +719,9 @@ export default function MSG() {
               color: '#111', fontWeight: 800, fontSize: 14, cursor: 'pointer',
             }}
           >
-            🔄 Retry Connection
+            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <RefreshIcon size={16} color="#111" /> Retry Connection
+            </span>
           </button>
           {load('msg_gym_id', null) && (
             <button
@@ -741,7 +752,7 @@ export default function MSG() {
   if (authStatus === 'profile_missing') {
     return (
       <div style={{ background: C.bg, height: '100dvh', maxWidth: 430, margin: '0 auto', padding: '32px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', fontFamily: fn }}>
-        <div style={{ fontSize: 52, marginBottom: 16 }}>🔍</div>
+        <div style={{ marginBottom: 16 }}><AnimatedSearch size={52} color={C.accent} /></div>
         <div style={{ fontSize: 20, fontWeight: 800, color: C.text, marginBottom: 8 }}>Profile Recovery</div>
         <div style={{ fontSize: 13, color: C.sub, marginBottom: 24, lineHeight: 1.6, maxWidth: 320 }}>
           We authenticated <strong style={{ color: C.text }}>{user?.email || 'your account'}</strong>, but did not find an active gym profile.
@@ -756,7 +767,9 @@ export default function MSG() {
               color: C.text, fontWeight: 700, fontSize: 14, cursor: 'pointer',
             }}
           >
-            🔄 Re-check Database
+            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <RefreshIcon size={16} color={C.text} /> Re-check Database
+            </span>
           </button>
           <button
             onClick={handleSetupNewAccount}
@@ -765,7 +778,9 @@ export default function MSG() {
               color: '#111', fontWeight: 800, fontSize: 14, cursor: 'pointer',
             }}
           >
-            ✨ Set Up Account As New
+            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <SparklesIcon size={16} color="#111" /> Set Up Account As New
+            </span>
           </button>
           <button
             onClick={handleLogout}
@@ -806,7 +821,7 @@ export default function MSG() {
   // 5. Subscription check
   if (gymSubscriptionExpired) return (
     <div style={{ background: C.bg, height: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', textAlign: 'center' }}>
-      <div style={{ fontSize: 64, marginBottom: 16 }}>🔒</div>
+      <div style={{ marginBottom: 16 }}><AnimatedLock size={56} color={C.accent} /></div>
       <div style={{ fontFamily: fn, fontSize: 24, fontWeight: 800, color: C.text, marginBottom: 12 }}>Gym Subscription Inactive</div>
       <div style={{ fontSize: 14, color: C.sub, lineHeight: 1.6, marginBottom: 32 }}>
         Your gym owner's MSG subscription has expired. <br/>
@@ -872,7 +887,7 @@ export default function MSG() {
           borderRadius: 20, padding: '5px 12px', display: 'flex', alignItems: 'center', gap: 6,
           boxShadow: '0 4px 16px rgba(0,0,0,0.35)', pointerEvents: 'none',
         }}>
-          <span style={{ fontSize: 11 }}>📡</span>
+          <AnimatedSignal size={13} color="#f59e0b" />
           <span style={{ fontFamily: fn, fontSize: 11, fontWeight: 700, color: '#f59e0b', letterSpacing: '0.02em' }}>
             Offline Mode
           </span>

@@ -1,5 +1,20 @@
 import { useState, useEffect, useRef } from 'react';
 import { C, fn, fb, MC } from '../shared/theme.js';
+import {
+  AnimatedFlame,
+  AnimatedSpinner,
+  PlayIcon,
+  PauseIcon,
+  SparklesIcon,
+  NotesIcon,
+  RocketIcon,
+  ClockIcon,
+  DumbbellIcon,
+  SettingsIcon,
+  SearchIcon,
+  CheckCircleIcon,
+  WorkoutModalityIcon
+} from '../components/visuals/index.js';
 import { AnatomicalFigure } from '../AnatomicalFigure';
 import { API_URL, callClaude } from './memberData.js';
 import { Card, Tag, Lbl, Hd, ExCard } from './primitives.jsx';
@@ -122,7 +137,7 @@ function WarmupBlock() {
     <div style={{ background: `linear-gradient(135deg,${C.s2},${C.s3})`, border: `1px solid ${C.accent}30`, borderLeft: `3px solid ${C.accent}`, borderRadius: '2px 14px 14px 2px', marginBottom: 14, overflow: 'hidden' }}>
       <div onClick={() => setOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', cursor: 'pointer' }}>
         <div style={{ width: 54, height: 54, borderRadius: 10, background: C.accent + '18', border: `1px solid ${C.accent}30`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <span style={{ fontSize: 22 }}>🔥</span>
+          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><AnimatedFlame size={24} /></span>
           <div style={{ fontSize: 6, color: C.accent, fontFamily: fb, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 2 }}>Warmup</div>
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -139,10 +154,10 @@ function WarmupBlock() {
       {open && (
         <div style={{ borderTop: `1px solid ${C.border}`, padding: '12px 16px 14px' }}>
           <div style={{ fontSize: 12, color: C.muted, marginBottom: 10, lineHeight: 1.5 }}>
-            Tap ▶ on each movement or use <strong style={{ color: C.accent }}>Start All</strong> to auto-advance.
+            Tap play on each movement or use <strong style={{ color: C.accent }}>Start All</strong> to auto-advance.
           </div>
           <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-            <button onClick={e => { e.stopPropagation(); startAll(); }} style={{ flex: 1, padding: '10px', background: C.accent, border: 'none', borderRadius: 10, color: '#111', fontFamily: fb, fontWeight: 800, fontSize: 12, cursor: 'pointer' }}>▶ Start All</button>
+            <button onClick={e => { e.stopPropagation(); startAll(); }} style={{ flex: 1, padding: '10px', background: C.accent, border: 'none', borderRadius: 10, color: '#111', fontFamily: fb, fontWeight: 800, fontSize: 12, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><PlayIcon size={12} color="#111" />Start All</button>
             <button onClick={e => { e.stopPropagation(); resetAll(); }} style={{ padding: '10px 16px', background: C.s4, border: `1px solid ${C.border}`, borderRadius: 10, color: C.sub, fontFamily: fb, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>↺ Reset</button>
           </div>
           {WARMUP_ROUTINE.map((w, i) => {
@@ -170,13 +185,13 @@ function WarmupBlock() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0, alignItems: 'flex-end' }}>
                   {!isActive && !isDone && (
-                    <button onClick={e => { e.stopPropagation(); startItem(i, false); }} style={{ background: C.accent + '20', border: `1px solid ${C.accent}44`, borderRadius: 8, padding: '4px 10px', color: C.accent, fontFamily: fb, fontWeight: 700, fontSize: 11, cursor: 'pointer' }}>▶</button>
+                    <button onClick={e => { e.stopPropagation(); startItem(i, false); }} style={{ background: C.accent + '20', border: `1px solid ${C.accent}44`, borderRadius: 8, padding: '4px 10px', color: C.accent, fontFamily: fb, fontWeight: 700, fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><PlayIcon size={11} color={C.accent} /></button>
                   )}
                   {isActive && running && (
-                    <button onClick={e => { e.stopPropagation(); pauseItem(); }} style={{ background: C.s3, border: `1px solid ${C.border}`, borderRadius: 8, padding: '4px 10px', color: C.sub, fontFamily: fb, fontWeight: 700, fontSize: 11, cursor: 'pointer' }}>⏸</button>
+                    <button onClick={e => { e.stopPropagation(); pauseItem(); }} style={{ background: C.s3, border: `1px solid ${C.border}`, borderRadius: 8, padding: '4px 10px', color: C.sub, fontFamily: fb, fontWeight: 700, fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><PauseIcon size={11} color={C.sub} /></button>
                   )}
                   {isActive && !running && (
-                    <button onClick={e => { e.stopPropagation(); startItem(i, autoRef.current); }} style={{ background: C.accent + '20', border: `1px solid ${C.accent}44`, borderRadius: 8, padding: '4px 10px', color: C.accent, fontFamily: fb, fontWeight: 700, fontSize: 11, cursor: 'pointer' }}>▶</button>
+                    <button onClick={e => { e.stopPropagation(); startItem(i, autoRef.current); }} style={{ background: C.accent + '20', border: `1px solid ${C.accent}44`, borderRadius: 8, padding: '4px 10px', color: C.accent, fontFamily: fb, fontWeight: 700, fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><PlayIcon size={11} color={C.accent} /></button>
                   )}
                   <button onClick={e => { e.stopPropagation(); resetItem(i); }} style={{ background: 'none', border: 'none', color: C.muted, fontSize: 12, cursor: 'pointer', padding: '2px 6px' }}>↺</button>
                   <div style={{ fontSize: 9, color: isDone ? C.green : isActive ? C.accent : C.muted, fontFamily: fb, fontWeight: 600, whiteSpace: 'nowrap' }}>{isDone ? 'Done!' : isActive ? fmt(rem) : w.duration}</div>
@@ -622,7 +637,7 @@ export default function WorkoutSection({ weekPlan, setWeekPlan, user, gymId, set
       sub: 'Be honest — beginners grow fastest with less',
       field: 'level',
       opts: [
-        { label: '🌱 Foundation', sub: 'Can\'t yet do push-ups or squats — starting from zero', val: 'foundation' },
+        { label: 'Foundation', sub: 'Can\'t yet do push-ups or squats — starting from zero', val: 'foundation' },
         { label: 'Beginner', sub: 'Under 1 year of consistent training', val: 'beginner' },
         { label: 'Intermediate', sub: '1–3 years, solid form on basics', val: 'intermediate' },
         { label: 'Advanced', sub: '3+ years, knows periodisation', val: 'advanced' },
@@ -654,14 +669,14 @@ export default function WorkoutSection({ weekPlan, setWeekPlan, user, gymId, set
       {injury === null && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {[
-            { label: 'No injuries', sub: 'I can train freely', val: false, icon: '✅' },
-            { label: 'Yes, I have an injury', sub: 'Tell us what area to protect', val: true, icon: '🩺' },
+            { label: 'No injuries', sub: 'I can train freely', val: false, icon: <CheckCircleIcon size={20} color={C.green} /> },
+            { label: 'Yes, I have an injury', sub: 'Tell us what area to protect', val: true, icon: <WorkoutModalityIcon modality="rehab" size={20} color={C.red} /> },
           ].map(opt => (
             <button key={String(opt.val)} onClick={() => { if (opt.val) setInjuryTyping(true); else { setInjury(false); generatePlan(); } }} style={{
               display: 'flex', alignItems: 'center', gap: 14, padding: '16px 18px',
               background: C.s2, border: `1px solid ${C.border}`, borderRadius: 14, cursor: 'pointer', textAlign: 'left',
             }}>
-              <span style={{ fontSize: 24 }}>{opt.icon}</span>
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28 }}>{opt.icon}</span>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{opt.label}</div>
                 <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>{opt.sub}</div>
@@ -752,7 +767,7 @@ export default function WorkoutSection({ weekPlan, setWeekPlan, user, gymId, set
                   border: `1px solid ${C.accent}44`, borderRadius: 18, cursor: 'pointer', textAlign: 'left',
                   transition: 'transform 0.2s, box-shadow 0.2s',
                 }}>
-                  <div style={{ fontSize: 28, marginBottom: 8 }}>🤖</div>
+                  <div style={{ marginBottom: 8 }}><SparklesIcon size={28} color={C.accent} /></div>
                   <div style={{ fontSize: 16, fontWeight: 800, color: C.accent, marginBottom: 4 }}>Build with AI</div>
                   <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.5 }}>Answer a few questions — get a personalized week plan generated for you. Best for beginners.</div>
                 </button>
@@ -761,7 +776,7 @@ export default function WorkoutSection({ weekPlan, setWeekPlan, user, gymId, set
                   border: `1px solid ${C.border}`, borderRadius: 18, cursor: 'pointer', textAlign: 'left',
                   transition: 'transform 0.2s, box-shadow 0.2s',
                 }}>
-                  <div style={{ fontSize: 28, marginBottom: 8 }}>📋</div>
+                  <div style={{ marginBottom: 8 }}><NotesIcon size={28} color={C.accent} /></div>
                   <div style={{ fontSize: 16, fontWeight: 800, color: C.text, marginBottom: 4 }}>Enter My Plan</div>
                   <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.5 }}>Already have a routine? Type in your exercises — we auto-fill the details using the exercise database.</div>
                 </button>
@@ -820,7 +835,7 @@ export default function WorkoutSection({ weekPlan, setWeekPlan, user, gymId, set
           {/* Loading state */}
           {loading && (
             <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-              <div style={{ fontSize: 36, marginBottom: 16 }}>⚡</div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}><AnimatedSpinner size={44} color={C.accent} /></div>
               <div style={{ fontFamily: fn, fontWeight: 800, fontSize: 18, color: C.accent, marginBottom: 8 }}>Building Your {days}-Day Plan</div>
               <div style={{ color: C.sub, fontSize: 13, lineHeight: 1.5 }}>AI is designing your personalised week…{injury ? ' accounting for your injury' : ''}</div>
               <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 20 }}>
@@ -839,9 +854,9 @@ export default function WorkoutSection({ weekPlan, setWeekPlan, user, gymId, set
                 <div style={{ marginBottom: 10 }}>
                   <div style={{ fontFamily: fn, fontWeight: 800, fontSize: 18, color: C.text, letterSpacing: '-0.02em' }}>{weekPlan.length}-Day Training Plan</div>
                   <div style={{ fontSize: 12, color: C.sub, marginTop: 3 }}>
-                    {level} · {equip}{injury ? ` · 🩺 Injury-safe (${typeof injury === 'string' ? injury.slice(0, 30) : 'adjusted'})` : ''}
+                    <span>{level} · {equip}</span>{injury ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginLeft: 6 }}><WorkoutModalityIcon modality="rehab" size={13} color={C.red} />Injury-safe ({typeof injury === 'string' ? injury.slice(0, 30) : 'adjusted'})</span> : ''}
                   </div>
-                  <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>To change this plan, go to ⚙️ Settings → Reset Workout Plan</div>
+                  <div style={{ fontSize: 11, color: C.muted, marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>To change this plan, go to <SettingsIcon size={12} color={C.muted} /> Settings → Reset Workout Plan</div>
                 </div>
 
                 {/* Day tabs */}
@@ -882,14 +897,14 @@ export default function WorkoutSection({ weekPlan, setWeekPlan, user, gymId, set
                             display: 'flex', alignItems: 'center', gap: 6
                           }}
                         >
-                          <span>🚀</span>
+                          <RocketIcon size={14} color="#111" />
                           <span>Start Guided Workout</span>
                         </button>
                       </div>
                       <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
-                        <span style={{ fontSize: 10, color: C.sub, background: C.s3, padding: '2px 8px', borderRadius: 4 }}>⏱ {d.duration || '50–60 min'}</span>
-                        <span style={{ fontSize: 10, color: C.sub, background: C.s3, padding: '2px 8px', borderRadius: 4 }}>💪 {(d.exercises || []).length} exercises</span>
-                        {injury && <span style={{ fontSize: 10, color: C.orange, background: C.orange + '18', padding: '2px 8px', borderRadius: 4 }}>🩺 Low impact</span>}
+                        <span style={{ fontSize: 10, color: C.sub, background: C.s3, padding: '2px 8px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 4 }}><ClockIcon size={11} color={C.sub} />{d.duration || '50–60 min'}</span>
+                        <span style={{ fontSize: 10, color: C.sub, background: C.s3, padding: '2px 8px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 4 }}><DumbbellIcon size={11} color={C.sub} />{(d.exercises || []).length} exercises</span>
+                        {injury && <span style={{ fontSize: 10, color: C.orange, background: C.orange + '18', padding: '2px 8px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 4 }}><WorkoutModalityIcon modality="rehab" size={11} color={C.orange} />Low impact</span>}
                       </div>
                     </div>
 
@@ -921,13 +936,13 @@ export default function WorkoutSection({ weekPlan, setWeekPlan, user, gymId, set
         <div style={{ padding: '0 16px' }}>
           {(() => {
             const CATS = [
-              { key: 'strength', label: '💪 Strength', color: C.blue },
-              { key: 'bands', label: '🔴 Bands', color: C.orange },
-              { key: 'pilates', label: '🪷 Pilates', color: '#c084fc' },
-              { key: 'yoga', label: '🧘 Yoga', color: C.purple },
-              { key: 'stretch', label: '🤸 Stretch', color: C.teal },
-              { key: 'recovery', label: '🛁 Recovery', color: C.green },
-              { key: 'rehab', label: '🩺 Rehab', color: C.red },
+              { key: 'strength', label: 'Strength', color: C.blue },
+              { key: 'bands', label: 'Bands', color: C.orange },
+              { key: 'pilates', label: 'Pilates', color: '#c084fc' },
+              { key: 'yoga', label: 'Yoga', color: C.purple },
+              { key: 'stretch', label: 'Stretch', color: C.teal },
+              { key: 'recovery', label: 'Recovery', color: C.green },
+              { key: 'rehab', label: 'Rehab', color: C.red },
             ];
             const catColor = CATS.find(c => c.key === libCat)?.color || C.accent;
 
@@ -946,7 +961,7 @@ export default function WorkoutSection({ weekPlan, setWeekPlan, user, gymId, set
               <>
                 {/* Search bar */}
                 <div style={{ position: 'relative', marginBottom: 12 }}>
-                  <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, opacity: 0.4 }}>🔍</span>
+                  <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', pointerEvents: 'none' }}><SearchIcon size={15} color={C.muted} /></span>
                   <input
                     value={libSearch}
                     onChange={e => setLibSearch(e.target.value)}
@@ -988,7 +1003,7 @@ export default function WorkoutSection({ weekPlan, setWeekPlan, user, gymId, set
                           borderRadius: 10, padding: '8px 14px', color: libCat === c.key ? c.color : C.sub,
                           fontFamily: fn, fontWeight: 700, fontSize: 11, textTransform: 'uppercase',
                           letterSpacing: '0.04em', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
-                        }}>{c.label} <span style={{ opacity: 0.5 }}>({EX.filter(e => e.cat === c.key).length})</span></button>
+                        display: 'inline-flex', alignItems: 'center', gap: 6 }}><WorkoutModalityIcon modality={c.key} size={12} color={libCat === c.key ? c.color : C.sub} /><span>{c.label}</span> <span style={{ opacity: 0.5 }}>({EX.filter(e => e.cat === c.key).length})</span></button>
                       ))}
                     </div>
                     {libCat === 'strength' && (

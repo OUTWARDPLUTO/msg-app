@@ -7,6 +7,26 @@ import {
 } from '../shared/firebase.js';
 import msgLogoExact from '../assets/msg_logo_exact.svg';
 import msgLogoWhite from '../assets/msg_logo_white.svg';
+import {
+  AnimatedCelebration,
+  AnimatedTrophy,
+  AnimatedStopwatch,
+  WarningIcon,
+  CopyIcon,
+  ZapIcon,
+  GiftIcon,
+  CalendarIcon,
+  StarBadge,
+  BarChartIcon,
+  KeyIcon,
+  DumbbellIcon,
+  BarbellIcon,
+  LockIcon,
+  ShieldLockIcon,
+  BadgeTrainerIcon,
+  CameraIcon,
+  StoreIcon,
+} from '../components/visuals';
 
 // ─── Keyframe injector ───────────────────────────────────────────────────────
 function injectOnboardingCSS() {
@@ -435,7 +455,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode, onBackToLog
 
   const errorBox = error && (
     <div style={{ color: C.red, fontSize: 12, marginBottom: 14, padding: '9px 12px', background: C.red + '18', borderRadius: 10, lineHeight: 1.5 }}>
-      ⚠️ {error}
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><WarningIcon size={14} color={C.red} /> <span>{error}</span></span>
     </div>
   );
 
@@ -463,7 +483,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode, onBackToLog
   if (screen === 'success') return wrap(
     <>
       <div className="ob-card" style={{ textAlign: 'center', marginBottom: 28 }}>
-        <div className="ob-bounce" style={{ fontSize: 56, marginBottom: 12, display:'inline-block' }}>🎉</div>
+        <div className="ob-bounce" style={{ marginBottom: 12, display:'inline-block' }}><AnimatedCelebration size={64} /></div>
         <div style={{ fontFamily: fn, fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: '-0.02em', marginBottom: 8 }}>
           You're Live!
         </div>
@@ -508,7 +528,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode, onBackToLog
         fontFamily: fn, fontWeight: 700, fontSize: 14, cursor: 'pointer',
         transition: 'all 0.25s',
       }}>
-        {copied ? '✓ Copied to clipboard!' : '📋 Copy Gym Code'}
+        {copied ? '✓ Copied to clipboard!' : <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><CopyIcon size={16} /> Copy Gym Code</span>}
       </button>
 
       <button onClick={() => onGymJoined(createdGym.id, 'owner', createdGym.name)} className="ob-btn ob-card-3" style={{
@@ -526,7 +546,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode, onBackToLog
   if (screen === 'subscription') return wrap(
     <>
       <div className="ob-card" style={{ textAlign: 'center', marginBottom: 24 }}>
-        <div style={{ fontSize: 42, marginBottom: 10 }}>⚡</div>
+        <div style={{ marginBottom: 10 }}><ZapIcon size={42} color={C.accent} fill /></div>
         <div style={{ fontFamily: fn, fontSize: 22, fontWeight: 800, color: C.text, letterSpacing: '-0.02em', marginBottom: 6 }}>
           Activate Your Gym
         </div>
@@ -557,7 +577,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode, onBackToLog
         border: `1px solid ${C.accent}44`, borderRadius: 14,
         padding: '10px 16px', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 10,
       }}>
-        <span style={{ fontSize: 20 }}>🎁</span>
+        <span style={{ display: "inline-flex", alignItems: "center" }}><GiftIcon size={22} color={C.accent} /></span>
         <div>
           <div style={{ fontSize: 12, fontWeight: 800, color: C.accent }}>Early Adopter Offer — Limited Time</div>
           <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>Lock in 50% off before prices go up. Forever.</div>
@@ -582,7 +602,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode, onBackToLog
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <span style={{ fontSize: 20 }}>⏱️</span>
+              <span style={{ display: "inline-flex", alignItems: "center" }}><AnimatedStopwatch size={20} color={subPlan === "trial" ? C.accent : C.muted} running={false} /></span>
               <span style={{ fontFamily: fn, fontSize: 16, fontWeight: 800, color: subPlan === 'trial' ? C.accent : C.text }}>7-Day Trial</span>
               {subPlan === 'trial' && <span style={{ fontSize: 12, color: C.accent }}>✓</span>}
             </div>
@@ -615,7 +635,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode, onBackToLog
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <span style={{ fontSize: 20 }}>📅</span>
+              <span style={{ display: "inline-flex", alignItems: "center" }}><CalendarIcon size={20} color={subPlan === "monthly" ? C.accent : C.muted} /></span>
               <span style={{ fontFamily: fn, fontSize: 16, fontWeight: 800, color: subPlan === 'monthly' ? C.accent : C.text }}>Monthly</span>
               {subPlan === 'monthly' && <span style={{ fontSize: 12, color: C.accent }}>✓</span>}
             </div>
@@ -647,17 +667,12 @@ export default function GymOnboarding({ user, onGymJoined, darkMode, onBackToLog
         }}
       >
         {/* BEST VALUE badge — inline, not absolute */}
-        <div style={{
-          display: 'inline-block', marginBottom: 10,
-          background: C.accent, color: '#111',
-          fontSize: 9, fontFamily: fb, fontWeight: 800, textTransform: 'uppercase',
-          letterSpacing: '0.06em', padding: '3px 10px', borderRadius: 6,
-        }}>⭐ BEST VALUE</div>
+        <div style={{ display: "inline-block", marginBottom: 10 }}><StarBadge text="BEST VALUE" /></div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <span style={{ fontSize: 20 }}>🏆</span>
+              <span style={{ display: "inline-flex", alignItems: "center" }}><AnimatedTrophy size={22} /></span>
               <span style={{ fontFamily: fn, fontSize: 16, fontWeight: 800, color: subPlan === 'yearly' ? C.accent : C.text }}>Yearly</span>
               {subPlan === 'yearly' && <span style={{ fontSize: 12, color: C.accent }}>✓</span>}
             </div>
@@ -682,15 +697,15 @@ export default function GymOnboarding({ user, onGymJoined, darkMode, onBackToLog
       <div className="ob-card-3" style={{ background: C.s2, border: `1px solid ${C.border}`, borderRadius: 14, padding: '14px 16px', marginBottom: 20 }}>
         <div style={{ fontSize: 11, color: C.muted, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>Everything Included</div>
         {[
-          ['📊', 'Member engagement & retention dashboard'],
-          ['⚠️', 'Inactive member alerts & insights'],
-          ['📋', 'Unlimited member CSV import'],
-          ['📅', 'Live attendance tracking'],
-          ['🔑', 'Unique gym code + unlimited members'],
-          ['💪', 'MSG fitness app for all your members'],
-        ].map(([icon, text]) => (
-          <div key={text} style={{ display: 'flex', gap: 10, marginBottom: 7, alignItems: 'center' }}>
-            <span style={{ fontSize: 15 }}>{icon}</span>
+          [<BarChartIcon size={16} color={C.accent} />, 'Member engagement & retention dashboard'],
+          [<WarningIcon size={16} color={C.orange} />, 'Inactive member alerts & insights'],
+          [<CopyIcon size={16} color={C.accent} />, 'Unlimited member CSV import'],
+          [<CalendarIcon size={16} color={C.accent} />, 'Live attendance tracking'],
+          [<KeyIcon size={16} color={C.accent} />, 'Unique gym code + unlimited members'],
+          [<DumbbellIcon size={16} color={C.accent} />, 'MSG fitness app for all your members'],
+        ].map(([iconEl, text], idx) => (
+          <div key={idx} style={{ display: 'flex', gap: 10, marginBottom: 7, alignItems: 'center' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}>{iconEl}</span>
             <span style={{ fontSize: 12, color: C.sub }}>{text}</span>
           </div>
         ))}
@@ -715,7 +730,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode, onBackToLog
       </button>
 
       <div style={{ fontSize: 10, color: C.muted, textAlign: 'center', lineHeight: 1.6 }}>
-        🔒 Secure payment · Cancel anytime · No hidden fees
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><LockIcon size={13} color={C.muted} /> Secure payment · Cancel anytime · No hidden fees</span>
       </div>
     </>
   );
@@ -735,7 +750,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode, onBackToLog
         background: `linear-gradient(135deg, ${C.accent}22, ${C.accent}08)`,
         border: `1px solid ${C.accent}44`, borderRadius: 18, cursor: 'pointer', textAlign: 'left',
       }}>
-        <div style={{ fontSize: 28, marginBottom: 6 }}>🏋️</div>
+        <div style={{ marginBottom: 6 }}><BarbellIcon size={30} color={C.accent} /></div>
         <div style={{ fontFamily: fn, fontSize: 17, fontWeight: 800, color: C.accent, marginBottom: 4 }}>I'm a Gym Owner</div>
         <div style={{ fontSize: 13, color: C.sub, lineHeight: 1.5 }}>Create your gym, manage members, track engagement and retention.</div>
       </button>
@@ -745,7 +760,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode, onBackToLog
         background: C.s2, border: `1px solid ${C.border}`, borderRadius: 18,
         cursor: 'pointer', textAlign: 'left',
       }}>
-        <div style={{ fontSize: 28, marginBottom: 6 }}>💪</div>
+        <div style={{ marginBottom: 6 }}><DumbbellIcon size={28} color={C.text} /></div>
         <div style={{ fontFamily: fn, fontSize: 17, fontWeight: 800, color: C.text, marginBottom: 4 }}>I'm a Gym Member</div>
         <div style={{ fontSize: 13, color: C.sub, lineHeight: 1.5 }}>Enter your gym's 6-character code to join and start training.</div>
       </button>
@@ -755,7 +770,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode, onBackToLog
         background: C.s2, border: `1px solid ${C.border}`, borderRadius: 18,
         cursor: 'pointer', textAlign: 'left',
       }}>
-        <div style={{ fontSize: 24, marginBottom: 6 }}>👟</div>
+        <div style={{ marginBottom: 6 }}><BadgeTrainerIcon size={26} color={C.text} /></div>
         <div style={{ fontFamily: fn, fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 4 }}>I'm a Trainer</div>
         <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.5 }}>Apply to join a gym and manage your assigned members.</div>
       </button>
@@ -777,7 +792,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode, onBackToLog
   if (screen === 'join') return wrap(
     <>
       {backBtn('choice')}
-      <div className="ob-card" style={{ fontSize: 40, marginBottom: 12 }}>🔑</div>
+      <div className="ob-card" style={{ marginBottom: 12 }}><KeyIcon size={44} color={C.accent} /></div>
       <div className="ob-card" style={{ fontFamily: fn, fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 8, letterSpacing: '-0.02em' }}>Enter Gym Code</div>
       <div className="ob-card" style={{ color: C.sub, fontSize: 13, marginBottom: 28, lineHeight: 1.5 }}>
         Ask your gym owner for the 6-character code. Without a valid code, access is not possible.
@@ -801,7 +816,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode, onBackToLog
       </div>
       
       <button onClick={startScanner} style={{ width: '100%', padding: '14px', background: C.s2, border: `1px solid ${C.border}`, borderRadius: 14, color: C.text, fontFamily: fn, fontWeight: 700, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-        <span>📷</span> Scan QR Code Instead
+        <CameraIcon size={18} color={C.text} /> Scan QR Code Instead
       </button>
 
       {errorBox}
@@ -828,7 +843,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode, onBackToLog
       }}>Join Gym →</button>
 
       <div style={{ marginTop: 16, fontSize: 12, color: C.muted, textAlign: 'center', lineHeight: 1.6, padding: '10px 14px', background: C.s2, borderRadius: 12, border: `1px solid ${C.border}` }}>
-        🔐 A valid gym code is required to access MSG as a member. Contact your gym owner if you don't have one.
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><ShieldLockIcon size={14} color={C.muted} /> A valid gym code is required to access MSG as a member. Contact your gym owner if you don't have one.</span>
       </div>
 
       {showScanner && (
@@ -850,7 +865,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode, onBackToLog
           }}>
             {scannerError ? (
               <div style={{ padding: 20, color: C.red, fontSize: 13, textAlign: 'center' }}>
-                ⚠️ Camera Error: {scannerError}
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><WarningIcon size={14} color={C.red} /> Camera Error: {scannerError}</span>
               </div>
             ) : (
               <>
@@ -890,7 +905,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode, onBackToLog
   if (screen === 'trainer') return wrap(
     <>
       {backBtn('choice')}
-      <div className="ob-card" style={{ fontSize: 40, marginBottom: 12 }}>👟</div>
+      <div className="ob-card" style={{ marginBottom: 12 }}><BadgeTrainerIcon size={40} color={C.accent} /></div>
       <div className="ob-card" style={{ fontFamily: fn, fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 8, letterSpacing: '-0.02em' }}>Join as Trainer</div>
       <div className="ob-card" style={{ color: C.sub, fontSize: 13, marginBottom: 28, lineHeight: 1.5 }}>
         Enter the gym's 6-character code to apply as a trainer. The gym owner must approve your application.
@@ -930,7 +945,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode, onBackToLog
   return wrap(
     <>
       {backBtn('choice')}
-      <div className="ob-card" style={{ fontSize: 36, marginBottom: 12 }}>🏗️</div>
+      <div className="ob-card" style={{ marginBottom: 12 }}><StoreIcon size={42} color={C.accent} /></div>
       <div className="ob-card" style={{ fontFamily: fn, fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 8, letterSpacing: '-0.02em' }}>Name Your Gym</div>
       <div className="ob-card" style={{ color: C.sub, fontSize: 13, marginBottom: 24, lineHeight: 1.5 }}>
         We'll generate a unique gym code. You'll choose your plan on the next step.

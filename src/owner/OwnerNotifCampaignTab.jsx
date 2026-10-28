@@ -15,6 +15,17 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
+import {
+  BroadcastIcon,
+  SleepIcon,
+  CreditCardIcon,
+  TargetIcon,
+  ClockIcon,
+  CheckCircleIcon,
+  UploadCloudIcon,
+  BellOffIcon,
+  WarningIcon
+} from '../components/visuals/index.js';
 import { Spinner } from '../shared/primitives.jsx';
 import { getFBFirestore } from '../shared/firebase.js';
 
@@ -37,10 +48,10 @@ function newCampaignId() {
 
 // ─── Audience types ────────────────────────────────────────────────────────────
 const AUDIENCE_TYPES = [
-  { key: 'all',      label: '📢 All active members',    sub: 'Send to everyone currently in your gym' },
-  { key: 'inactive', label: '😴 Inactive members',       sub: 'Members who have not visited recently' },
-  { key: 'plan',     label: '💳 Membership plan',        sub: 'Members on a specific membership plan' },
-  { key: 'selected', label: '🎯 Selected members',       sub: 'Hand-pick specific members to notify' },
+  { key: 'all',      label: 'All active members',    sub: 'Send to everyone currently in your gym', icon: <BroadcastIcon size={16} color={C.accent} /> },
+  { key: 'inactive', label: 'Inactive members',       sub: 'Members who have not visited recently', icon: <SleepIcon size={16} color={C.accent} /> },
+  { key: 'plan',     label: 'Membership plan',        sub: 'Members on a specific membership plan', icon: <CreditCardIcon size={16} color={C.accent} /> },
+  { key: 'selected', label: 'Selected members',       sub: 'Hand-pick specific members to notify', icon: <TargetIcon size={16} color={C.accent} /> },
 ];
 
 // ─── Route options for tap destination ────────────────────────────────────────
@@ -128,9 +139,9 @@ export default function OwnerNotifCampaignTab({ gymId, ownerUid, onBack }) {
       });
     } catch (err) {
       const msg = err?.details?.message || err?.message || 'Send failed. Please try again.';
-      if (msg.includes('limit')) setError('📊 Daily campaign limit reached (max 3 per day). Try again tomorrow.');
-      else if (msg.includes('already-exists')) setError('⚠️ This campaign was already sent.');
-      else setError(`❌ ${msg}`);
+      if (msg.includes('limit')) setError('Daily campaign limit reached (max 3 per day). Try again tomorrow.');
+      else if (msg.includes('already-exists')) setError('This campaign was already sent.');
+      else setError(msg);
       setStep('compose');
     }
     setSending(false);
@@ -151,14 +162,14 @@ export default function OwnerNotifCampaignTab({ gymId, ownerUid, onBack }) {
 
   if (step === 'sent') return (
     <div style={{ padding: '24px 20px', textAlign: 'center' }}>
-      <div style={{ fontSize: 48, marginBottom: 12 }}>{result?.status === 'scheduled' ? '⏰' : '✅'}</div>
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>{result?.status === 'scheduled' ? <ClockIcon size={44} color={C.accent} /> : <CheckCircleIcon size={44} color={C.green} />}</div>
       <div style={{ fontSize: 20, fontWeight: 800, color: C.text, marginBottom: 8 }}>
         {result?.status === 'scheduled' ? 'Campaign Scheduled!' : 'Campaign Sent!'}
       </div>
       {result?.status !== 'scheduled' && (
         <div style={{ fontSize: 13, color: C.sub, lineHeight: 1.6, marginBottom: 24 }}>
-          <div>📤 Delivered to <strong>{result?.successCount || 0}</strong> member{result?.successCount !== 1 ? 's' : ''}</div>
-          {result?.skipCount > 0 && <div style={{ marginTop: 4 }}>🔕 <strong>{result.skipCount}</strong> opted out or in quiet hours</div>}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><UploadCloudIcon size={14} color={C.accent} /><span>Delivered to <strong>{result?.successCount || 0}</strong> member{result?.successCount !== 1 ? 's' : ''}</span></div>
+          {result?.skipCount > 0 && <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><BellOffIcon size={14} color={C.muted} /><span><strong>{result.skipCount}</strong> opted out or in quiet hours</span></div>}
         </div>
       )}
       {result?.status === 'scheduled' && (
@@ -204,7 +215,7 @@ export default function OwnerNotifCampaignTab({ gymId, ownerUid, onBack }) {
 
       <div style={{ background: C.orange + '18', border: `1px solid ${C.orange}44`, borderRadius: 12, padding: '12px 14px', marginBottom: 20 }}>
         <div style={{ fontSize: 12, color: C.orange, lineHeight: 1.5 }}>
-          ⚠️ Members who have opted out of promotional notifications will not receive this message. Max 3 campaigns per day.
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><WarningIcon size={13} color={C.orange} /> Members who have opted out of promotional notifications will not receive this message. Max 3 campaigns per day.</span>
         </div>
       </div>
 
@@ -219,7 +230,7 @@ export default function OwnerNotifCampaignTab({ gymId, ownerUid, onBack }) {
           ← Edit
         </button>
         <button onClick={handleSend} disabled={sending} style={{ flex: 2, background: sending ? C.s3 : C.accent, border: 'none', borderRadius: 12, padding: '13px', color: sending ? C.muted : '#111', fontFamily: fn, fontWeight: 800, fontSize: 13, cursor: sending ? 'default' : 'pointer', transition: 'all 0.2s' }}>
-          {sending ? <Spinner size={16} /> : (scheduleAt ? '⏰ Schedule Campaign' : '📤 Send Now')}
+          {sending ? <Spinner size={16} /> : (scheduleAt ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><ClockIcon size={14} color="#000" />Schedule Campaign</span> : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><UploadCloudIcon size={14} color="#000" />Send Now</span>)}
         </button>
       </div>
     </div>
@@ -310,7 +321,7 @@ export default function OwnerNotifCampaignTab({ gymId, ownerUid, onBack }) {
         <input
           value={title}
           onChange={e => setTitle(e.target.value)}
-          placeholder="Notification title (e.g. 🎉 New Batch Starting!)"
+          placeholder="Notification title (e.g. New Batch Starting!)"
           maxLength={60}
           style={{ ...inputStyle, marginBottom: 8 }}
         />
@@ -371,7 +382,7 @@ export default function OwnerNotifCampaignTab({ gymId, ownerUid, onBack }) {
               </div>
               {c.successCount !== undefined && (
                 <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>
-                  📤 {c.successCount} delivered · {c.skipCount || 0} skipped · Audience: {c.audience?.type}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><UploadCloudIcon size={11} color={C.muted} />{c.successCount} delivered</span> · {c.skipCount || 0} skipped · Audience: {c.audience?.type}
                 </div>
               )}
             </div>

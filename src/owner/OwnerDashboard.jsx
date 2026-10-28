@@ -21,13 +21,29 @@ import OwnerTutorial from './OwnerTutorial.jsx';
 import RevenueDetail from './RevenueDetail.jsx';
 import OwnerNotifCampaignTab from './OwnerNotifCampaignTab.jsx';
 import { useTranslation } from 'react-i18next';
+import {
+  CreditCardIcon,
+  UploadCloudIcon,
+  MegaphoneIcon,
+  UserIcon,
+  SettingsIcon,
+  SmartphoneIcon,
+  BadgeTrainerIcon,
+  WarningIcon,
+  LogoutIcon,
+  StarBadge,
+  DumbbellIcon,
+  SaladIcon,
+  CalendarIcon,
+  ZapIcon
+} from '../components/visuals/index.js';
 
 const NAV = [
-  { key: 'dashboard',  label: 'Dashboard',   icon: '🏠' },
-  { key: 'members',    label: 'Members',     icon: '👥' },
-  { key: 'attendance', label: 'Attend.',     icon: '📅' },
-  { key: 'store',      label: 'Store',       icon: '🛒' },
-  { key: 'more',       label: 'More',        icon: '⚙️' },
+  { key: 'dashboard',  label: 'Dashboard' },
+  { key: 'members',    label: 'Members' },
+  { key: 'attendance', label: 'Attend.' },
+  { key: 'store',      label: 'Store' },
+  { key: 'more',       label: 'More' },
 ];
 
 // ─── SVG Nav Icons ─────────────────────────────────────────────────────────────
@@ -45,9 +61,9 @@ function OwnerNavIcon({ id, active }) {
 // ─── More Tab ─────────────────────────────────────────────────────────────────
 function MoreTab({ gymId, gymName, ownerUid, onNavigate, pendingTrainersCount = 0 }) {
   const items = [
-    { key: 'memberships', icon: '💳', label: 'Memberships',   sub: 'Manage plans and member subscriptions' },
-    { key: 'import',      icon: '📤', label: 'CSV Import',    sub: 'Bulk import members from CSV' },
-    { key: 'campaigns',  icon: '📣', label: 'Campaigns',     sub: 'Send push notifications to your members' },
+    { key: 'memberships', icon: <CreditCardIcon size={20} color={C.accent} />, label: 'Memberships',   sub: 'Manage plans and member subscriptions' },
+    { key: 'import',      icon: <UploadCloudIcon size={20} color={C.accent} />, label: 'CSV Import',    sub: 'Bulk import members from CSV' },
+    { key: 'campaigns',  icon: <MegaphoneIcon size={20} color={C.accent} />, label: 'Campaigns',     sub: 'Send push notifications to your members' },
   ];
   const isDark = !C.isLight;
   return (
@@ -66,7 +82,7 @@ function MoreTab({ gymId, gymName, ownerUid, onNavigate, pendingTrainersCount = 
           onMouseEnter={e => e.currentTarget.style.borderColor = C.accent + '55'}
           onMouseLeave={e => e.currentTarget.style.borderColor = C.border}
         >
-          <span style={{ fontSize: 22, width: 30, textAlign: 'center', flexShrink: 0 }}>{item.icon}</span>
+          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 30, flexShrink: 0 }}>{item.icon}</span>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: C.text, display: 'flex', alignItems: 'center', gap: 8 }}>
               {item.label}
@@ -99,7 +115,7 @@ function OwnerProfileDropdown({ user, gymName, gymCode, onNavigate, pendingTrain
       padding: '12px 16px', background: 'none', border: 'none',
       cursor: 'pointer', textAlign: 'left', borderBottom: `1px solid ${C.border}`,
     }}>
-      <span style={{ fontSize: 20, width: 28, textAlign: 'center' }}>{icon}</span>
+      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28 }}>{icon}</span>
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
         <div>
           <div style={{ fontSize: 13, fontWeight: 600, color: danger ? C.red : C.text }}>{label}</div>
@@ -152,12 +168,12 @@ function OwnerProfileDropdown({ user, gymName, gymCode, onNavigate, pendingTrain
         <div style={{ fontSize: 10, color: C.muted, marginTop: 4 }}>Share this code with your members to let them join.</div>
       </div>
       {/* Actions */}
-      {row('👤', 'My Account', 'Profile & details', () => onNavigate('account'))}
-      {row('⚙️', 'Gym Settings', 'Manage gym code & info', () => onNavigate('settings'))}
-      {row('📱', 'App Settings', 'Dark mode & notifications', () => onNavigate('appSettings'))}
-      {row('🏅', 'Trainers', 'Manage gym trainers', () => onNavigate('trainers'), false, pendingTrainersCount)}
-      {row('⚠️', 'Alerts', 'At-risk members', () => onNavigate('alerts'))}
-      {row('🚪', 'Log Out', null, onLogout, true)}
+      {row(<UserIcon size={18} color={C.sub} />, 'My Account', 'Profile & details', () => onNavigate('account'))}
+      {row(<SettingsIcon size={18} color={C.sub} />, 'Gym Settings', 'Manage gym code & info', () => onNavigate('settings'))}
+      {row(<SmartphoneIcon size={18} color={C.sub} />, 'App Settings', 'Dark mode & notifications', () => onNavigate('appSettings'))}
+      {row(<BadgeTrainerIcon size={18} color={C.sub} />, 'Trainers', 'Manage gym trainers', () => onNavigate('trainers'), false, pendingTrainersCount)}
+      {row(<WarningIcon size={18} color={C.red} />, 'Alerts', 'At-risk members', () => onNavigate('alerts'))}
+      {row(<LogoutIcon size={18} color={C.red} />, 'Log Out', null, onLogout, true)}
     </div>
   );
 }
@@ -180,7 +196,7 @@ function PremiumPopup({ onClose, onUpgrade }) {
         boxSizing: 'border-box',
         textAlign: 'center',
       }}>
-        <div style={{ fontSize: 56, marginBottom: 16 }}>⭐</div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}><StarBadge size={56} color="#f59e0b" /></div>
         <div style={{ fontFamily: fb, fontSize: 26, fontWeight: 800, color: '#fff', marginBottom: 8 }}>
           Unlock MSG Premium
         </div>
@@ -406,7 +422,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
                     cursor: 'pointer', letterSpacing: '0.04em',
                     boxShadow: `0 2px 8px ${C.accent}55`,
                   }}>
-                    ⭐ PREMIUM
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><StarBadge size={12} color="#111" />PREMIUM</span>
                   </button>
                 )}
                 <button onClick={() => handleMoreNavigate('alerts')} style={{ background: 'none', border: 'none', color: C.text, padding: 0, position: 'relative', cursor: 'pointer' }}>
@@ -422,7 +438,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
         {!moreScreen && tab === 'dashboard' && (
           <div style={{ marginBottom: 4 }}>
             <div style={{ fontSize: 22, fontFamily: fn, fontWeight: 700, color: C.text, letterSpacing: '-0.02em', marginBottom: 4 }}>
-              {getGreeting()}, {firstName} 👋
+              {getGreeting()}, {firstName}
             </div>
             <div style={{ fontSize: 13, fontFamily: fb, color: C.sub, fontWeight: 500, marginBottom: 16 }}>
               Here's what's happening at {gymName || 'your gym'}
@@ -1044,8 +1060,8 @@ function DashboardTab({
                 }}
                 title={act.type === 'checkin' ? 'View attendance for this day' : 'View member profile'}
               >
-                <div style={{ width: 36, height: 36, borderRadius: '50%', background: C.s2, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
-                  {act.type === 'workout' ? '🏋️' : act.type === 'diet' ? '🥗' : act.type === 'checkin' ? '📅' : '⚡'}
+                <div style={{ width: 36, height: 36, borderRadius: '50%', background: C.s2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {act.type === 'workout' ? <DumbbellIcon size={16} color={C.accent} /> : act.type === 'diet' ? <SaladIcon size={16} color={C.green} /> : act.type === 'checkin' ? <CalendarIcon size={16} color={C.blue} /> : <ZapIcon size={16} color="#f59e0b" />}
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, fontFamily: fb, color: C.text }}>

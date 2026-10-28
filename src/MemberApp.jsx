@@ -6,6 +6,7 @@ import AmbientBackground from './shared/AmbientBackground.jsx';
 import msgLogoExact from './assets/msg_logo_exact.svg';
 import msgLogoWhite from './assets/msg_logo_white.svg';
 import { trackActivity } from './shared/firebase.js';
+import { AnimatedWarning, StarBadge } from './components/visuals';
 
 // ── Per-section error boundary (keeps crashes isolated to one tab) ────────────
 class SectionErrorBoundary extends Component {
@@ -19,7 +20,7 @@ class SectionErrorBoundary extends Component {
         padding: '48px 24px', textAlign: 'center',
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
       }}>
-        <div style={{ fontSize: 40 }}>⚠️</div>
+        <div style={{ marginBottom: 8 }}><AnimatedWarning size={42} color={C.accent} /></div>
         <div style={{ fontFamily: fn, fontSize: 17, fontWeight: 800, color: C.text }}>Something went wrong</div>
         <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.6, maxWidth: 280 }}>
           {this.state.error?.message || 'An unexpected error occurred in this section.'}
@@ -214,7 +215,7 @@ export default function MemberApp({
       {profileScreen === 'language' && <LanguageScreen onClose={() => setProfileScreen(null)} />}
       {profileScreen === 'premium'  && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 500, background: C.bg, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px', textAlign: 'center', fontFamily: fn }}>
-          <div style={{ fontSize: 64, marginBottom: 16 }}>⭐</div>
+          <div style={{ marginBottom: 16 }}><StarBadge text="PREMIUM" style={{ fontSize: 13, padding: "6px 16px" }} /></div>
           <div style={{ fontSize: 26, fontWeight: 800, color: C.text, marginBottom: 8, letterSpacing: '-0.02em' }}>MSG Premium</div>
           <div style={{ fontSize: 14, color: C.sub, lineHeight: 1.7, marginBottom: 32, maxWidth: 300 }}>
             Advanced AI coaching, personalised macro targets, detailed analytics and priority support — coming soon for members.

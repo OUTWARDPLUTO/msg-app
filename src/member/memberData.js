@@ -46,7 +46,7 @@ export const DEF_LOGS = [
   { date: 'Feb 21', weight: 73.5, bodyFat: 17.8, chest: 97, waist: 80.5, arms: 36, legs: 55.5, notes: '' },
   { date: 'Feb 28', weight: 73.1, bodyFat: 17.4, chest: 97, waist: 80, arms: 36, legs: 56, notes: 'Sleep getting better' },
   { date: 'Mar 7', weight: 72.8, bodyFat: 17.1, chest: 97.5, waist: 79, arms: 36.5, legs: 56, notes: '' },
-  { date: 'Mar 14', weight: 72.5, bodyFat: 16.8, chest: 98, waist: 78.5, arms: 37, legs: 56.5, notes: 'PR on bench today 🔥' },
+  { date: 'Mar 14', weight: 72.5, bodyFat: 16.8, chest: 98, waist: 78.5, arms: 37, legs: 56.5, notes: 'PR on bench today' },
 ];
 
 // ─── AI API (Secure Proxy) ───────────────────────────────────────────────────

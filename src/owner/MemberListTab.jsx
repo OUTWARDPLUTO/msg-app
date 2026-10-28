@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
+import { AnimatedWarning, CopyIcon } from '../components/visuals/index.js';
 import { Card, Lbl, ScoreRing, StatusBadge, ModalShell, Spinner, Skeleton } from '../shared/primitives.jsx';
 import { getFBFirestore } from '../shared/firebase.js';
 import MemberDetailSheet from './MemberDetailSheet.jsx';
@@ -193,7 +194,7 @@ export default function MemberListTab({ gymId, gymCode = '', setBackHandler, onV
           <div style={{ padding: '0 20px' }}>
             {error ? (
               <div style={{ textAlign: 'center', padding: '48px 20px' }}>
-                <div style={{ fontSize: 32, marginBottom: 8 }}>⚠️</div>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}><AnimatedWarning size={32} /></div>
                 <div style={{ fontFamily: fb, fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 4 }}>Unable to load roster</div>
                 <div style={{ color: C.sub, fontSize: 13, fontFamily: fn, marginBottom: 16 }}>{error}</div>
                 <button onClick={loadMembers} style={{ background: C.accent, color: '#111', border: 'none', borderRadius: 12, padding: '10px 24px', fontFamily: fn, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
@@ -300,7 +301,7 @@ export default function MemberListTab({ gymId, gymCode = '', setBackHandler, onV
               fontFamily: fb, fontWeight: 700, fontSize: 14, cursor: 'pointer',
               transition: 'all 0.25s',
             }}>
-              {copied ? '✓ Copied to clipboard!' : '📋 Copy Gym Code'}
+              {copied ? '✓ Copied to clipboard!' : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><CopyIcon size={13} color="#000" />Copy Gym Code</span>}
             </button>
 
             <div style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: 16, padding: '20px' }}>

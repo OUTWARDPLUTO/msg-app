@@ -13,6 +13,18 @@ import {
   saveWorkoutHistoryEntry
 } from './workoutStorage.js';
 import { trackActivity } from '../shared/firebase.js';
+import {
+  AnimatedTrophy,
+  AnimatedStopwatch,
+  AnimatedPlayPause,
+  PauseIcon,
+  PlayIcon,
+  ZapIcon,
+  ClockIcon,
+  CycleViewIcon,
+  BookOpenIcon,
+  LightbulbIcon
+} from '../components/visuals/index.js';
 
 export default function ActiveWorkoutSession({
   plan,
@@ -264,7 +276,9 @@ export default function ActiveWorkoutSession({
     return (
       <div className="msg-motion-page" style={{ padding: '20px 16px 40px', maxWidth: 500, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <div style={{ fontSize: 52, marginBottom: 8 }}>🏆</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+            <AnimatedTrophy size={64} />
+          </div>
           <div style={{ fontFamily: fn, fontWeight: 800, fontSize: 24, color: C.text, letterSpacing: '-0.02em' }}>Workout Completed!</div>
           <div style={{ fontSize: 13, color: C.accent, fontWeight: 700, marginTop: 4 }}>+30 Engagement Points Earned</div>
         </div>
@@ -339,7 +353,7 @@ export default function ActiveWorkoutSession({
               background: C.s3, border: `1px solid ${isRunning ? C.accent + '44' : C.border}`,
               borderRadius: 10, padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 6
             }}>
-              <span style={{ fontSize: 12 }}>⏱</span>
+              <AnimatedStopwatch size={14} isRunning={isRunning} color={C.accent} />
               <span style={{ fontFamily: fn, fontWeight: 800, fontSize: 15, color: isRunning ? C.text : C.orange, letterSpacing: '0.04em' }}>
                 {formatTime(displaySeconds)}
               </span>
@@ -351,7 +365,7 @@ export default function ActiveWorkoutSession({
               border: `1px solid ${isRunning ? C.border : C.accent}`, color: isRunning ? C.text : '#000',
               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700
             }} title={isRunning ? 'Pause Workout' : 'Resume Workout'}>
-              {isRunning ? '⏸' : '▶'}
+              {isRunning ? <PauseIcon size={13} color={C.text} /> : <PlayIcon size={13} color={C.text} />}
             </button>
 
             {/* Exit Button */}
@@ -388,12 +402,12 @@ export default function ActiveWorkoutSession({
               </span>
               {currentExercise.isCompound && (
                 <span style={{ background: '#f59e0b1A', color: '#f59e0b', border: '1px solid #f59e0b33', fontSize: 10, fontFamily: fb, fontWeight: 700, padding: '3px 8px', borderRadius: 4, textTransform: 'uppercase' }}>
-                  ⚡ Compound Lift
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><ZapIcon size={11} color="#f59e0b" />Compound Lift</span>
                 </span>
               )}
               {currentExercise.isIsometric && (
                 <span style={{ background: '#06b6d41A', color: '#06b6d4', border: '1px solid #06b6d433', fontSize: 10, fontFamily: fb, fontWeight: 700, padding: '3px 8px', borderRadius: 4, textTransform: 'uppercase' }}>
-                  ⏱ Isometric Hold
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><ClockIcon size={11} color="#06b6d4" />Isometric Hold</span>
                 </span>
               )}
             </div>
@@ -412,7 +426,7 @@ export default function ActiveWorkoutSession({
           <div>
             <span style={{ fontSize: 10, color: C.muted, textTransform: 'uppercase', fontFamily: fb, fontWeight: 700 }}>Rest</span>
             <div style={{ fontFamily: fn, fontWeight: 700, fontSize: 14, color: C.sub }}>
-              ⏱ {currentExercise.rest || 60}s
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><ClockIcon size={12} color={C.muted} />{currentExercise.rest || 60}s</span>
             </div>
           </div>
           <div style={{ width: 1, height: 24, background: C.border }} />
@@ -432,7 +446,7 @@ export default function ActiveWorkoutSession({
               background: C.s2, border: `1px solid ${C.border}`, borderRadius: 8, padding: '4px 10px',
               color: C.text, fontFamily: fn, fontSize: 10.5, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4
             }}>
-              <span>🔄 View:</span> <strong style={{ color: C.accent, textTransform: 'uppercase' }}>{viewAnatomy}</strong>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><CycleViewIcon size={13} color={C.accent} />View:</span> <strong style={{ color: C.accent, textTransform: 'uppercase' }}>{viewAnatomy}</strong>
             </button>
           </div>
 
@@ -452,7 +466,7 @@ export default function ActiveWorkoutSession({
             width: '100%', background: 'none', border: 'none', color: C.sub, fontSize: 11.5,
             fontWeight: 700, cursor: 'pointer', padding: '6px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
           }}>
-            <span>📖 Form Guide & Tips</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><BookOpenIcon size={14} color={C.accent} />Form Guide & Tips</span>
             <span>{formOpen ? '▲' : '▼'}</span>
           </button>
           {formOpen && (
@@ -465,7 +479,7 @@ export default function ActiveWorkoutSession({
               ))}
               {currentExercise.tip && (
                 <div style={{ marginTop: 6, padding: '8px 10px', background: C.s3, borderRadius: 8, color: C.accent }}>
-                  💡 {currentExercise.tip}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><LightbulbIcon size={14} color="#f59e0b" style={{ flexShrink: 0 }} /><span>{currentExercise.tip}</span></span>
                 </div>
               )}
             </div>
@@ -579,7 +593,7 @@ export default function ActiveWorkoutSession({
               boxShadow: `0 4px 16px ${C.accent}40`, textTransform: 'uppercase', letterSpacing: '0.04em'
             }}
           >
-            Finish Workout 🏆
+            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>Finish Workout <AnimatedTrophy size={16} /></span>
           </button>
         ) : (
           <button
@@ -605,7 +619,9 @@ export default function ActiveWorkoutSession({
             background: C.s1, border: `1px solid ${C.border}`, borderRadius: 20, padding: '24px 20px',
             maxWidth: 380, width: '100%', textAlign: 'center'
           }}>
-            <div style={{ fontSize: 36, marginBottom: 8 }}>⏸</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+              <AnimatedPlayPause isPaused={true} size={48} />
+            </div>
             <div style={{ fontFamily: fn, fontWeight: 800, fontSize: 18, color: C.text, marginBottom: 6 }}>Leave Workout Session?</div>
             <div style={{ fontSize: 12.5, color: C.sub, lineHeight: 1.5, marginBottom: 20 }}>
               Your session progress and elapsed time are saved. You can resume anytime or conclude now.

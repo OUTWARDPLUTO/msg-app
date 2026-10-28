@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
+import { BarChartIcon } from '../components/visuals/index.js';
 
 export default function RevenueDetail({ gymId, onBack, hideHeader }) {
   const [data, setData] = useState([]);
@@ -31,7 +32,7 @@ export default function RevenueDetail({ gymId, onBack, hideHeader }) {
         <div style={{ padding: '40px 0', textAlign: 'center', color: C.sub }}>Loading revenue data...</div>
       ) : data.length === 0 ? (
         <div style={{ padding: '60px 20px', textAlign: 'center' }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>📊</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}><BarChartIcon size={48} color={C.muted} /></div>
           <div style={{ fontFamily: fb, fontSize: 18, color: C.text, marginBottom: 8 }}>Not Enough Data</div>
           <div style={{ fontSize: 14, color: C.sub, lineHeight: 1.5, maxWidth: 260, margin: '0 auto' }}>
             There isn't enough historical revenue data to generate charts for this gym yet. Check back later once members start paying.

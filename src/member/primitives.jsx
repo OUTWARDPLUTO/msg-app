@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { MC, C, fn, fb } from '../shared/theme.js';
+import { AnimatedStopwatch, ZapIcon, LightbulbIcon, ClockIcon } from '../components/visuals';
 // ─── Primitives ─────────────────────────────────────────────────────────────
 export const Card = ({ children, style: s = {}, onClick }) => {
   const isDark = !C.isLight;
@@ -115,7 +116,7 @@ export function ExCard({ ex }) {
           <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>{ex.primary} · {ex.equip}</div>
           <div style={{ display: 'flex', gap: 10, marginTop: 5, alignItems: 'center' }}>
             <span style={{ fontFamily: fn, fontSize: 20, color: mc, letterSpacing: '0.04em', lineHeight: 1 }}>{ex.sets} × {ex.reps}</span>
-            <span style={{ fontSize: 10, color: C.muted, background: C.s3, padding: '2px 7px', borderRadius: 4 }}>⏱ {ex.rest}s rest</span>
+            <span style={{ fontSize: 10, color: C.muted, background: C.s3, padding: '2px 7px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 4 }}><ClockIcon size={11} color={C.muted} /> {ex.rest}s rest</span>
           </div>
           <div style={{ display: 'flex', gap: 5, marginTop: 8 }}>
             {Array.from({ length: s }).map((_, i) => (
@@ -137,8 +138,8 @@ export function ExCard({ ex }) {
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
             <span style={{ background: mc + '1A', color: mc, border: `1px solid ${mc}33`, fontSize: 10, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '3px 9px', borderRadius: 4 }}>Primary: {ex.primary}</span>
             {ex.secondary && <span style={{ background: C.s3, color: C.sub, fontSize: 10, fontFamily: fb, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '3px 9px', borderRadius: 4 }}>Also: {ex.secondary}</span>}
-            {ex.isCompound && <span style={{ background: '#f59e0b1A', color: '#f59e0b', border: '1px solid #f59e0b33', fontSize: 10, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '3px 9px', borderRadius: 4 }}>⚡ Compound Lift</span>}
-            {ex.isIsometric && <span style={{ background: '#06b6d41A', color: '#06b6d4', border: '1px solid #06b6d433', fontSize: 10, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '3px 9px', borderRadius: 4 }}>⏱ Isometric Hold</span>}
+            {ex.isCompound && <span style={{ background: '#f59e0b1A', color: '#f59e0b', border: '1px solid #f59e0b33', fontSize: 10, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '3px 9px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 4 }}><ZapIcon size={12} color="#f59e0b" fill /> Compound Lift</span>}
+            {ex.isIsometric && <span style={{ background: '#06b6d41A', color: '#06b6d4', border: '1px solid #06b6d433', fontSize: 10, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '3px 9px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 4 }}><ClockIcon size={12} color="#06b6d4" /> Isometric Hold</span>}
             <span style={{ background: C.s3, color: C.muted, fontSize: 10, fontFamily: fb, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '3px 9px', borderRadius: 4 }}>{ex.level}</span>
           </div>
 
@@ -151,7 +152,7 @@ export function ExCard({ ex }) {
           ))}
           {ex.tip && (
             <div style={{ marginTop: 8, padding: '9px 12px', background: C.s3, borderRadius: 10, fontSize: 12, color: C.sub, lineHeight: 1.5 }}>
-              💡 {ex.tip}
+              <span style={{ display: 'inline-flex', alignItems: 'flex-start', gap: 6 }}><LightbulbIcon size={14} color={mc} style={{ flexShrink: 0, marginTop: 2 }} /> <span>{ex.tip}</span></span>
             </div>
           )}
 
@@ -163,12 +164,12 @@ export function ExCard({ ex }) {
           }}>
             {timer !== null ? (
               <>
-                <span>⏱ {timer}s remaining</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><AnimatedStopwatch size={14} color={mc} running={true} /> {timer}s remaining</span>
                 <div style={{ flex: 1, height: 3, background: C.s4, borderRadius: 2 }}>
                   <div style={{ height: '100%', width: `${Math.round((timer / ex.rest) * 100)}%`, background: mc, borderRadius: 2 }} />
                 </div>
               </>
-            ) : `⏱ Start Rest Timer (${ex.rest}s)`}
+            ) : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><AnimatedStopwatch size={14} color={mc} running={false} /> Start Rest Timer ({ex.rest}s)</span>}
           </button>
         </div>
       )}

@@ -1,5 +1,11 @@
 import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
+import {
+  ShieldLockIcon,
+  ZapIcon,
+  NotesIcon,
+  PrinterIcon
+} from '../components/visuals/index.js';
 import { Card, Lbl, SettingsToggle, Spinner } from '../shared/primitives.jsx';
 import { getFBFirestore, checkSubscription } from '../shared/firebase.js';
 
@@ -158,7 +164,7 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid, onBack }) {
           
           {(!subData || !subData.active) ? (
             <div style={{ textAlign: 'center', padding: '24px 16px', background: C.bg, borderRadius: 12, border: `1px dashed ${C.border}` }}>
-              <span style={{ fontSize: 32, display: 'block', marginBottom: 12 }}>🔒</span>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><ShieldLockIcon size={36} color={C.accent} /></div>
               <div style={{ fontSize: 15, color: C.text, fontFamily: fb, fontWeight: 700, marginBottom: 4 }}>Code Locked</div>
               <div style={{ fontSize: 13, color: C.sub, fontFamily: fn }}>Activate your subscription below to view your gym code.</div>
             </div>
@@ -355,8 +361,8 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid, onBack }) {
               <div style={{ fontSize: 13, color: C.sub, fontFamily: fb, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>QR Code Mode</div>
               <div style={{ display: 'flex', gap: 10 }}>
                 {[
-                  { label: '⚡ Dynamic', val: false },
-                  { label: '📄 Static', val: true }
+                  { label: 'Dynamic', val: false },
+                  { label: 'Static', val: true }
                 ].map(m => (
                   <button key={m.label} onClick={() => setUseStaticQr(m.val)} style={{
                     flex: 1, padding: '12px',
@@ -435,7 +441,7 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid, onBack }) {
             <button onClick={() => setShowPreview(false)} style={{ flex: 1, padding: 14, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 14, color: '#fff', fontFamily: fn, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Close</button>
             <button onClick={() => {
               setShowPrintView(true);
-            }} style={{ flex: 2, padding: 14, background: C.accent, border: 'none', borderRadius: 14, color: '#111', fontFamily: fn, fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: C.accentShadow }}>🖨️ Print QR</button>
+            }} style={{ flex: 2, padding: 14, background: C.accent, border: 'none', borderRadius: 14, color: '#111', fontFamily: fn, fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: C.accentShadow, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><PrinterIcon size={15} color="#111" />Print QR</button>
           </div>
         </div>
       )}
@@ -451,7 +457,7 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid, onBack }) {
               ← Close / Go Back
             </button>
             <button onClick={() => window.print()} style={{ padding: '14px 24px', borderRadius: 12, background: C.accent, color: '#111', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: 14 }}>
-              🖨️ Print Page
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><PrinterIcon size={15} color="#111" />Print Page</span>
             </button>
           </div>
         </div>

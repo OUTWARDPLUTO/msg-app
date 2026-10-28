@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
+import { CameraIcon } from '../components/visuals/index.js';
 import { Card, Lbl, UserAvatar } from '../shared/primitives.jsx';
 import { updateUserDoc } from '../shared/firebase.js';
 
@@ -75,7 +76,7 @@ export default function OwnerAccountTab({ user, onLogout, onBack }) {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               border: `2px solid ${C.s1}`, boxShadow: C.accentShadow
             }}>
-              <span style={{ fontSize: 13, color: '#111' }}>📷</span>
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><CameraIcon size={13} color="#111" /></span>
             </div>
           </div>
           <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoChange} />

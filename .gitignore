@@ -11,3 +11,4 @@ ios/
 
 .vercel
 .env*.local
+*.zip

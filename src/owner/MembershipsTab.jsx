@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
+import { NotesIcon, UsersIcon } from '../components/visuals/index.js';
 import { Card, Lbl, Skeleton } from '../shared/primitives.jsx';
 import { getFBFirestore, serverTimestamp } from '../shared/firebase.js';
 
@@ -70,7 +71,7 @@ function PlansView({ gymId }) {
         </div>
       ) : plans.length === 0 ? (
         <div style={{ background: C.s1, border: `1px dashed ${C.border}`, borderRadius: 20, padding: '40px 20px', textAlign: 'center' }}>
-          <div style={{ fontSize: 40, marginBottom: 16, opacity: 0.8 }}>📋</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}><NotesIcon size={40} color={C.muted} /></div>
           <div style={{ fontFamily: fb, fontSize: 16, color: C.text, marginBottom: 8 }}>No Plans Created</div>
           <div style={{ fontSize: 13, color: C.sub, fontFamily: fn, marginBottom: 24, maxWidth: 240, margin: '0 auto 24px', lineHeight: 1.5 }}>Create membership plans for your members to subscribe to.</div>
           <button onClick={() => setShowForm(true)} style={{
@@ -344,7 +345,7 @@ function MembersView({ gymId, initialFilter }) {
         </div>
       ) : filtered.length === 0 ? (
         <div style={{ background: C.s1, border: `1px dashed ${C.border}`, borderRadius: 20, padding: '40px 20px', textAlign: 'center' }}>
-          <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.5 }}>👥</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><UsersIcon size={32} color={C.muted} /></div>
           <div style={{ fontFamily: fb, fontSize: 16, color: C.text, marginBottom: 4 }}>No Members Found</div>
           <div style={{ color: C.sub, fontSize: 13, fontFamily: fn }}>No members match the selected filter.</div>
         </div>
@@ -373,7 +374,7 @@ function MembersView({ gymId, initialFilter }) {
                       }}>{cfg.label}</div>
                     </div>
                     <div style={{ fontSize: 13, color: C.sub, fontFamily: fn }}>
-                      {planName ? `📋 ${planName}` : 'No active plan'}
+                      {planName ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><NotesIcon size={12} color={C.sub} />{planName}</span> : 'No active plan'}
                       {daysLeft !== null && (
                         <span style={{ color: cfg.color, marginLeft: 8, fontWeight: 600, fontFamily: fb }}>
                           {daysLeft < 0 ? `• Expired ${Math.abs(daysLeft)}d ago` : daysLeft === 0 ? '• Expires today' : `• ${daysLeft}d left`}
@@ -586,7 +587,7 @@ export default function MembershipsTab({ gymId, onBack, initialFilter }) {
       {/* Sub-tab switcher */}
       <div style={{ padding: '0 20px', marginBottom: 24 }}>
         <div style={{ display: 'flex', background: C.s1, border: `1px solid ${C.border}`, borderRadius: 16, padding: 4 }}>
-          {[['members', '👥 Members'], ['plans', '📋 Plans']].map(([k, l]) => (
+          {[['members', 'Members', <UsersIcon key="u" size={14} color={subTab === 'members' ? '#000' : C.sub} />], ['plans', 'Plans', <NotesIcon key="p" size={14} color={subTab === 'plans' ? '#000' : C.sub} />]].map(([k, l, ic]) => (
             <button key={k} onClick={() => setSubTab(k)} style={{
               flex: 1, padding: '12px', borderRadius: 12,
               background: subTab === k ? C.bg : 'transparent',
@@ -594,7 +595,7 @@ export default function MembershipsTab({ gymId, onBack, initialFilter }) {
               boxShadow: subTab === k ? '0 4px 12px rgba(0,0,0,0.1)' : 'none',
               color: subTab === k ? C.text : C.sub,
               fontFamily: fb, fontWeight: 600, fontSize: 14, cursor: 'pointer', transition: 'all 0.2s ease',
-            }}>{l}</button>
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>{ic}<span>{l}</span></button>
           ))}
         </div>
       </div>

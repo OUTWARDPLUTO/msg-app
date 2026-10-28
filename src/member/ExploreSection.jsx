@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { C, fn, fb, MC } from '../shared/theme.js';
+import { SearchIcon } from '../components/visuals/index.js';
 import { AnatomicalFigure } from '../AnatomicalFigure.jsx';
 import { ExCard } from './primitives.jsx';
 import { EX } from './constants.js';
@@ -87,7 +88,7 @@ export function ExploreSection() {
     <div>
       {/* Search bar */}
       <div style={{ padding: '0 16px 12px', position: 'relative' }}>
-        <span style={{ position: 'absolute', left: 28, top: '50%', transform: 'translateY(-50%)', fontSize: 14, opacity: 0.4 }}>🔍</span>
+        <span style={{ position: 'absolute', left: 28, top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', pointerEvents: 'none' }}><SearchIcon size={15} color={C.muted} /></span>
         <input
           value={exploreSearch}
           onChange={e => setExploreSearch(e.target.value)}

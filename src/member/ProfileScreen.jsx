@@ -1,5 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
+import {
+  AnimatedFlame,
+  AchievementBadge,
+  EditIcon,
+  CameraIcon,
+  LocationPinIcon,
+  LockIcon,
+  LightbulbIcon
+} from '../components/visuals/index.js';
 import { UserAvatar } from '../shared/primitives.jsx';
 import { Card, Lbl, Hd } from './primitives.jsx';
 import { sanitizeString, validateNumber } from '../shared/security.js';
@@ -106,7 +115,7 @@ export default function ProfileScreen({ onClose, progressLogs, dietGoal, mealLog
   const stats = [
     { label: 'Current Weight', val: last ? `${last.weight} kg` : '—', color: C.accent },
     { label: 'Engagement Score', val: `${score} / 100`, color: C.blue },
-    { label: 'Check-in Streak', val: realStreak > 0 ? `${realStreak} day${realStreak !== 1 ? 's' : ''} 🔥` : '—', color: C.orange },
+    { label: 'Check-in Streak', val: realStreak > 0 ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>{`${realStreak} day${realStreak !== 1 ? 's' : ''}`} <AnimatedFlame size={13} /></span> : '—', color: C.orange },
     { label: 'Weight Change', val: weightChange !== null ? `${weightChange.toFixed(1)} kg` : '—', color: weightChange < 0 ? C.green : C.orange },
     { label: 'Entries Logged', val: `${progressLogs.length}`, color: C.purple },
     { label: 'Body Fat', val: last ? `${last.bodyFat}%` : '—', color: C.accent },
@@ -115,64 +124,64 @@ export default function ProfileScreen({ onClose, progressLogs, dietGoal, mealLog
   // ── Achievement definitions (20 total) ───────────────────────────────────
   const [expandedAch, setExpandedAch] = useState(null);
   const ACHIEVEMENTS = [
-    { id:1,  icon:'🩸', name:'First Blood',        cat:'Onboarding',   rarity:'Common',    desc:'Complete your first workout',
+    { id:1,  name:'First Blood',        cat:'Onboarding',   rarity:'Common',    desc:'Complete your first workout',
       how:'Log your first progress entry in the app. Just show up once — that\'s all it takes to start.',
       progress:'Single unlock — earned once, forever', unlocked: totalWorkouts >= 1 },
-    { id:2,  icon:'💎', name:'Unbreakable',         cat:'Discipline',   rarity:'Common',    desc:'Maintain a 7-day check-in streak',
+    { id:2,  name:'Unbreakable',         cat:'Discipline',   rarity:'Common',    desc:'Maintain a 7-day check-in streak',
       how:'Log at least one progress entry every week without missing a week. Consistency is the key.',
       progress:'1 week → 4 weeks → 8 weeks → 52 weeks', unlocked: realStreak >= 1 },
-    { id:3,  icon:'🤖', name:'Machine Mode',        cat:'Discipline',   rarity:'Common',    desc:'Hit a 30-day check-in streak',
+    { id:3,  name:'Machine Mode',        cat:'Discipline',   rarity:'Common',    desc:'Hit a 30-day check-in streak',
       how:'Keep logging progress entries every week for 4 consecutive weeks. No gap allowed.',
       progress:'4 weeks of unbroken check-ins', unlocked: realStreak >= 4 },
-    { id:4,  icon:'⏰', name:'5AM Club',            cat:'Lifestyle',    rarity:'Rare',      desc:'Complete 10 workouts before 6AM',
+    { id:4,  name:'5AM Club',            cat:'Lifestyle',    rarity:'Rare',      desc:'Complete 10 workouts before 6AM',
       how:'Start 10 of your workout sessions before 6:00 AM. Early birds build the strongest habits.',
       progress:'10 → 50 → 100 early sessions', unlocked: false },
-    { id:5,  icon:'🌙', name:'Night Grinder',       cat:'Lifestyle',    rarity:'Rare',      desc:'Complete 10 workouts after 10PM',
+    { id:5,  name:'Night Grinder',       cat:'Lifestyle',    rarity:'Rare',      desc:'Complete 10 workouts after 10PM',
       how:'Finish 10 workout sessions after 10:00 PM. Night owls earn this one.',
       progress:'10 → 50 → 100 late sessions', unlocked: false },
-    { id:6,  icon:'⚙️', name:'Iron Soul',           cat:'Strength',     rarity:'Epic',      desc:'Lift a cumulative 100,000 kg total volume',
+    { id:6,  name:'Iron Soul',           cat:'Strength',     rarity:'Epic',      desc:'Lift a cumulative 100,000 kg total volume',
       how:'Track your lifts consistently. The app totals your volume across all sessions — sets × reps × weight.',
       progress:'100k → 500k → 1M → 10M kg', unlocked: false },
-    { id:7,  icon:'📈', name:'The Bulk Begins',     cat:'Physique',     rarity:'Rare',      desc:'Intentionally gain 5kg of bodyweight',
+    { id:7,  name:'The Bulk Begins',     cat:'Physique',     rarity:'Rare',      desc:'Intentionally gain 5kg of bodyweight',
       how:'Log your progress consistently while on a gaining phase. When your current weight exceeds your starting weight by 5kg, this unlocks.',
       progress:'5kg → 10kg → 15kg gained', unlocked: weightGained >= 5 },
-    { id:8,  icon:'🔥', name:'Shredded Arc',        cat:'Physique',     rarity:'Rare',      desc:'Lose your first 5kg of fat',
+    { id:8,  name:'Shredded Arc',        cat:'Physique',     rarity:'Rare',      desc:'Lose your first 5kg of fat',
       how:'Keep logging progress while cutting. When you\'re 5kg lighter than when you started, this unlocks automatically.',
       progress:'5kg → 10kg → 15kg lost', unlocked: weightLost >= 5 },
-    { id:9,  icon:'🥩', name:'Protein King',        cat:'Nutrition',    rarity:'Rare',      desc:'Log 30+ meals in the Diet section',
+    { id:9,  name:'Protein King',        cat:'Nutrition',    rarity:'Rare',      desc:'Log 30+ meals in the Diet section',
       how:'Use the Diet tab to log your food daily. Every meal logged counts — aim for at least one log per day.',
       progress:'30 → 90 → 180 meals logged', unlocked: mealLog.length >= 30 },
-    { id:10, icon:'💪', name:'No Excuses',          cat:'Hardcore',     rarity:'Epic',      desc:'Work out on a weekend, holiday, or bad weather day',
+    { id:10, name:'No Excuses',          cat:'Hardcore',     rarity:'Epic',      desc:'Work out on a weekend, holiday, or bad weather day',
       how:'Show up when others don\'t. Complete a workout on a weekend, public holiday, or when life throws a curveball.',
       progress:'Seasonal Expansion unlocks', unlocked: false },
-    { id:11, icon:'👻', name:'Ghost Mode',          cat:'Discipline',   rarity:'Common',    desc:'Complete a workout session without skipping any sets',
+    { id:11, name:'Ghost Mode',          cat:'Discipline',   rarity:'Common',    desc:'Complete a workout session without skipping any sets',
       how:'Build your workout plan and follow it to the letter — no skipped sets allowed. Tick every set in your plan.',
       progress:'10 → 50 → 100 perfect sessions', unlocked: totalWorkouts >= 1 && weekPlan != null },
-    { id:12, icon:'🏆', name:'Beast PR',            cat:'Strength',     rarity:'Rare',      desc:'Set your first personal record on any lift',
+    { id:12, name:'Beast PR',            cat:'Strength',     rarity:'Rare',      desc:'Set your first personal record on any lift',
       how:'Log a heavier lift than you\'ve done before on any exercise. Your history tracks PRs automatically.',
       progress:'1 → 10 → 50 PRs set', unlocked: false },
-    { id:13, icon:'🦁', name:'Gym Veteran',         cat:'Achievement',  rarity:'Rare',      desc:'Log 100 progress entries (workouts)',
+    { id:13, name:'Gym Veteran',         cat:'Achievement',  rarity:'Rare',      desc:'Log 100 progress entries (workouts)',
       how:'Show up 100 times. That\'s it. Every progress log counts toward this milestone.',
       progress:'100 → 500 → 1000 entries', unlocked: totalWorkouts >= 100 },
-    { id:14, icon:'🧘', name:'Spartan Mind',        cat:'Recovery',     rarity:'Rare',      desc:'Meditate or stretch for 14 consecutive days',
+    { id:14, name:'Spartan Mind',        cat:'Recovery',     rarity:'Rare',      desc:'Meditate or stretch for 14 consecutive days',
       how:'Use the Recovery or Stretch section in Explore for 14 days in a row. Mind training counts as training.',
       progress:'14 → 30 → 90 days', unlocked: false },
-    { id:15, icon:'📸', name:'The Transformation',  cat:'Physique',     rarity:'Epic',      desc:'Upload your first transformation comparison photo',
+    { id:15, name:'The Transformation',  cat:'Physique',     rarity:'Epic',      desc:'Upload your first transformation comparison photo',
       how:'Go to your Profile and upload a before/after photo. Visual proof of your journey.',
       progress:'Milestone-based unlock', unlocked: false },
-    { id:16, icon:'👑', name:'Alpha Discipline',    cat:'Discipline',   rarity:'Legendary', desc:'Maintain a 60-day unbroken check-in streak',
+    { id:16, name:'Alpha Discipline',    cat:'Discipline',   rarity:'Legendary', desc:'Maintain a 60-day unbroken check-in streak',
       how:'Log progress every single week for 8 weeks straight. Miss one week and the streak resets. Pure discipline.',
       progress:'60 → 180 → 365 days', unlocked: realStreak >= 8 },
-    { id:17, icon:'🐺', name:'Lone Wolf',           cat:'Lifestyle',    rarity:'Rare',      desc:'Log 20 solo training sessions',
+    { id:17, name:'Lone Wolf',           cat:'Lifestyle',    rarity:'Rare',      desc:'Log 20 solo training sessions',
       how:'Train and log 20 workouts independently — no group classes, no partner sessions. Self-reliance builds character.',
       progress:'20 → 50 → 100 solo sessions', unlocked: totalWorkouts >= 20 },
-    { id:18, icon:'🤝', name:'Brotherhood',         cat:'Social',       rarity:'Epic',      desc:'Refer 3 active friends to MSG',
+    { id:18, name:'Brotherhood',         cat:'Social',       rarity:'Epic',      desc:'Refer 3 active friends to MSG',
       how:'Share your referral link with friends and have 3 of them sign up and log at least one workout.',
       progress:'3 → 10 → 25 referrals', unlocked: false },
-    { id:19, icon:'🌍', name:'Built Different',     cat:'Hardcore',     rarity:'Epic',      desc:'Complete a workout outside your home gym',
+    { id:19, name:'Built Different',     cat:'Hardcore',     rarity:'Epic',      desc:'Complete a workout outside your home gym',
       how:'Work out while travelling, at a hotel gym, outdoor park, or any non-home-gym location. Log it manually.',
       progress:'5 → 20 → 50 away sessions', unlocked: false },
-    { id:20, icon:'⚡', name:'MSG Legend',          cat:'Legendary',    rarity:'Mythic',    desc:'365 logged entries + 52-week streak + transformation',
+    { id:20, name:'MSG Legend',          cat:'Legendary',    rarity:'Mythic',    desc:'365 logged entries + 52-week streak + transformation',
       how:'The final boss. Log every week for a full year, hit 365 total entries, and upload your transformation photo. Ultimate status.',
       progress:'Final Prestige — earned once', unlocked: realStreak >= 52 && totalWorkouts >= 365 },
   ];
@@ -187,7 +196,7 @@ export default function ProfileScreen({ onClose, progressLogs, dietGoal, mealLog
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
             <div style={{ position: 'relative' }}>
               <div style={{ width: 80, height: 80, borderRadius: '50%', background: C.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: fn, fontSize: 26, fontWeight: 800, color: '#000' }}>{draft.initials}</div>
-              <div style={{ position: 'absolute', bottom: 0, right: 0, width: 26, height: 26, borderRadius: '50%', background: C.s3, border: `2px solid ${C.bg}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, cursor: 'pointer' }}>✏️</div>
+              <div style={{ position: 'absolute', bottom: 0, right: 0, width: 26, height: 26, borderRadius: '50%', background: C.s3, border: `2px solid ${C.bg}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><EditIcon size={12} color={C.accent} /></div>
             </div>
           </div>
           {/* Fields */}
@@ -253,7 +262,7 @@ export default function ProfileScreen({ onClose, progressLogs, dietGoal, mealLog
       {/* Avatar + name */}
       <div style={{ padding: '24px 20px 18px', display: 'flex', flexDirection: 'column', alignItems: 'center', borderBottom: `1px solid ${C.border}`, position: 'relative' }}>
         <button onClick={() => setEditing(true)} style={{ position: 'absolute', top: 20, right: 20, background: C.s3, border: `1px solid ${C.border}`, borderRadius: 8, padding: '5px 12px', color: C.sub, fontFamily: fn, fontWeight: 600, fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
-          ✏️ Edit
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><EditIcon size={13} color={C.accent} />Edit</span>
         </button>
 
         {/* Avatar with camera upload button */}
@@ -284,7 +293,7 @@ export default function ProfileScreen({ onClose, progressLogs, dietGoal, mealLog
             }}
             onMouseDown={e => e.currentTarget.style.transform = 'scale(0.9)'}
             onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
-          >📷</button>
+          ><CameraIcon size={15} color={C.sub} /></button>
           <input
             ref={photoInputRef}
             type="file"
@@ -299,7 +308,7 @@ export default function ProfileScreen({ onClose, progressLogs, dietGoal, mealLog
         <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
           {profile.age && <span style={{ color: C.muted, fontSize: 12 }}>{profile.age} yrs</span>}
           {profile.gender && <span style={{ color: C.muted, fontSize: 12 }}>· {profile.gender}</span>}
-          {profile.city && <span style={{ color: C.muted, fontSize: 12 }}>· 📍 {profile.city}</span>}
+          {profile.city && <span style={{ color: C.muted, fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}>· <LocationPinIcon size={12} color={C.muted} /> {profile.city}</span>}
         </div>
         {dietGoal && (
           <div style={{ display: 'flex', gap: 7, marginTop: 12 }}>
@@ -406,7 +415,7 @@ export default function ProfileScreen({ onClose, progressLogs, dietGoal, mealLog
                   boxShadow: isOpen ? `0 0 16px ${rc}44` : a.unlocked ? `0 0 10px ${rc}22` : 'none',
                   transition: 'all 0.25s ease', position: 'relative', userSelect: 'none',
                 }}>
-                  <div style={{ fontSize: isOpen ? 30 : 24, marginBottom: 5, filter: a.unlocked ? 'none' : 'brightness(0)', transition: 'font-size 0.2s' }}>{a.icon}</div>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}><AchievementBadge id={a.id} unlocked={a.unlocked} rarity={a.rarity} size={isOpen ? 34 : 26} /></div>
                   <div style={{ fontSize: 9, color: a.unlocked ? C.text : C.muted, fontFamily: fb, fontWeight: 700, letterSpacing: '0.03em', lineHeight: 1.3 }}>{a.name}</div>
                   <div style={{ fontSize: 7, color: rc, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 3, opacity: a.unlocked ? 1 : 0.5 }}>{a.rarity}</div>
                   {a.unlocked && !isOpen && (
@@ -423,13 +432,13 @@ export default function ProfileScreen({ onClose, progressLogs, dietGoal, mealLog
                   }}>
                     {/* Header row */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ fontSize: 36 }}>{a.icon}</div>
+                      <div><AchievementBadge id={a.id} unlocked={a.unlocked} rarity={a.rarity} size={38} /></div>
                       <div>
                         <div style={{ fontFamily: fn, fontSize: 15, fontWeight: 800, color: C.text }}>{a.name}</div>
                         <div style={{ display: 'flex', gap: 5, marginTop: 4, flexWrap: 'wrap' }}>
                           <span style={{ background: rc + '1A', color: rc, fontSize: 9, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '2px 8px', borderRadius: 4 }}>{a.rarity}</span>
                           <span style={{ background: C.s3, color: C.sub, fontSize: 9, fontFamily: fb, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', padding: '2px 8px', borderRadius: 4 }}>{a.cat}</span>
-                          <span style={{ background: a.unlocked ? C.green + '20' : C.s4, color: a.unlocked ? C.green : C.muted, fontSize: 9, fontFamily: fb, fontWeight: 700, padding: '2px 8px', borderRadius: 4 }}>{a.unlocked ? '✓ UNLOCKED' : '🔒 LOCKED'}</span>
+                          {a.unlocked ? <span style={{ background: C.green + '20', color: C.green, fontSize: 9, fontFamily: fb, fontWeight: 700, padding: '2px 8px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 4 }}>✓ UNLOCKED</span> : <span style={{ background: C.s4, color: C.muted, fontSize: 9, fontFamily: fb, fontWeight: 700, padding: '2px 8px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 4 }}><LockIcon size={10} color={C.muted} /> LOCKED</span>}
                         </div>
                       </div>
                     </div>
@@ -440,7 +449,7 @@ export default function ProfileScreen({ onClose, progressLogs, dietGoal, mealLog
                     </div>
                     {/* How to earn */}
                     <div style={{ background: rc + '0D', border: `1px solid ${rc}22`, borderRadius: 10, padding: '10px 12px', marginBottom: 10 }}>
-                      <div style={{ fontSize: 9, color: rc, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>💡 How to earn it</div>
+                      <div style={{ fontSize: 9, color: rc, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5, display: 'flex', alignItems: 'center', gap: 4 }}><LightbulbIcon size={11} color={rc} /> How to earn it</div>
                       <div style={{ fontSize: 12, color: C.text, lineHeight: 1.65 }}>{a.how}</div>
                     </div>
                     {/* Progression */}
@@ -456,7 +465,7 @@ export default function ProfileScreen({ onClose, progressLogs, dietGoal, mealLog
         </div>
         <div style={{ marginTop: 16, padding: '12px 14px', background: C.s2, border: `1px solid ${C.border}`, borderRadius: 12 }}>
           <div style={{ fontSize: 11, color: C.muted, lineHeight: 1.55 }}>
-            🔒 <span style={{ color: C.sub }}>Locked achievements are earned through real progress — log workouts, hit streaks, and track nutrition to unlock them.</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><LockIcon size={13} color={C.muted} /><span style={{ color: C.sub }}>Locked achievements are earned through real progress — log workouts, hit streaks, and track nutrition to unlock them.</span></span>
           </div>
         </div>
       </div>

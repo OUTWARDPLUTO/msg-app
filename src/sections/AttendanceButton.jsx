@@ -1,5 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
+import {
+  AnimatedSpinner,
+  CheckCircleIcon,
+  LocationPinIcon,
+  WarningIcon
+} from '../components/visuals/index.js';
 import { checkIn, getTodayCheckIn, getDistance, getFBFirestore } from '../shared/firebase.js';
 
 export default function AttendanceButton({ uid, gymId, onCheckIn }) {
@@ -261,7 +267,7 @@ export default function AttendanceButton({ uid, gymId, onCheckIn }) {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 22, transition: 'all 0.3s',
         }}>
-          {loading ? '⏳' : checked ? '✅' : '📍'}
+          {loading ? <AnimatedSpinner size={20} color={C.accent} /> : checked ? <CheckCircleIcon size={22} color={C.green} /> : <LocationPinIcon size={22} color={C.accent} />}
         </div>
         <div style={{ flex: 1, textAlign: 'left' }}>
           <div style={{
@@ -301,7 +307,7 @@ export default function AttendanceButton({ uid, gymId, onCheckIn }) {
           }}>
             {scannerError ? (
               <div style={{ padding: 20, color: C.red, fontSize: 13, textAlign: 'center' }}>
-                ⚠️ Camera Error: {scannerError}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><WarningIcon size={14} color={C.red} /> Camera Error: {scannerError}</span>
               </div>
             ) : (
               <>

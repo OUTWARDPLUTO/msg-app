@@ -1,0 +1,284 @@
+/* src/components/visuals/visuals.css */
+/* Micro-animations and visual system styles for MSG */
+
+/* ─── Keyframe Animations ─── */
+
+/* Flickering Flame */
+@keyframes msgFlamePulse {
+  0%, 100% {
+    transform: scale(1) translateY(0);
+    filter: drop-shadow(0 0 4px rgba(255, 92, 51, 0.4));
+  }
+  50% {
+    transform: scale(1.06) translateY(-1px);
+    filter: drop-shadow(0 0 10px rgba(255, 92, 51, 0.7));
+  }
+}
+
+@keyframes msgFlameTongue {
+  0%, 100% {
+    transform: scaleY(1) rotate(0deg);
+  }
+  33% {
+    transform: scaleY(1.12) rotate(-2deg);
+  }
+  66% {
+    transform: scaleY(0.95) rotate(2deg);
+  }
+}
+
+@keyframes msgEmberRise {
+  0% {
+    transform: translateY(0) scale(0.6);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-14px) scale(0.2);
+    opacity: 0;
+  }
+}
+
+/* Trophy & Medal Shimmer */
+@keyframes msgTrophyFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes msgShimmerSweep {
+  0% {
+    transform: translateX(-120%) rotate(25deg);
+  }
+  100% {
+    transform: translateX(200%) rotate(25deg);
+  }
+}
+
+@keyframes msgStarTwinkle {
+  0%, 100% {
+    transform: scale(0.4) rotate(0deg);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.1) rotate(90deg);
+    opacity: 1;
+  }
+}
+
+/* Water Drop Breathing */
+@keyframes msgWaterWobble {
+  0%, 100% {
+    transform: scale(1, 1);
+  }
+  30% {
+    transform: scale(0.96, 1.04);
+  }
+  60% {
+    transform: scale(1.04, 0.96);
+  }
+}
+
+@keyframes msgWaterRipple {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+/* Stopwatch Hand Rotation */
+@keyframes msgStopwatchTick {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Signal Radiating Waves */
+@keyframes msgSignalWave {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Search Scanning Optic */
+@keyframes msgSearchScan {
+  0%, 100% {
+    transform: rotate(-10deg) scale(1);
+  }
+  50% {
+    transform: rotate(15deg) scale(1.05);
+  }
+}
+
+@keyframes msgBeamSweep {
+  0%, 100% {
+    opacity: 0.2;
+    transform: translateY(-2px);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translateY(2px);
+  }
+}
+
+/* Warning Pulse */
+@keyframes msgWarningPulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 6px rgba(229, 57, 53, 0.3));
+  }
+  50% {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 14px rgba(229, 57, 53, 0.6));
+  }
+}
+
+/* Lock Secure Pulse */
+@keyframes msgLockNudge {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  10% {
+    transform: translateY(-2px);
+  }
+  20% {
+    transform: translateY(0);
+  }
+}
+
+/* Celebration Confetti */
+@keyframes msgConfettiPop {
+  0% {
+    transform: translate(0, 0) scale(0) rotate(0deg);
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(var(--tx, 15px), var(--ty, -25px)) scale(1) rotate(var(--tr, 180deg));
+    opacity: 0;
+  }
+}
+
+/* AI Neural Pulse */
+@keyframes msgNeuralNode {
+  0%, 100% {
+    transform: scale(0.9);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+/* Spinner Orbit */
+@keyframes msgOrbitSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Utility Animation Classes */
+.msg-anim-flame {
+  animation: msgFlamePulse 2.2s ease-in-out infinite;
+}
+
+.msg-anim-flame-inner {
+  transform-origin: center bottom;
+  animation: msgFlameTongue 1.6s ease-in-out infinite;
+}
+
+.msg-anim-ember-1 {
+  animation: msgEmberRise 1.8s ease-out infinite;
+}
+.msg-anim-ember-2 {
+  animation: msgEmberRise 2.1s ease-out infinite 0.6s;
+}
+
+.msg-anim-trophy {
+  animation: msgTrophyFloat 3s ease-in-out infinite;
+}
+
+.msg-anim-star-1 {
+  transform-origin: center;
+  animation: msgStarTwinkle 2.4s ease-in-out infinite;
+}
+.msg-anim-star-2 {
+  transform-origin: center;
+  animation: msgStarTwinkle 2.8s ease-in-out infinite 0.7s;
+}
+
+.msg-anim-water {
+  transform-origin: center bottom;
+  animation: msgWaterWobble 3s ease-in-out infinite;
+}
+
+.msg-anim-stopwatch-hand {
+  transform-origin: 12px 12px;
+  animation: msgStopwatchTick 4s linear infinite;
+}
+
+.msg-anim-signal-wave-1 {
+  transform-origin: center;
+  animation: msgSignalWave 2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+.msg-anim-signal-wave-2 {
+  transform-origin: center;
+  animation: msgSignalWave 2s cubic-bezier(0.16, 1, 0.3, 1) infinite 0.6s;
+}
+
+.msg-anim-warning {
+  animation: msgWarningPulse 2.2s ease-in-out infinite;
+}
+
+.msg-anim-spin {
+  animation: msgOrbitSpin 1s linear infinite;
+}
+
+.msg-anim-search {
+  transform-origin: 35% 35%;
+  animation: msgSearchScan 3.5s ease-in-out infinite;
+}
+
+/* Accessibility: Respect Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .msg-anim-flame,
+  .msg-anim-flame-inner,
+  .msg-anim-ember-1,
+  .msg-anim-ember-2,
+  .msg-anim-trophy,
+  .msg-anim-star-1,
+  .msg-anim-star-2,
+  .msg-anim-water,
+  .msg-anim-stopwatch-hand,
+  .msg-anim-signal-wave-1,
+  .msg-anim-signal-wave-2,
+  .msg-anim-warning,
+  .msg-anim-spin,
+  .msg-anim-search {
+    animation: none !important;
+    transform: none !important;
+  }
+}

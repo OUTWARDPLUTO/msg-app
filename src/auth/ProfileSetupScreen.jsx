@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { Lbl } from '../shared/primitives.jsx';
+import { RocketIcon } from '../components/visuals';
 
 export default function ProfileSetupScreen({ user, onComplete, onBackToLogin }) {
   const [step, setStep] = useState(0);
@@ -163,7 +164,11 @@ export default function ProfileSetupScreen({ user, onComplete, onBackToLogin }) 
           cursor: canNext ? 'pointer' : 'not-allowed',
           boxShadow: canNext ? C.accentShadow : 'none', transition: 'all 0.2s',
         }}>
-          {isLast ? "Let's Go 🚀" : 'Next →'}
+          {isLast ? (
+            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              Let's Go <RocketIcon size={16} color="#111" />
+            </span>
+          ) : 'Next →'}
         </button>
       </div>
       <button onClick={() => onComplete(user)} style={{

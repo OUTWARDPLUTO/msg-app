@@ -1,5 +1,14 @@
 import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
+import {
+  DumbbellIcon,
+  SaladIcon,
+  BarChartIcon,
+  CheckCircleIcon,
+  CalendarIcon,
+  LightbulbIcon,
+  ZapIcon
+} from '../components/visuals/index.js';
 import { Card, Lbl, ScoreRing, ModalShell, Spinner, Skeleton } from '../shared/primitives.jsx';
 import { getFBFirestore, getFBAuth, recordManualCheckIn, getTodayCheckIn } from '../shared/firebase.js';
 import { getStatusFromScore, computeEngagementScore } from '../shared/engagementScore.js';
@@ -206,7 +215,7 @@ export default function MemberDetailSheet({ member, gymId, onClose }) {
     return () => { active = false; };
   }, [member.uid, gymId]);
 
-  const TYPE_ICONS = { workout: '💪', diet: '🥗', progress: '📊', checkin: '✅' };
+  const TYPE_ICONS = { workout: <DumbbellIcon size={14} color={C.accent} />, diet: <SaladIcon size={14} color={C.green} />, progress: <BarChartIcon size={14} color={C.blue} />, checkin: <CheckCircleIcon size={14} color={C.accent} /> };
 
   // Map real data to mockup-like formatting where possible
   const statusText = (memberDetail?.status || 'active') === 'inactive' ? 'Inactive' : 'Active';
@@ -429,7 +438,7 @@ export default function MemberDetailSheet({ member, gymId, onClose }) {
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 16
                     }}>
-                      {checkedInToday ? '✅' : '📅'}
+                      {checkedInToday ? <CheckCircleIcon size={15} color={C.green} /> : <CalendarIcon size={15} color={C.muted} />}
                     </div>
                     <div>
                       <div style={{ fontSize: 13, fontFamily: fb, fontWeight: 700, color: C.text }}>
@@ -568,7 +577,7 @@ export default function MemberDetailSheet({ member, gymId, onClose }) {
                   {eng.tips && eng.tips.length > 0 && (
                     <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${C.border}` }}>
                       <div style={{ fontSize: 12, fontFamily: fb, fontWeight: 700, color: C.text, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span>💡</span> What improves this score?
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><LightbulbIcon size={13} color="#f59e0b" /><span>What improves this score?</span></span>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                         {eng.tips.map((tip, idx) => (
@@ -690,7 +699,7 @@ export default function MemberDetailSheet({ member, gymId, onClose }) {
                     </div>
                   ) : (
                     activity.slice(0, 6).map((ev, idx) => {
-                      const icon = TYPE_ICONS[ev.type] || '⚡';
+                      const icon = TYPE_ICONS[ev.type] || <ZapIcon size={14} color="#f59e0b" />;
                       const label = ev.type === 'workout' ? 'Completed Workout' :
                                     ev.type === 'diet' ? 'Logged Nutrition' :
                                     ev.type === 'checkin' ? 'Gym Check-in' :

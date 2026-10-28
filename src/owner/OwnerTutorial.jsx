@@ -1,33 +1,41 @@
 import { useState, useRef } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
+import {
+  DumbbellIcon,
+  BarChartIcon,
+  UsersIcon,
+  CalendarIcon,
+  ZapIcon,
+  RocketIcon
+} from '../components/visuals/index.js';
 
 const SLIDES = [
   {
-    icon: '🏋️',
+    icon: <DumbbellIcon size={28} color={C.accent} />,
     title: 'Welcome to MSG Owner!',
     body: "You're all set to manage your gym. Let's show you the most important features in just 30 seconds.",
     accent: C.accent,
   },
   {
-    icon: '📊',
+    icon: <BarChartIcon size={28} color={C.accent} />,
     title: 'Your Command Centre',
     body: 'The Overview tab shows live stats — check-ins, active members, renewals and revenue — all at a glance. Tap any card to dive deeper.',
     accent: '#FF6B6B',
   },
   {
-    icon: '👥',
+    icon: <UsersIcon size={28} color={C.accent} />,
     title: 'Manage Your Members',
     body: 'Add members, track engagement scores, and see who is at risk of dropping off in the Alerts tab. Stay proactive.',
     accent: '#4ECDC4',
   },
   {
-    icon: '📅',
+    icon: <CalendarIcon size={28} color={C.accent} />,
     title: 'Attendance & QR',
     body: 'Show the QR code at reception for instant check-ins, or manually log walk-ins. The 30-day chart always keeps you informed.',
     accent: '#FFE66D',
   },
   {
-    icon: '⚡',
+    icon: <ZapIcon size={28} color="#f59e0b" />,
     title: "You're Ready to Go!",
     body: 'Use Quick Actions on the home screen to add members, mark attendance, or jump to Gym Settings instantly.',
     accent: '#A8E6CF',
@@ -160,7 +168,7 @@ export default function OwnerTutorial({ onDone }) {
           boxShadow: isLast ? `0 4px 20px ${C.accent}55` : 'none',
           transition: 'all 0.3s ease',
         }}>
-          {isLast ? "🚀 Let's Go!" : 'Next →'}
+          {isLast ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><RocketIcon size={14} color="#000" />Let's Go!</span> : 'Next →'}
         </button>
       </div>
 

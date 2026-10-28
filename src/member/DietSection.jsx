@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { BASE_DRI, NMETA, DEF_MEALS, API_URL, callClaude } from './memberData.js';
 import { Card, Tag, Lbl, Hd, NRow } from './primitives.jsx';
+import { AnimatedWaterDrop, WaterDropIcon, NotesIcon, ProteinSteakIcon } from '../components/visuals';
 // ─── Meal Card (Expandable) ──────────────────────────────────────────────────
 function MealCard({ item, onDelete }) {
   const [open, setOpen] = useState(false);
@@ -341,7 +342,7 @@ function WaterTracker() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ fontSize: 22 }}>💧</div>
+          <AnimatedWaterDrop size={26} />
           <div>
             <div style={{ fontFamily: fn, fontSize: 15, fontWeight: 800, color: C.text, letterSpacing: '-0.01em' }}>Water Intake</div>
             <div style={{ fontSize: 11, color: C.muted, marginTop: 1 }}>
@@ -432,7 +433,7 @@ function WaterTracker() {
               fontSize: 13, transition: 'all 0.18s ease',
               boxShadow: i < glasses ? `0 0 8px ${waterColor}44` : 'none',
             }}
-          >{i < glasses ? '💧' : '○'}</button>
+          >{i < glasses ? <WaterDropIcon size={14} color={waterColor} /> : <span style={{ opacity: 0.35, fontSize: 11 }}>○</span>}</button>
         ))}
         {goalGlasses > 12 && (
           <div style={{ fontSize: 10, color: C.muted, alignSelf: 'center', paddingLeft: 4 }}>
@@ -822,7 +823,7 @@ export default function DietSection({ dietGoal, setDietGoal, mealLog, setMealLog
           background: noteOpen ? C.accent + '1A' : C.s3, border: `1px solid ${noteOpen ? C.accent : C.border}`,
           borderRadius: 8, padding: '5px 10px', color: noteOpen ? C.accent : C.muted,
           fontFamily: fb, fontWeight: 700, fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', flexShrink: 0, marginLeft: 8,
-        }}>📝 {noteOpen ? 'Close' : 'Notes'}</button>
+        }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><NotesIcon size={12} color={noteOpen ? C.accent : C.muted} /> {noteOpen ? 'Close' : 'Notes'}</span></button>
       </div>
 
       {/* Notepad */}
@@ -833,7 +834,7 @@ export default function DietSection({ dietGoal, setDietGoal, mealLog, setMealLog
             <div style={{ padding: '12px 14px 10px', borderBottom: `1px solid ${C.border}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ fontFamily: fn, fontSize: 14, fontWeight: 700, color: C.accent }}>
-                  🥩 High Protein Guide · {dietGoal.diet || 'Flexible'}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><ProteinSteakIcon size={16} color={C.accent} /> High Protein Guide · {dietGoal.diet || 'Flexible'}</span>
                 </div>
                 <span style={{ fontSize: 10, color: C.muted, fontFamily: fb, fontWeight: 600 }}>per serving</span>
               </div>
@@ -865,7 +866,7 @@ export default function DietSection({ dietGoal, setDietGoal, mealLog, setMealLog
             </div>
             {/* Personal notes */}
             <div style={{ padding: '10px 14px' }}>
-              <div style={{ fontSize: 10, color: C.muted, fontFamily: fb, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>📝 My Notes</div>
+              <div style={{ fontSize: 10, color: C.muted, fontFamily: fb, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6, display: 'inline-flex', alignItems: 'center', gap: 5 }}><NotesIcon size={12} color={C.muted} /> My Notes</div>
               <textarea value={note} onChange={e => setNote(e.target.value.slice(0, 400))} rows={3}
                 placeholder="Track how you feel, cheat meals, energy levels..."
                 style={{ width: '100%', boxSizing: 'border-box', background: 'transparent', border: 'none', color: C.text, fontSize: 12, fontFamily: fn, resize: 'none', outline: 'none', lineHeight: 1.6 }} />

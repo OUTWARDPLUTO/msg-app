@@ -7,6 +7,21 @@ import { BASE_DRI, API_URL, callClaude } from './memberData.js';
 import { parseLogDate, getWeekStart, calcStreak, getThisWeekActivity, getTodayDowIndex, ChartTip } from './utils.jsx';
 import { Card, Tag, Lbl, Hd, NRow } from './primitives.jsx';
 import { MembershipCard, AttendanceHeatMap } from './StoreSection.jsx';
+import {
+  AnimatedFlame,
+  AnimatedTrophy,
+  AnimatedMedal,
+  AnimatedWaterDrop,
+  BarChartIcon,
+  DaypartIcon,
+  ProteinSteakIcon,
+  MineralSaltIcon,
+  WarningIcon,
+  CopyIcon,
+  TrendDownIcon,
+  SleepIcon,
+  SaladIcon,
+} from '../components/visuals';
 
 export default function HomeSection({ mealLog, progressLogs, dietGoal, onLogClick, user, gymId, onAchievementsClick, setBackHandler }) {
   const [checkInKey, setCheckInKey] = useState(0);
@@ -24,7 +39,7 @@ export default function HomeSection({ mealLog, progressLogs, dietGoal, onLogClic
   // Dynamic greeting based on time of day
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : hour < 21 ? 'Good evening' : 'Good night';
-  const greetEmoji = hour < 12 ? '☀️' : hour < 17 ? '👋' : hour < 21 ? '🌆' : '🌙';
+  // Daypart icon rendered directly via DaypartIcon component
   const firstName = (user?.name || 'there').split(' ')[0];
 
   // Water quick-log shared with WaterTracker (same localStorage keys)
@@ -44,12 +59,12 @@ export default function HomeSection({ mealLog, progressLogs, dietGoal, onLogClic
 
 
   const insights = [
-    tot.p < dri.protein * 0.7 && { icon: '🥩', text: `You're at ${Math.round(tot.p)}g protein — need ${dri.protein}g today`, c: C.orange },
-    tot.na > 2300 && { icon: '🧂', text: `High sodium today (${Math.round(tot.na)}mg) — watch salty foods`, c: C.red },
-    tot.cal > dri.calories * 1.1 && { icon: '⚠️', text: `You're ${Math.round(tot.cal - dri.calories)} kcal over today's goal`, c: C.red },
-    streak > 0 ? { icon: '🔥', text: `${streak}-day check-in streak — momentum is everything!`, c: C.accent }
-      : { icon: '📋', text: 'No recent check-ins — log your progress to start a streak!', c: C.orange },
-    last && wDiff && parseFloat(wDiff) < 0 && { icon: '📉', text: `Down ${Math.abs(wDiff)}kg since last check-in — great progress!`, c: C.green },
+    tot.p < dri.protein * 0.7 && { icon: <ProteinSteakIcon size={16} color={C.orange} />, text: `You're at ${Math.round(tot.p)}g protein — need ${dri.protein}g today`, c: C.orange },
+    tot.na > 2300 && { icon: <MineralSaltIcon size={16} color={C.red} />, text: `High sodium today (${Math.round(tot.na)}mg) — watch salty foods`, c: C.red },
+    tot.cal > dri.calories * 1.1 && { icon: <WarningIcon size={16} color={C.red} />, text: `You're ${Math.round(tot.cal - dri.calories)} kcal over today's goal`, c: C.red },
+    streak > 0 ? { icon: <AnimatedFlame size={16} />, text: `${streak}-day check-in streak — momentum is everything!`, c: C.accent }
+      : { icon: <CopyIcon size={16} color={C.orange} />, text: 'No recent check-ins — log your progress to start a streak!', c: C.orange },
+    last && wDiff && parseFloat(wDiff) < 0 && { icon: <TrendDownIcon size={16} color={C.green} />, text: `Down ${Math.abs(wDiff)}kg since last check-in — great progress!`, c: C.green },
   ].filter(Boolean);
 
   return (
@@ -59,7 +74,7 @@ export default function HomeSection({ mealLog, progressLogs, dietGoal, onLogClic
           {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
         </div>
         <div style={{ fontFamily: fn, fontSize: 24, fontWeight: 800, color: C.text, lineHeight: 1.15, marginTop: 6, letterSpacing: '-0.02em' }}>
-          {greeting}, <span style={{ color: C.accent }}>{firstName}</span> {greetEmoji}
+          {greeting}, <span style={{ color: C.accent }}>{firstName}</span> <DaypartIcon hour={hour} size={22} style={{ display: 'inline-block', verticalAlign: 'middle', marginLeft: 4 }} />
         </div>
       </div>
 
@@ -96,13 +111,13 @@ export default function HomeSection({ mealLog, progressLogs, dietGoal, onLogClic
             <div style={{ color: C.accent, opacity: .7, fontSize: 8, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 3 }}>
               {streak === 1 ? 'Day' : 'Days'}
             </div>
-            <div style={{ fontSize: 18, marginTop: 4 }}>{streak > 0 ? '🔥' : '💤'}</div>
+            <div style={{ marginTop: 4, display: 'flex', justifyContent: 'center' }}>{streak > 0 ? <AnimatedFlame size={20} /> : <SleepIcon size={18} color={C.muted} />}</div>
           </Card>
           <button onClick={onLogClick} style={{
             background: C.s2, border: `1px solid ${C.border}`, borderRadius: 14, padding: '10px 6px',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, cursor: 'pointer',
           }}>
-            <div style={{ width: 32, height: 32, borderRadius: '50%', background: C.accent + '18', border: `1.5px solid ${C.accent}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>📊</div>
+            <div style={{ width: 32, height: 32, borderRadius: '50%', background: C.accent + '18', border: `1.5px solid ${C.accent}44`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><BarChartIcon size={16} color={C.accent} /></div>
             <div style={{ fontSize: 8, fontFamily: fb, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: C.accent, lineHeight: 1.2, textAlign: 'center' }}>Log<br />Progress</div>
           </button>
         </div>
@@ -206,7 +221,7 @@ export default function HomeSection({ mealLog, progressLogs, dietGoal, onLogClic
                 transform: 'scale(1)',
               }}
               title="Tap to add a glass"
-            >💧</button>
+            ><AnimatedWaterDrop size={20} filled={wGlasses > 0} /></button>
 
             {/* Progress bar */}
             <div style={{ flex: 1 }}>
@@ -237,7 +252,7 @@ export default function HomeSection({ mealLog, progressLogs, dietGoal, onLogClic
           </div>
 
           {mealLog.length === 0 ? (
-            <div style={{ fontSize: 12, color: C.muted, textAlign: 'center', padding: '8px 0' }}>No food logged yet — tap Diet to start tracking 🥗</div>
+            <div style={{ fontSize: 12, color: C.muted, textAlign: 'center', padding: '8px 0' }}>No food logged yet — tap Diet to start tracking</div>
           ) : (
             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
               {[
@@ -391,7 +406,7 @@ export default function HomeSection({ mealLog, progressLogs, dietGoal, onLogClic
         >
           {/* Glow blob */}
           <div style={{ position: 'absolute', right: -20, top: -20, width: 80, height: 80, background: C.accent + '18', borderRadius: '50%', filter: 'blur(18px)', pointerEvents: 'none' }} />
-          <div style={{ width: 48, height: 48, borderRadius: 14, background: C.accent + '18', border: `1.5px solid ${C.accent}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>🏆</div>
+          <div style={{ width: 48, height: 48, borderRadius: 14, background: C.accent + '18', border: `1.5px solid ${C.accent}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><AnimatedTrophy size={28} /></div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontFamily: fn, fontSize: 15, fontWeight: 800, color: C.text, letterSpacing: '-0.01em' }}>Achievements</div>
             <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>Track your milestones &amp; unlock badges</div>
@@ -415,7 +430,7 @@ export default function HomeSection({ mealLog, progressLogs, dietGoal, onLogClic
           boxShadow: `0 4px 18px ${C.blue}12`,
         }}>
           <div style={{ position: 'absolute', right: -20, top: -20, width: 80, height: 80, background: C.blue + '15', borderRadius: '50%', filter: 'blur(18px)', pointerEvents: 'none' }} />
-          <div style={{ width: 48, height: 48, borderRadius: 14, background: C.blue + '18', border: `1.5px solid ${C.blue}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>🏅</div>
+          <div style={{ width: 48, height: 48, borderRadius: 14, background: C.blue + '18', border: `1.5px solid ${C.blue}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><AnimatedMedal size={28} /></div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <div style={{ fontFamily: fn, fontSize: 15, fontWeight: 800, color: C.text, letterSpacing: '-0.01em' }}>Leaderboard</div>

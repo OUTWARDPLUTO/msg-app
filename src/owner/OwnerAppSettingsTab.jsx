@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { Card, Lbl, SettingsRow } from '../shared/primitives.jsx';
 import { useTranslation } from 'react-i18next';
+import { SunIcon, MoonIcon } from '../components/visuals';
 
 const LANGS = [
   { code: 'en-IN', name: 'English', region: 'India', native: 'English' },
@@ -125,8 +126,10 @@ export default function OwnerAppSettingsTab({ darkMode, onToggleTheme, onBack, o
           <button onClick={onToggleTheme} style={{
             padding: '6px 14px', borderRadius: 10, background: C.accent,
             color: '#111', border: 'none', fontFamily: fb, fontWeight: 700,
-            fontSize: 11, cursor: 'pointer', boxShadow: C.accentShadow
+            fontSize: 11, cursor: 'pointer', boxShadow: C.accentShadow,
+            display: 'inline-flex', alignItems: 'center', gap: 6,
           }}>
+            {darkMode ? <SunIcon size={13} color="#111" /> : <MoonIcon size={13} color="#111" />}
             {darkMode ? t('settings.btnLight') : t('settings.btnDark')}
           </button>
         </div>

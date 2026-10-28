@@ -5,6 +5,15 @@
 import { useState } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import {
+  EmptyWorkoutsIllustration,
+  ZapIcon,
+  PlayIcon,
+  TrashIcon,
+  ClockIcon,
+  DumbbellIcon,
+  RocketIcon
+} from '../components/visuals/index.js';
+import {
   getSavedPlans,
   deletePlanFromLibrary,
   getActiveWorkoutSession,
@@ -49,7 +58,7 @@ export default function WorkoutPlanLibrary({
         }}>
           <div>
             <div style={{ fontSize: 10, fontFamily: fb, fontWeight: 800, color: C.accent, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              ⚡ Workout in Progress
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><ZapIcon size={15} color="#f59e0b" />Workout in Progress</span>
             </div>
             <div style={{ fontFamily: fn, fontWeight: 800, fontSize: 14, color: C.text, marginTop: 2 }}>
               {activeSession.dayFocus || activeSession.planName || 'Active Session'}
@@ -63,7 +72,7 @@ export default function WorkoutPlanLibrary({
             color: '#000', fontFamily: fn, fontWeight: 800, fontSize: 12, cursor: 'pointer',
             whiteSpace: 'nowrap'
           }}>
-            Resume ▶
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>Resume <PlayIcon size={11} color="#000" /></span>
           </button>
         </div>
       )}
@@ -89,7 +98,9 @@ export default function WorkoutPlanLibrary({
           background: C.s2, border: `1px solid ${C.border}`, borderRadius: 18,
           padding: '36px 20px', textAlign: 'center', marginTop: 10
         }}>
-          <div style={{ fontSize: 40, marginBottom: 10 }}>📋</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+            <EmptyWorkoutsIllustration size={110} />
+          </div>
           <div style={{ fontFamily: fn, fontWeight: 800, fontSize: 16, color: C.text, marginBottom: 6 }}>No Plans Saved Yet</div>
           <div style={{ fontSize: 12.5, color: C.sub, lineHeight: 1.5, maxWidth: 300, margin: '0 auto 20px' }}>
             Generate a personalized AI routine or enter your own workout split to start training with guided tracking.
@@ -151,7 +162,7 @@ export default function WorkoutPlanLibrary({
                   }}
                   title="Delete Plan"
                 >
-                  🗑
+                  <TrashIcon size={15} color={C.muted} />
                 </button>
               </div>
 
@@ -177,9 +188,9 @@ export default function WorkoutPlanLibrary({
 
               {/* Metadata Badges */}
               <div style={{ display: 'flex', gap: 12, marginTop: 12, alignItems: 'center', fontSize: 11, color: C.muted }}>
-                <span>⏱ Approx. {duration}</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><ClockIcon size={12} color={C.muted} />Approx. {duration}</span>
                 <span>•</span>
-                <span>💪 {totalExCount} exercises / session</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><DumbbellIcon size={12} color={C.muted} />{totalExCount} exercises / session</span>
               </div>
 
               {/* Action Buttons */}
@@ -260,9 +271,9 @@ export default function WorkoutPlanLibrary({
                       {currentDay.focus || currentDay.day}
                     </div>
                     <div style={{ display: 'flex', gap: 10, marginTop: 6, fontSize: 11, color: C.sub }}>
-                      <span>⏱ Approx. duration: <strong>{approxDuration}</strong></span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><ClockIcon size={12} color={C.sub} />Approx. duration: <strong>{approxDuration}</strong></span>
                       <span>•</span>
-                      <span>💪 {(currentDay.exercises || []).length} exercises</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><DumbbellIcon size={12} color={C.sub} />{(currentDay.exercises || []).length} exercises</span>
                     </div>
                   </div>
 
@@ -289,7 +300,7 @@ export default function WorkoutPlanLibrary({
                             {ex.sets} × {ex.reps}
                           </div>
                           <div style={{ fontSize: 10, color: C.muted, marginTop: 1 }}>
-                            ⏱ {ex.rest || 60}s rest
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><ClockIcon size={11} color={C.muted} />{ex.rest || 60}s rest</span>
                           </div>
                         </div>
                       </div>
@@ -307,7 +318,7 @@ export default function WorkoutPlanLibrary({
                     color: '#000', fontFamily: fn, fontWeight: 800, fontSize: 14, cursor: 'pointer',
                     boxShadow: `0 8px 24px ${C.accent}40`, textTransform: 'uppercase', letterSpacing: '0.04em'
                   }}>
-                    Start This Workout 🚀
+                    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>Start This Workout <RocketIcon size={16} color="#000" /></span>
                   </button>
                 </div>
               );

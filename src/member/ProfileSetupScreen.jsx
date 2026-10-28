@@ -1,5 +1,17 @@
 import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
+import {
+  RocketIcon,
+  WaveIcon,
+  BarChartIcon,
+  AnimatedTrophy,
+  AnimatedMedal,
+  DumbbellIcon,
+  SaladIcon,
+  StoreIcon,
+  TrendUpIcon,
+  UserIcon
+} from '../components/visuals/index.js';
 import { Card } from './primitives.jsx';
 import { sanitizeString, validateNumber } from '../shared/security.js';
 // ─── Profile Setup Screen (shown once after first signup) ─────────────────────
@@ -13,7 +25,7 @@ export default function ProfileSetupScreen({ user, onComplete }) {
 
   const steps = [
     {
-      title: 'Who Are You? 👋', sub: 'Let\'s personalise your experience from day one.',
+      title: 'Who Are You?', sub: 'Let\'s personalise your experience from day one.',
       fields: [
         { l: 'Display Name', k: 'name', p: 'What should we call you?', type: 'text' },
         { l: 'Age', k: 'age', p: 'e.g. 22', type: 'number' },
@@ -21,7 +33,7 @@ export default function ProfileSetupScreen({ user, onComplete }) {
       ],
     },
     {
-      title: 'Your Body 💪', sub: 'Honest numbers = smarter targets. We\'ve got you.',
+      title: 'Your Body', sub: 'Honest numbers = smarter targets. We\'ve got you.',
       fields: [
         { l: 'Height (cm)', k: 'height', p: 'e.g. 175', type: 'number' },
         { l: 'Current Weight (kg)', k: 'currentWeight', p: 'e.g. 72.5', type: 'number' },
@@ -36,7 +48,7 @@ export default function ProfileSetupScreen({ user, onComplete }) {
     { l: 'Activity Level', k: 'activity', opts: ['Sedentary', 'Lightly Active', 'Moderately Active', 'Very Active'] },
     { l: 'Diet Style', k: 'diet', opts: ['Flexible', 'Non-Vegetarian', 'Vegetarian', 'Vegan'] },
   ];
-  const selStep = { title: 'Your Mission 🎯', sub: 'Set the direction. We\'ll handle the plan.', sels: selOpts };
+  const selStep = { title: 'Your Mission', sub: 'Set the direction. We\'ll handle the plan.', sels: selOpts };
 
   const allSteps = [...steps, selStep];
   const cur = allSteps[step];
@@ -111,7 +123,7 @@ export default function ProfileSetupScreen({ user, onComplete }) {
           border: 'none', borderRadius: 14, fontFamily: fn, fontWeight: 800, fontSize: 14,
           cursor: canNext ? 'pointer' : 'not-allowed', boxShadow: canNext ? C.accentShadow : 'none', transition: 'all 0.2s',
         }}>
-          {isLast ? 'Let\'s Go 🚀' : 'Next →'}
+          {isLast ? <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>Let's Go <RocketIcon size={14} color="#000" /></span> : 'Next →'}
         </button>
       </div>
 
@@ -125,16 +137,16 @@ export default function ProfileSetupScreen({ user, onComplete }) {
 
 // ─── Tutorial Overlay (Spotlight) ────────────────────────────────────────────
 const TUTORIAL_STEPS = [
-  { id: 'welcome',      emoji: '👋', title: 'Welcome to MSG!',             body: "Your personal smart fitness app. Let's take a 30-second tour so you know exactly where everything is.", target: null },
-  { id: 'stats',        emoji: '📊', title: 'Your Daily Stats',            body: 'Streak, calories, body weight — updated every day. Your personal health snapshot at a glance.', target: 'tut-stats' },
-  { id: 'achievements', emoji: '🏆', title: 'Achievements',                body: 'Tap here to view earned badges and milestones. Unlock new ones by consistently hitting your goals.', target: 'tut-achievements' },
-  { id: 'leaderboard',  emoji: '🏅', title: 'Leaderboard — Coming Soon',  body: "Soon you'll be able to compete with friends and climb global fitness ranks.", target: 'tut-leaderboard' },
-  { id: 'workout',      emoji: '💪', title: 'Workout',                     body: 'Build your week plan with 140+ exercises across strength, yoga, bands & rehab. Rest timer included.', target: 'tut-tab-workout' },
-  { id: 'diet',         emoji: '🥗', title: 'Diet & Water',                body: 'Log any meal in plain language. Track 15 nutrients and set your custom daily water goal in litres.', target: 'tut-tab-diet' },
-  { id: 'store',        emoji: '🛒', title: 'Store',                       body: 'Browse products and supplements offered by your gym directly from the app.', target: 'tut-tab-store' },
-  { id: 'progress',     emoji: '📈', title: 'Progress',                    body: 'Log weight, body fat & measurements. Charts show your transformation week over week.', target: 'tut-tab-progress' },
-  { id: 'profile',      emoji: '👤', title: 'Your Profile',                body: 'Tap your avatar to open achievements, settings, language options, or sign out.', target: 'tut-profile-btn' },
-  { id: 'done',         emoji: '🚀', title: "You're all set!",             body: "Your fitness journey starts now. Log your first workout, track a meal, or weigh in — every action builds your streak!", target: null },
+  { id: 'welcome',      title: 'Welcome to MSG!',             body: "Your personal smart fitness app. Let's take a 30-second tour so you know exactly where everything is.", target: null },
+  { id: 'stats',        title: 'Your Daily Stats',            body: 'Streak, calories, body weight — updated every day. Your personal health snapshot at a glance.', target: 'tut-stats' },
+  { id: 'achievements', title: 'Achievements',                body: 'Tap here to view earned badges and milestones. Unlock new ones by consistently hitting your goals.', target: 'tut-achievements' },
+  { id: 'leaderboard',  title: 'Leaderboard — Coming Soon',  body: "Soon you'll be able to compete with friends and climb global fitness ranks.", target: 'tut-leaderboard' },
+  { id: 'workout',      title: 'Workout',                     body: 'Build your week plan with 140+ exercises across strength, yoga, bands & rehab. Rest timer included.', target: 'tut-tab-workout' },
+  { id: 'diet',         title: 'Diet & Water',                body: 'Log any meal in plain language. Track 15 nutrients and set your custom daily water goal in litres.', target: 'tut-tab-diet' },
+  { id: 'store',        title: 'Store',                       body: 'Browse products and supplements offered by your gym directly from the app.', target: 'tut-tab-store' },
+  { id: 'progress',     title: 'Progress',                    body: 'Log weight, body fat & measurements. Charts show your transformation week over week.', target: 'tut-tab-progress' },
+  { id: 'profile',      title: 'Your Profile',                body: 'Tap your avatar to open achievements, settings, language options, or sign out.', target: 'tut-profile-btn' },
+  { id: 'done',         title: "You're all set!",             body: "Your fitness journey starts now. Log your first workout, track a meal, or weigh in — every action builds your streak!", target: null },
 ];
 
 export function TutorialOverlay({ onDone }) {
@@ -251,7 +263,7 @@ export function TutorialOverlay({ onDone }) {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-          <span style={{ fontSize: 24, lineHeight: 1 }}>{cur.emoji}</span>
+          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28 }}>{renderTourIcon(cur.id)}</span>
           <div style={{ fontFamily: fn, fontSize: 16, fontWeight: 800, color: C.text, letterSpacing: '-0.02em', lineHeight: 1.2 }}>
             {cur.title}
           </div>
@@ -275,7 +287,7 @@ export function TutorialOverlay({ onDone }) {
             fontFamily: fn, fontWeight: 800, fontSize: 13,
             letterSpacing: '0.02em', cursor: 'pointer', boxShadow: C.accentShadow,
           }}>
-            {isLast ? "🚀 Let's Go!" : 'Next →'}
+            {isLast ? <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><RocketIcon size={14} color="#000" />Let's Go!</span> : 'Next →'}
           </button>
           {!isLast && (
             <button onClick={onDone} style={{

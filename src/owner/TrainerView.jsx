@@ -15,6 +15,15 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
+import {
+  LogoutIcon,
+  AnimatedWarning,
+  ZapIcon,
+  AnimatedCelebration,
+  SearchIcon,
+  BarChartIcon,
+  UsersIcon
+} from '../components/visuals/index.js';
 import { Card, Lbl, Spinner, UserAvatar, Skeleton } from '../shared/primitives.jsx';
 import { getFBFirestore } from '../shared/firebase.js';
 import { getStatusFromScore } from '../shared/engagementScore.js';
@@ -285,7 +294,7 @@ export default function TrainerView({ gymId, user, onLogout }) {
       <div className="msg-scroll" style={{ flex: 1, overflowY: 'auto' }}>
         {error ? (
           <div style={{ textAlign: 'center', padding: '60px 24px' }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>⚠️</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><AnimatedWarning size={40} /></div>
             <div style={{ fontFamily: fb, fontSize: 18, fontWeight: 800, color: C.text, marginBottom: 8 }}>
               Connection Error
             </div>
@@ -341,7 +350,7 @@ export default function TrainerView({ gymId, user, onLogout }) {
             <div style={{ marginBottom: 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                 <div style={{ fontFamily: fb, fontSize: 16, fontWeight: 800, color: C.text }}>
-                  ⚡ Today's Follow-ups
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><ZapIcon size={15} color="#f59e0b" />Today's Follow-ups</span>
                 </div>
                 <span style={{ fontSize: 12, color: C.sub }}>{metrics.followUps.length} pending</span>
               </div>
@@ -351,7 +360,7 @@ export default function TrainerView({ gymId, user, onLogout }) {
                   background: C.s1, border: `1px solid ${C.border}`, borderRadius: 16,
                   padding: '24px 20px', textAlign: 'center',
                 }}>
-                  <div style={{ fontSize: 28, marginBottom: 6 }}>🎉</div>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}><AnimatedCelebration size={36} /></div>
                   <div style={{ fontFamily: fb, fontSize: 14, fontWeight: 700, color: C.text }}>All members active!</div>
                   <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Everyone in your squad has engaged recently.</div>
                 </div>
@@ -480,7 +489,7 @@ export default function TrainerView({ gymId, user, onLogout }) {
             {/* Member List */}
             {filteredMembers.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '60px 20px', color: C.muted }}>
-                <div style={{ fontSize: 32, marginBottom: 8 }}>🔍</div>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}><SearchIcon size={32} color={C.muted} /></div>
                 <div style={{ fontFamily: fb, fontSize: 14, fontWeight: 700, color: C.text }}>No members match</div>
                 <div style={{ fontSize: 12, marginTop: 4 }}>Try clearing search filters or enter a code to link a member.</div>
               </div>
@@ -552,7 +561,7 @@ export default function TrainerView({ gymId, user, onLogout }) {
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
           }}
         >
-          <span style={{ fontSize: 20 }}>📊</span>
+          <BarChartIcon size={20} color={C.accent} />
           Overview
         </button>
 
@@ -565,7 +574,7 @@ export default function TrainerView({ gymId, user, onLogout }) {
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
           }}
         >
-          <span style={{ fontSize: 20 }}>👥</span>
+          <UsersIcon size={20} color={C.accent} />
           Squad ({members.length})
         </button>
       </div>
