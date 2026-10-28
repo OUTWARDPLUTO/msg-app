@@ -30,10 +30,11 @@
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html, body, #root {
         height: 100%;
-        background: #09090C;
+        background-color: #09090C;
         overflow: hidden;
         -webkit-tap-highlight-color: transparent;
         -webkit-touch-callout: none;
+        transition: background-color 0.38s cubic-bezier(0.25, 1, 0.5, 1), color 0.38s cubic-bezier(0.25, 1, 0.5, 1);
       }
       /* Prevent text selection on mobile */
       body { user-select: none; }

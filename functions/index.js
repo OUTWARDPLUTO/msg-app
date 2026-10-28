@@ -183,12 +183,12 @@ exports.onMemberJoined = onDocumentCreated(
 
     await sendToUser({
       uid: ownerUid,
-      title: '🎉 New Member Joined!',
+      title: 'New Member Joined!',
       body: `${name || 'Someone'} just joined your gym.`,
       data: { route: 'members', memberUid: uid || '' },
     });
 
-    await logDelivery({ gymId, uid: ownerUid, type: 'new_member', title: '🎉 New Member Joined!', body: `${name} joined` });
+    await logDelivery({ gymId, uid: ownerUid, type: 'new_member', title: 'New Member Joined!', body: `${name} joined` });
   }
 );
 
@@ -250,15 +250,15 @@ exports.scheduledInactivity = onSchedule(
         let title, body;
         if (inactiveDays < 4) {
           // 2–3 days: gentle reminder
-          title = '🏋️ Miss the gym?';
+          title = 'Miss the gym?';
           body = `Hey ${name || 'there'}! It's been a couple days — a quick workout can reset your energy.`;
         } else if (inactiveDays < 8) {
           // 4–7 days: stronger comeback prompt
-          title = '💪 Time to come back!';
+          title = 'Time to come back!';
           body = `${name || 'Hey'}! It's been ${Math.floor(inactiveDays)} days. Let's not lose that streak — your body is waiting!`;
         } else {
           // 7+ days: every 7 days until cap
-          title = '🔥 We miss you at the gym!';
+          title = 'We miss you at the gym!';
           body = `${name || 'Hey'}! ${Math.floor(inactiveDays)} days without training. One session can make all the difference.`;
         }
 
@@ -340,7 +340,7 @@ exports.scheduledOwnerDigest = onSchedule(
         const fresh = await claimIdempotencyKey(iKey, 26 * 60 * 60 * 1000);
         if (!fresh) continue;
 
-        const title = `📊 ${inactive.length} inactive member${inactive.length > 1 ? 's' : ''} in your gym`;
+        const title = `${inactive.length} inactive member${inactive.length > 1 ? 's' : ''} in your gym`;
         const body = `${inactive.length} member${inactive.length > 1 ? 's haven\'t' : ' hasn\'t'} visited in ${thresholdDays}+ days. Tap to review.`;
 
         await sendToUser({
@@ -507,9 +507,9 @@ exports.onMembershipChange = onDocumentCreated(
       const ownerPrefs = await getPrefs(ownerUid, 'owner');
       if (ownerPrefs.paymentExceptions !== false) {
         const titles = {
-          expired: `⚠️ Membership Expired`,
-          suspended: `🚫 Membership Suspended`,
-          payment_failed: `💳 Payment Failed`,
+          expired: `Membership Expired`,
+          suspended: `Membership Suspended`,
+          payment_failed: `Payment Failed`,
         };
         const bodies = {
           expired: `${memberName || 'A member'}'s ${planName || 'membership'} has expired.`,
@@ -518,7 +518,7 @@ exports.onMembershipChange = onDocumentCreated(
         };
         await sendToUser({
           uid: ownerUid,
-          title: titles[type] || '⚠️ Membership Alert',
+          title: titles[type] || 'Membership Alert',
           body: bodies[type] || 'A membership status changed.',
           data: { route: 'members', type: 'membership_exception' },
         });
@@ -528,9 +528,9 @@ exports.onMembershipChange = onDocumentCreated(
     // Notify member (essential — cannot be opted out)
     if (memberUid) {
       const memberTitles = {
-        expired: '⏰ Your Membership Expired',
-        suspended: '🚫 Your Membership was Suspended',
-        payment_failed: '💳 Payment Failed',
+        expired: 'Your Membership Expired',
+        suspended: 'Your Membership was Suspended',
+        payment_failed: 'Payment Failed',
       };
       const memberBodies = {
         expired: `Your ${planName || 'gym'} membership has expired. Renew to keep training!`,

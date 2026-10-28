@@ -285,7 +285,7 @@ export default function TrainerView({ gymId, user, onLogout }) {
             width: 32, height: 32, cursor: 'pointer', color: C.sub, fontSize: 14,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            ⏻
+            <LogoutIcon size={14} color={C.sub} />
           </button>
         </div>
       </div>

@@ -85,8 +85,28 @@ const save = (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)
 export default function MSG() {
   // ── Theme ──────────────────────────────────────────────────────────────────
   const [darkMode, setDarkMode] = useState(() => load('msg_dark', true));
-  Object.assign(C, THEMES[darkMode ? 'dark' : 'light']);
-  const toggleTheme = () => setDarkMode(d => { const n = !d; save('msg_dark', n); Object.assign(C, THEMES[n ? 'dark' : 'light']); return n; });
+  const toggleTheme = () => {
+    const performTransition = () => {
+      document.documentElement.classList.add('msg-theme-transitioning');
+      setDarkMode(d => {
+        const n = !d;
+        save('msg_dark', n);
+        Object.assign(C, THEMES[n ? 'dark' : 'light']);
+        return n;
+      });
+      setTimeout(() => {
+        document.documentElement.classList.remove('msg-theme-transitioning');
+      }, 420);
+    };
+
+    if (typeof document !== 'undefined' && 'startViewTransition' in document) {
+      document.startViewTransition(() => {
+        performTransition();
+      });
+    } else {
+      performTransition();
+    }
+  };
 
   useEffect(() => {
     document.body.style.backgroundColor = C.bg;

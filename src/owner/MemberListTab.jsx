@@ -307,12 +307,17 @@ export default function MemberListTab({ gymId, gymCode = '', setBackHandler, onV
             <div style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: 16, padding: '20px' }}>
               <div style={{ fontSize: 11, color: C.muted, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>Instructions for Members</div>
               {[
-                ['1️⃣', 'Download the MSG app on their phone.'],
-                ['2️⃣', 'Sign in and select "I\'m a Gym Member".'],
-                ['3️⃣', `Scan the QR above or enter code: ${gymCode || '——'}`],
+                ['1', 'Download the MSG app on their phone.'],
+                ['2', 'Sign in and select "I\'m a Gym Member".'],
+                ['3', `Scan the QR above or enter code: ${gymCode || '——'}`],
               ].map(([num, text]) => (
                 <div key={text} style={{ display: 'flex', gap: 12, marginBottom: 10, alignItems: 'flex-start', fontSize: 13, color: C.sub, lineHeight: 1.5 }}>
-                  <span style={{ fontSize: 15, flexShrink: 0 }}>{num}</span>
+                  <span style={{
+                    width: 20, height: 20, borderRadius: '50%', background: C.accent + '22',
+                    border: `1px solid ${C.accent}44`, color: C.accent,
+                    fontSize: 11, fontFamily: fb, fontWeight: 800,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1
+                  }}>{num}</span>
                   <span>{text}</span>
                 </div>
               ))}

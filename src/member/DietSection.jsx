@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { BASE_DRI, NMETA, DEF_MEALS, API_URL, callClaude } from './memberData.js';
 import { Card, Tag, Lbl, Hd, NRow } from './primitives.jsx';
-import { AnimatedWaterDrop, WaterDropIcon, NotesIcon, ProteinSteakIcon } from '../components/visuals';
+import { AnimatedWaterDrop, WaterDropIcon, NotesIcon, ProteinSteakIcon, EditIcon } from '../components/visuals';
 // ─── Meal Card (Expandable) ──────────────────────────────────────────────────
 function MealCard({ item, onDelete }) {
   const [open, setOpen] = useState(false);
@@ -415,7 +415,7 @@ function WaterTracker() {
           <span style={{ fontSize: 10, color: C.muted, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
             Goal: {(goalMl / 1000).toFixed(1)} L/day
           </span>
-          <span style={{ fontSize: 9, color: waterColor, fontFamily: fb, fontWeight: 700 }}>✎ Edit</span>
+          <span style={{ fontSize: 9, color: waterColor, fontFamily: fb, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 3 }}><EditIcon size={10} color={waterColor} />Edit</span>
         </button>
       )}
 

@@ -132,3 +132,33 @@
   }
 }
 
+/* ─── Ultra-Smooth Theme Transition Engine ─── */
+html,
+body,
+#root,
+.msg-root {
+  transition: background-color 0.38s cubic-bezier(0.25, 1, 0.5, 1),
+              color 0.38s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Coordinated hardware-accelerated surface transition during theme toggling */
+.msg-theme-transitioning,
+.msg-theme-transitioning *,
+.msg-theme-transitioning *::before,
+.msg-theme-transitioning *::after {
+  transition: background 0.38s cubic-bezier(0.25, 1, 0.5, 1) !important,
+              background-color 0.38s cubic-bezier(0.25, 1, 0.5, 1) !important,
+              color 0.38s cubic-bezier(0.25, 1, 0.5, 1) !important,
+              border-color 0.38s cubic-bezier(0.25, 1, 0.5, 1) !important,
+              box-shadow 0.38s cubic-bezier(0.25, 1, 0.5, 1) !important,
+              fill 0.38s cubic-bezier(0.25, 1, 0.5, 1) !important,
+              stroke 0.38s cubic-bezier(0.25, 1, 0.5, 1) !important;
+}
+
+/* Native View Transition API cross-fade (Chromium, Android WebView, Edge, Safari 18+) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.35s;
+  animation-timing-function: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
