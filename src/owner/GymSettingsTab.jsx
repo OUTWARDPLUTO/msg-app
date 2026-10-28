@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import {
+  CheckIcon, useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import {
   ShieldLockIcon,
@@ -417,7 +418,7 @@ export default function GymSettingsTab({ gymId, gymName, ownerUid, onBack }) {
           border: 'none', borderRadius: 16, color: C.bg, fontFamily: fb, fontWeight: 700,
           fontSize: 16, cursor: 'pointer', transition: 'all 0.3s',
         }}>
-          {loading ? 'Saving…' : saved ? '✓ Saved Settings!' : 'Save Settings'}
+          {loading ? 'Saving…' : saved ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}><CheckIcon size={16} color={C.bg} strokeWidth={3} /> Saved Settings!</span> : 'Save Settings'}
         </button>
       </div>
 

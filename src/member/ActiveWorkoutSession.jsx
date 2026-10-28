@@ -3,7 +3,9 @@
 // live AnatomicalFigure target muscle highlighting, set-by-set reps/kg logging,
 // previous/next exercise flow, unfinished-session recovery, and truthful completion summary.
 
-import { useState, useEffect, useRef } from 'react';
+import {
+  CheckIcon,
+  CloseIcon, useState, useEffect, useRef } from 'react';
 import { C, fn, fb, MC } from '../shared/theme.js';
 import { AnatomicalFigure } from '../AnatomicalFigure.jsx';
 import {
@@ -372,9 +374,9 @@ export default function ActiveWorkoutSession({
             <button onClick={() => setShowExitModal(true)} className="msg-press" style={{
               width: 32, height: 32, borderRadius: 8, background: C.s3,
               border: `1px solid ${C.border}`, color: C.muted, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12
+              display: 'flex', alignItems: 'center', justifyContent: 'center'
             }} title="Exit Workout">
-              ✕
+              <CloseIcon size={14} color={C.muted} />
             </button>
           </div>
         </div>
@@ -557,10 +559,10 @@ export default function ActiveWorkoutSession({
                   background: set.done ? C.accent : 'transparent',
                   border: `2px solid ${set.done ? C.accent : C.muted}`,
                   color: set.done ? '#000' : 'transparent',
-                  fontSize: 14, fontWeight: 800, cursor: 'pointer',
+                  cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
-                  ✓
+                  {set.done && <CheckIcon size={14} color="#000" strokeWidth={3} />}
                 </button>
               </div>
             </div>

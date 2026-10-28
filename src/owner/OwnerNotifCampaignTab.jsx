@@ -13,7 +13,8 @@
  * Never touches FCM or Admin SDK directly.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import {
+  CheckIcon, useState, useEffect, useCallback } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import {
   BroadcastIcon,
@@ -302,7 +303,7 @@ export default function OwnerNotifCampaignTab({ gymId, ownerUid, onBack }) {
             {members.map(m => (
               <div key={m.uid} onClick={() => toggleMember(m.uid)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderBottom: `1px solid ${C.border}`, cursor: 'pointer', background: selectedUids.has(m.uid) ? C.accent + '12' : 'transparent' }}>
                 <div style={{ width: 18, height: 18, borderRadius: 4, border: `2px solid ${selectedUids.has(m.uid) ? C.accent : C.border}`, background: selectedUids.has(m.uid) ? C.accent : 'transparent', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: '#000', fontWeight: 700 }}>
-                  {selectedUids.has(m.uid) ? '✓' : ''}
+                  {selectedUids.has(m.uid) ? <CheckIcon size={12} color="#000" strokeWidth={3} /> : null}
                 </div>
                 <div>
                   <div style={{ fontSize: 13, color: C.text, fontWeight: 500 }}>{m.name}</div>

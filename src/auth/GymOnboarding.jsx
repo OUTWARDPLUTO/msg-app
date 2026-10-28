@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import {
+  CheckIcon, useState, useEffect, useRef } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { Spinner, Skeleton } from '../shared/primitives.jsx';
 import {
@@ -528,7 +529,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode, onBackToLog
         fontFamily: fn, fontWeight: 700, fontSize: 14, cursor: 'pointer',
         transition: 'all 0.25s',
       }}>
-        {copied ? '✓ Copied to clipboard!' : <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><CopyIcon size={16} /> Copy Gym Code</span>}
+        {copied ? <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><CheckIcon size={16} color={C.green} strokeWidth={3} /> Copied to clipboard!</span> : <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><CopyIcon size={16} /> Copy Gym Code</span>}
       </button>
 
       <button onClick={() => onGymJoined(createdGym.id, 'owner', createdGym.name)} className="ob-btn ob-card-3" style={{
@@ -604,7 +605,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode, onBackToLog
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
               <span style={{ display: "inline-flex", alignItems: "center" }}><AnimatedStopwatch size={20} color={subPlan === "trial" ? C.accent : C.muted} running={false} /></span>
               <span style={{ fontFamily: fn, fontSize: 16, fontWeight: 800, color: subPlan === 'trial' ? C.accent : C.text }}>7-Day Trial</span>
-              {subPlan === 'trial' && <span style={{ fontSize: 12, color: C.accent }}>✓</span>}
+              {subPlan === 'trial' && <CheckIcon size={14} color={C.accent} strokeWidth={3} />}
             </div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
               <span style={{ fontFamily: fn, fontSize: 28, fontWeight: 800, color: C.accent }}>₹249</span>
@@ -637,7 +638,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode, onBackToLog
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
               <span style={{ display: "inline-flex", alignItems: "center" }}><CalendarIcon size={20} color={subPlan === "monthly" ? C.accent : C.muted} /></span>
               <span style={{ fontFamily: fn, fontSize: 16, fontWeight: 800, color: subPlan === 'monthly' ? C.accent : C.text }}>Monthly</span>
-              {subPlan === 'monthly' && <span style={{ fontSize: 12, color: C.accent }}>✓</span>}
+              {subPlan === 'monthly' && <CheckIcon size={14} color={C.accent} strokeWidth={3} />}
             </div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
               <span style={{ fontFamily: fn, fontSize: 28, fontWeight: 800, color: C.accent }}>₹999</span>
@@ -674,7 +675,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode, onBackToLog
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
               <span style={{ display: "inline-flex", alignItems: "center" }}><AnimatedTrophy size={22} /></span>
               <span style={{ fontFamily: fn, fontSize: 16, fontWeight: 800, color: subPlan === 'yearly' ? C.accent : C.text }}>Yearly</span>
-              {subPlan === 'yearly' && <span style={{ fontSize: 12, color: C.accent }}>✓</span>}
+              {subPlan === 'yearly' && <CheckIcon size={14} color={C.accent} strokeWidth={3} />}
             </div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
               <span style={{ fontFamily: fn, fontSize: 28, fontWeight: 800, color: C.accent }}>₹7,999</span>

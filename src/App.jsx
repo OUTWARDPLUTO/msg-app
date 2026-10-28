@@ -1,4 +1,5 @@
-﻿import { useState, useEffect, useRef, lazy, Suspense, Component } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense, Component } from 'react';
+import { flushSync } from 'react-dom';
 import { THEMES, C, fn, applyThemeVars } from './shared/theme.js';
 import {
   AnimatedWarning,
@@ -98,7 +99,10 @@ export default function MSG() {
       Object.assign(C, nextTheme);
       // 3. Persist & trigger React re-render.
       save('msg_dark', next);
-      setDarkMode(next);
+      // 4. Force synchronous DOM flush before View Transition snapshot is taken
+      flushSync(() => {
+        setDarkMode(next);
+      });
     };
 
     if (typeof document !== 'undefined' && 'startViewTransition' in document) {

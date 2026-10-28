@@ -50,7 +50,7 @@ export function NRow({ label, current, dri, unit, color }) {
   const pct = dri > 0 ? Math.min((current / dri) * 100, 130) : 0;
   const status = pct < 70 ? 'deficit' : pct > 110 ? 'excess' : 'ok';
   const bc = status === 'ok' ? C.green : status === 'excess' ? C.red : C.blue;
-  const ic = status === 'ok' ? '✓' : status === 'excess' ? '↑' : '↓';
+  const ic = status === 'ok' ? <CheckIcon size={10} color={bc} strokeWidth={2.8} /> : status === 'excess' ? <TrendUpIcon size={10} color={bc} /> : <TrendDownIcon size={10} color={bc} />;
   const disp = unit === 'mcg' ? current.toFixed(1) : unit === 'g' ? current.toFixed(1) : Math.round(current);
   const driDisp = unit === 'mcg' ? dri : unit === 'g' ? dri : dri;
   return (
@@ -59,7 +59,7 @@ export function NRow({ label, current, dri, unit, color }) {
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
           <span style={{ fontSize: 12, color: C.sub }}>{label}</span>
-          <span style={{ fontSize: 11, color: bc, fontFamily: fb, fontWeight: 700 }}>{ic} {disp}/{driDisp}{unit}</span>
+          <span style={{ fontSize: 11, color: bc, fontFamily: fb, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{ic} {disp}/{driDisp}{unit}</span>
         </div>
         <div style={{ height: 3, background: C.s4, borderRadius: 2 }}>
           <div style={{ height: '100%', width: `${Math.min(pct, 100)}%`, background: bc, borderRadius: 2, transition: 'width 0.4s ease' }} />
@@ -126,7 +126,7 @@ export function ExCard({ ex }) {
                 border: `1.5px solid ${done.includes(i) ? mc : C.muted}`,
                 cursor: 'pointer', fontSize: 9, color: done.includes(i) ? '#000' : C.muted,
                 fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>{done.includes(i) ? '✓' : i + 1}</button>
+              }}>{done.includes(i) ? <CheckIcon size={11} color="#000" strokeWidth={3} /> : i + 1}</button>
             ))}
           </div>
         </div>

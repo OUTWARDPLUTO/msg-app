@@ -2,7 +2,8 @@
 // Workout Plan Library & Details: multiple plan cards, approximate duration,
 // exercise inspection, and launching active guided workout sessions.
 
-import { useState } from 'react';
+import {
+  CloseIcon, useState } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import {
   EmptyWorkoutsIllustration,
@@ -240,7 +241,7 @@ export default function WorkoutPlanLibrary({
                 background: C.s3, border: `1px solid ${C.border}`, borderRadius: '50%',
                 width: 32, height: 32, color: C.muted, fontSize: 16, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center'
-              }}>✕</button>
+              }}><CloseIcon size={16} color={C.text} /></button>
             </div>
 
             {/* Day Selector Tabs */}

@@ -232,7 +232,7 @@ export default function HomeSection({ mealLog, progressLogs, dietGoal, onLogClic
 
             {/* Count label */}
             <span style={{ fontSize: 11, color: wc, fontFamily: fb, fontWeight: 700, whiteSpace: 'nowrap', minWidth: 60, textAlign: 'right' }}>
-              {wGlasses}/{wGoalGlasses} {wDone ? '✓' : 'glasses'}
+              {wGlasses}/{wGoalGlasses} {wDone ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, verticalAlign: 'middle' }}><CheckIcon size={12} color={wc} strokeWidth={3} /> Goal</span> : 'glasses'}
             </span>
 
             {/* − button */}
@@ -311,7 +311,7 @@ export default function HomeSection({ mealLog, progressLogs, dietGoal, onLogClic
                     color: logged ? '#000' : isToday ? C.accent : C.muted,
                     fontSize: logged ? 13 : 11, fontWeight: 700,
                     boxShadow: isToday ? `0 0 0 3px ${C.accent}22` : 'none',
-                  }}>{logged ? '✓' : d}</div>
+                  }}>{logged ? <CheckIcon size={13} color="#000" strokeWidth={3} /> : d}</div>
                   <div style={{ color: isToday ? C.accent : C.muted, fontSize: 9, fontFamily: fb, fontWeight: 600, textTransform: 'uppercase' }}>{d}</div>
                 </div>
               );
@@ -411,7 +411,7 @@ export default function HomeSection({ mealLog, progressLogs, dietGoal, onLogClic
             <div style={{ fontFamily: fn, fontSize: 15, fontWeight: 800, color: C.text, letterSpacing: '-0.01em' }}>Achievements</div>
             <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>Track your milestones &amp; unlock badges</div>
           </div>
-          <div style={{ fontSize: 18, color: C.accent, flexShrink: 0 }}>›</div>
+          <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}><ChevronRightIcon size={18} color={C.accent} /></div>
         </div>
       </div>
 
@@ -438,7 +438,7 @@ export default function HomeSection({ mealLog, progressLogs, dietGoal, onLogClic
             </div>
             <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>See who's crushing it — climb the ranks</div>
           </div>
-          <div style={{ fontSize: 18, color: C.muted, flexShrink: 0, opacity: 0.5 }}>›</div>
+          <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0, opacity: 0.5 }}><ChevronRightIcon size={18} color={C.muted} /></div>
         </div>
       </div>
 

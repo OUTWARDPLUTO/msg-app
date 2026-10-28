@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import {
+  CheckIcon, useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { AnimatedWarning, CopyIcon } from '../components/visuals/index.js';
 import { Card, Lbl, ScoreRing, StatusBadge, ModalShell, Spinner, Skeleton } from '../shared/primitives.jsx';
@@ -301,7 +302,7 @@ export default function MemberListTab({ gymId, gymCode = '', setBackHandler, onV
               fontFamily: fb, fontWeight: 700, fontSize: 14, cursor: 'pointer',
               transition: 'all 0.25s',
             }}>
-              {copied ? '✓ Copied to clipboard!' : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><CopyIcon size={13} color="#000" />Copy Gym Code</span>}
+              {copied ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}><CheckIcon size={14} color="#000" strokeWidth={3} /> Copied to clipboard!</span> : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><CopyIcon size={13} color="#000" />Copy Gym Code</span>}
             </button>
 
             <div style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: 16, padding: '20px' }}>

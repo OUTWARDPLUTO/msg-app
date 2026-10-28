@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import {
+  CheckIcon, useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import {
   BellIcon,
@@ -255,7 +256,7 @@ function NotificationSettings({ uid }) {
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><LockIcon size={11} color={C.muted} /> Membership &amp; payment alerts are always delivered.</span>
             </div>
             <button onClick={savePushPrefs} style={{ width: '100%', background: pushSaved ? C.green + '22' : C.accent, border: 'none', borderRadius: 12, padding: '11px', color: pushSaved ? C.green : '#000', fontFamily: fn, fontWeight: 800, fontSize: 12, cursor: 'pointer', marginTop: 10, transition: 'all 0.3s' }}>
-              {pushSaved ? '✓ Preferences Saved!' : 'Save Notification Preferences'}
+              {pushSaved ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><CheckIcon size={14} color={C.green} /> Preferences Saved!</span> : 'Save Notification Preferences'}
             </button>
           </>
         )}
@@ -326,7 +327,7 @@ function NotificationSettings({ uid }) {
         )}
 
         <button onClick={saveLocal} style={{ width: '100%', background: localSaved ? C.green + '22' : C.accent, border: 'none', borderRadius: 12, padding: '12px', color: localSaved ? C.green : '#000', fontFamily: fn, fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: localSaved ? 'none' : C.accentShadow, transition: 'all 0.3s' }}>
-          {localSaved ? '✓ Saved & Scheduled!' : 'Save & Schedule Local Reminders'}
+          {localSaved ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><CheckIcon size={14} color={C.green} /> Saved & Scheduled!</span> : 'Save & Schedule Local Reminders'}
         </button>
       </div>
     </>
@@ -364,7 +365,7 @@ export default function SettingsScreen({ onClose, onResetDiet, onResetWorkout, d
         {
           label: 'Theme', sub: darkMode ? 'Dark mode — tap to switch to Light' : 'Light mode — tap to switch to Dark', custom: (
             <button onClick={onToggleTheme} style={{ padding: '5px 16px', borderRadius: 10, background: C.accent, color: '#111', border: 'none', fontFamily: fb, fontWeight: 700, fontSize: 11, cursor: 'pointer', boxShadow: C.accentShadow }}>
-              {darkMode ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><SunIcon size={13} color={C.text} />Light</span> : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><MoonIcon size={13} color={C.text} />Dark</span>}
+              {darkMode ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><SunIcon size={13} color="#111" />Light</span> : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><MoonIcon size={13} color="#111" />Dark</span>}
             </button>
           )
         },
@@ -476,7 +477,7 @@ export function LanguageScreen({ onClose }) {
                   <div style={{ fontSize: 14, fontWeight: 500, color: selected === l.code ? C.accent : C.text }}>{l.native}</div>
                   <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{l.name}</div>
                 </div>
-                {selected === l.code && <div style={{ width: 20, height: 20, borderRadius: '50%', background: C.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: '#000', fontWeight: 700, flexShrink: 0 }}>✓</div>}
+                {selected === l.code && <div style={{ width: 20, height: 20, borderRadius: '50%', background: C.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><CheckIcon size={12} color="#000" strokeWidth={3} /></div>}
               </button>
             ))}
           </div>

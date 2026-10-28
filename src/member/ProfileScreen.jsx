@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import {
+  CheckIcon, useState, useEffect, useRef } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import {
   AnimatedFlame,
@@ -438,7 +439,7 @@ export default function ProfileScreen({ onClose, progressLogs, dietGoal, mealLog
                         <div style={{ display: 'flex', gap: 5, marginTop: 4, flexWrap: 'wrap' }}>
                           <span style={{ background: rc + '1A', color: rc, fontSize: 9, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '2px 8px', borderRadius: 4 }}>{a.rarity}</span>
                           <span style={{ background: C.s3, color: C.sub, fontSize: 9, fontFamily: fb, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', padding: '2px 8px', borderRadius: 4 }}>{a.cat}</span>
-                          {a.unlocked ? <span style={{ background: C.green + '20', color: C.green, fontSize: 9, fontFamily: fb, fontWeight: 700, padding: '2px 8px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 4 }}>✓ UNLOCKED</span> : <span style={{ background: C.s4, color: C.muted, fontSize: 9, fontFamily: fb, fontWeight: 700, padding: '2px 8px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 4 }}><LockIcon size={10} color={C.muted} /> LOCKED</span>}
+                          {a.unlocked ? <span style={{ background: C.green + '20', color: C.green, fontSize: 9, fontFamily: fb, fontWeight: 700, padding: '2px 8px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 4 }}><CheckIcon size={10} color={C.green} strokeWidth={3} /> UNLOCKED</span> : <span style={{ background: C.s4, color: C.muted, fontSize: 9, fontFamily: fb, fontWeight: 700, padding: '2px 8px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 4 }}><LockIcon size={10} color={C.muted} /> LOCKED</span>}
                         </div>
                       </div>
                     </div>

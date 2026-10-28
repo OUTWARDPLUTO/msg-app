@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import {
+  CheckIcon, useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { C, fn, fb } from '../shared/theme.js';
 import { Card, Lbl } from './primitives.jsx';
@@ -183,7 +184,7 @@ export default function ProgressSection({ logs, onLogClick, onDelete }) {
                           color: logged ? '#000' : isToday ? C.accent : C.muted,
                           fontSize: logged ? 13 : 11, fontWeight: 700,
                           boxShadow: isToday ? `0 0 0 3px ${C.accent}22` : 'none',
-                        }}>{logged ? '✓' : d}</div>
+                        }}>{logged ? <CheckIcon size={13} color="#000" strokeWidth={3} /> : d}</div>
                         <div style={{ color: isToday ? C.accent : C.muted, fontSize: 9, fontFamily: fb, fontWeight: 600 }}>{d}</div>
                       </div>
                     );

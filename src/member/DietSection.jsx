@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { BASE_DRI, NMETA, DEF_MEALS, API_URL, callClaude } from './memberData.js';
 import { Card, Tag, Lbl, Hd, NRow } from './primitives.jsx';
-import { AnimatedWaterDrop, WaterDropIcon, NotesIcon, ProteinSteakIcon, EditIcon } from '../components/visuals';
+import { AnimatedWaterDrop, WaterDropIcon, NotesIcon, ProteinSteakIcon, EditIcon, CheckIcon, TrendUpIcon, TrendDownIcon, CloseIcon } from '../components/visuals';
 // ─── Meal Card (Expandable) ──────────────────────────────────────────────────
 function MealCard({ item, onDelete }) {
   const [open, setOpen] = useState(false);
@@ -41,7 +41,7 @@ function MealCard({ item, onDelete }) {
                 const pct = Math.min((val / dri) * 100, 130);
                 const status = pct < 70 ? 'deficit' : pct > 110 ? 'excess' : 'ok';
                 const bc = status === 'ok' ? C.green : status === 'excess' ? C.red : C.blue;
-                const ic = status === 'ok' ? '✓' : status === 'excess' ? '↑' : '↓';
+                const ic = status === 'ok' ? <CheckIcon size={10} color={bc} strokeWidth={2.8} /> : status === 'excess' ? <TrendUpIcon size={10} color={bc} /> : <TrendDownIcon size={10} color={bc} />;
                 const disp = meta.unit === 'mcg' ? val.toFixed(1) : meta.unit === 'g' ? val.toFixed(1) : Math.round(val);
                 return (
                   <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
@@ -49,7 +49,7 @@ function MealCard({ item, onDelete }) {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
                         <span style={{ fontSize: 11.5, color: C.sub }}>{meta.label}</span>
-                        <span style={{ fontSize: 10.5, color: bc, fontFamily: fb, fontWeight: 700 }}>{ic} {disp}/{dri}{meta.unit}</span>
+                        <span style={{ fontSize: 10.5, color: bc, fontFamily: fb, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{ic} {disp}/{dri}{meta.unit}</span>
                       </div>
                       <div style={{ height: 2.5, background: C.s4, borderRadius: 2 }}>
                         <div style={{ height: '100%', width: `${Math.min(pct, 100)}%`, background: bc, borderRadius: 2, transition: 'width 0.3s' }} />
@@ -355,7 +355,7 @@ function WaterTracker() {
             {(intakeMl / 1000).toFixed(2)}<span style={{ fontSize: 11, fontWeight: 600, color: C.muted }}>/{(goalMl / 1000).toFixed(1)} L</span>
           </div>
           <div style={{ fontSize: 9, color: done ? waterColor : C.muted, fontFamily: fb, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-            {done ? '✓ Goal met!' : `${glasses}/${goalGlasses} glasses`}
+            {done ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><CheckIcon size={12} color={C.green} strokeWidth={3} /> Goal met!</span> : `${glasses}/${goalGlasses} glasses`}
           </div>
         </div>
       </div>
@@ -404,7 +404,7 @@ function WaterTracker() {
             <button onClick={() => setEditingGoal(false)} style={{
               background: C.s2, border: `1px solid ${C.border}`, borderRadius: 10,
               padding: '10px 12px', color: C.muted, fontFamily: fn, fontWeight: 600, fontSize: 12, cursor: 'pointer',
-            }}>✕</button>
+            }}><CloseIcon size={14} color={C.sub} /></button>
           </div>
         </div>
       ) : (
@@ -433,7 +433,7 @@ function WaterTracker() {
               fontSize: 13, transition: 'all 0.18s ease',
               boxShadow: i < glasses ? `0 0 8px ${waterColor}44` : 'none',
             }}
-          >{i < glasses ? <WaterDropIcon size={14} color={waterColor} /> : <span style={{ opacity: 0.35, fontSize: 11 }}>○</span>}</button>
+          >{i < glasses ? <WaterDropIcon size={14} color={waterColor} /> : <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.border, display: 'inline-block' }} />}</button>
         ))}
         {goalGlasses > 12 && (
           <div style={{ fontSize: 10, color: C.muted, alignSelf: 'center', paddingLeft: 4 }}>
@@ -930,8 +930,14 @@ export default function DietSection({ dietGoal, setDietGoal, mealLog, setMealLog
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <div style={{ fontFamily: fn, fontSize: 16, fontWeight: 800, letterSpacing: '-0.02em', color: C.text }}>Full Nutrition</div>
           <div style={{ display: 'flex', gap: 4 }}>
-            {[['↓', C.blue, 'Deficit'], ['✓', C.green, 'Optimal'], ['↑', C.red, 'Excess']].map(([ic, c, l]) => (
-              <span key={l} style={{ fontSize: 9, color: c, fontFamily: fb, fontWeight: 700, background: c + '18', padding: '2px 6px', borderRadius: 3 }}>{ic} {l}</span>
+            {[
+              { icon: <TrendDownIcon size={9} color={C.blue} />, color: C.blue, label: 'Deficit' },
+              { icon: <CheckIcon size={9} color={C.green} strokeWidth={3} />, color: C.green, label: 'Optimal' },
+              { icon: <TrendUpIcon size={9} color={C.red} />, color: C.red, label: 'Excess' },
+            ].map(item => (
+              <span key={item.label} style={{ fontSize: 9, color: item.color, fontFamily: fb, fontWeight: 700, background: item.color + '18', padding: '2px 6px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                {item.icon} {item.label}
+              </span>
             ))}
           </div>
         </div>

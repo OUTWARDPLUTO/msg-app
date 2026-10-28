@@ -139,21 +139,38 @@
  * Secondary: View Transition API cross-fade via document.startViewTransition().
  */
 
-/* Give html/body a CSS-var-driven background that transitions */
+/* Give html/body a CSS-var-driven background */
 html, body, #root, .msg-root {
   background-color: var(--msg-bg, #080808) !important;
   color: var(--msg-text, #ffffff);
-  transition:
-    background-color 0.42s cubic-bezier(0.25, 1, 0.5, 1),
-    color            0.35s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* View Transition API cross-fade — smooth compositor-level swap */
+/* Fallback CSS transition only when View Transition API is not supported */
+@supports not (view-transition-name: root) {
+  html, body, #root, .msg-root {
+    transition:
+      background-color 0.32s cubic-bezier(0.25, 1, 0.5, 1),
+      color            0.28s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+}
+
+/* View Transition API cross-fade — compositor-level swap with normal blend mode */
+::view-transition-group(root) {
+  animation-duration: 0.26s;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.26s;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  mix-blend-mode: normal;
+}
+
 ::view-transition-old(root) {
-  animation: msg-theme-out 0.32s cubic-bezier(0.4, 0, 1, 1) forwards;
+  animation-name: msg-theme-out;
 }
 ::view-transition-new(root) {
-  animation: msg-theme-in 0.38s cubic-bezier(0, 0, 0.2, 1) forwards;
+  animation-name: msg-theme-in;
 }
 @keyframes msg-theme-out {
   from { opacity: 1; }

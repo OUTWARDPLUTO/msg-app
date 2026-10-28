@@ -4,7 +4,9 @@ import {
   AnimatedSpinner,
   CheckCircleIcon,
   LocationPinIcon,
-  WarningIcon
+  WarningIcon,
+  CheckIcon,
+  ChevronRightIcon
 } from '../components/visuals/index.js';
 import { checkIn, getTodayCheckIn, getDistance, getFBFirestore } from '../shared/firebase.js';
 
@@ -274,7 +276,7 @@ export default function AttendanceButton({ uid, gymId, onCheckIn }) {
             fontFamily: fn, fontSize: 15, fontWeight: 800,
             color: checked ? C.green : C.accent, lineHeight: 1.1,
           }}>
-            {loading ? 'Checking status…' : checked ? 'Checked In Today ✓' : 'Check In Now'}
+            {loading ? 'Checking status…' : checked ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><CheckIcon size={15} color={C.green} strokeWidth={3} /> Checked In Today</span> : 'Check In Now'}
           </div>
           <div style={{ fontSize: 11, color: C.sub, marginTop: 3 }}>
             {checked
@@ -283,7 +285,7 @@ export default function AttendanceButton({ uid, gymId, onCheckIn }) {
           </div>
         </div>
         {!checked && !loading && (
-          <div style={{ color: C.accent, fontSize: 18, flexShrink: 0 }}>›</div>
+          <div style={{ display: 'flex', alignItems: 'center', color: C.accent, flexShrink: 0 }}><ChevronRightIcon size={16} color={C.accent} /></div>
         )}
       </button>
 

@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import {
+  CheckIcon, useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { Lbl } from '../shared/primitives.jsx';
 import { RocketIcon } from '../components/visuals';
@@ -122,7 +123,7 @@ export default function ProfileSetupScreen({ user, onComplete, onBackToLogin }) 
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
             }}>
               {o}
-              {form[cur.k] === o && <span style={{ color: C.accent, fontSize: 16 }}>✓</span>}
+              {form[cur.k] === o && <CheckIcon size={16} color={C.accent} strokeWidth={3} />}
             </button>
           ))}
         </div>

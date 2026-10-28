@@ -1,4 +1,5 @@
-import { useState, useRef } from 'react';
+import {
+  CheckIcon, useState, useRef } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { CameraIcon } from '../components/visuals/index.js';
 import { Card, Lbl, UserAvatar } from '../shared/primitives.jsx';
@@ -135,7 +136,7 @@ export default function OwnerAccountTab({ user, onLogout, onBack }) {
             fontSize: 16, cursor: 'pointer', transition: 'all 0.3s',
             boxShadow: saved ? 'none' : '0 4px 12px rgba(0,0,0,0.1)',
           }}>
-            {saving ? 'Saving…' : saved ? '✓ Saved Profile' : 'Save Changes'}
+            {saving ? 'Saving…' : saved ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}><CheckIcon size={14} color="#111" strokeWidth={3} /> Saved Profile</span> : 'Save Changes'}
           </button>
 
           <button onClick={() => {

@@ -460,3 +460,28 @@ export const BadgeTrainerIcon = ({ size = 20, color = 'currentColor', ...props }
 export const AlertTriangleIcon = ({ size = 20, color = '#E53935', ...props }) => (
   <WarningIcon size={size} color={color} {...props} />
 );
+
+export const CheckIcon = ({ size = 20, color = 'currentColor', strokeWidth = 2.4, ...props }) => (
+  <BaseIcon size={size} color={color} {...props}>
+    <polyline points="20 6 9 17 4 12" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+  </BaseIcon>
+);
+
+export const CloseIcon = ({ size = 20, color = 'currentColor', strokeWidth = 2.2, ...props }) => (
+  <BaseIcon size={size} color={color} {...props}>
+    <line x1="18" y1="6" x2="6" y2="18" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+    <line x1="6" y1="6" x2="18" y2="18" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+  </BaseIcon>
+);
+
+export const ChevronRightIcon = ({ size = 16, color = 'currentColor', strokeWidth = 2, ...props }) => (
+  <BaseIcon size={size} color={color} {...props}>
+    <polyline points="9 18 15 12 9 6" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+  </BaseIcon>
+);
+
+export const ChevronLeftIcon = ({ size = 16, color = 'currentColor', strokeWidth = 2, ...props }) => (
+  <BaseIcon size={size} color={color} {...props}>
+    <polyline points="15 18 9 12 15 6" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+  </BaseIcon>
+);

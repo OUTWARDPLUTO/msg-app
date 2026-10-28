@@ -3,7 +3,7 @@ import { C, fn, fb } from '../shared/theme.js';
 import { UserAvatar } from '../shared/primitives.jsx';
 import { sanitizeString, validateNumber } from '../shared/security.js';
 import { Lbl } from './primitives.jsx';
-import { DiamondIcon, UserIcon, SettingsIcon, GlobeIcon, LogoutIcon } from '../components/visuals';
+import { DiamondIcon, UserIcon, SettingsIcon, GlobeIcon, LogoutIcon, ChevronRightIcon } from '../components/visuals';
 // ─── Profile Dropdown ────────────────────────────────────────────────────────
 export function ProfileDropdown({ onClose, onNavigate, onLogout, user, darkMode }) {
   const items = [
@@ -47,7 +47,7 @@ export function ProfileDropdown({ onClose, onNavigate, onLogout, user, darkMode 
               <div style={{ fontSize: 13, fontWeight: 500, color: item.danger ? C.red : C.text }}>{item.label}</div>
               <div style={{ fontSize: 11, color: C.muted, marginTop: 1 }}>{item.sub}</div>
             </div>
-            {!item.danger && <span style={{ color: C.muted, fontSize: 14 }}>›</span>}
+            {!item.danger && <ChevronRightIcon size={14} color={C.muted} />}
           </button>
         ))}
       </div>

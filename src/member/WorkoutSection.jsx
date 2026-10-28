@@ -1,4 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import {
+  CheckIcon,
+  CloseIcon, useState, useEffect, useRef } from 'react';
 import { C, fn, fb, MC } from '../shared/theme.js';
 import {
   AnimatedFlame,
@@ -169,7 +171,7 @@ function WarmupBlock() {
             return (
               <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10, padding: '10px 12px', background: isActive ? C.accent + '12' : isDone ? C.green + '0D' : C.s4, borderRadius: 12, border: `1px solid ${isActive ? C.accent + '44' : isDone ? C.green + '33' : 'transparent'}`, transition: 'all 0.3s' }}>
                 <div style={{ width: 26, height: 26, borderRadius: '50%', background: isDone ? C.green + '22' : isActive ? C.accent + '20' : C.s3, border: `1px solid ${isDone ? C.green + '66' : isActive ? C.accent + '66' : C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 10, fontWeight: 800, color: isDone ? C.green : isActive ? C.accent : C.sub }}>
-                  {isDone ? '✓' : i + 1}
+                  {isDone ? <CheckIcon size={12} color={C.green} strokeWidth={3} /> : i + 1}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: isActive ? C.accent : isDone ? C.green : C.text }}>{w.move}</div>
@@ -384,7 +386,7 @@ function ManualPlanBuilder({ setWeekPlan, onBack }) {
               <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{ex.name}</div>
               <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>{ex.sets} sets × {ex.reps} · {ex.primary}</div>
             </div>
-            <button onClick={() => removeExercise(activeDay, i)} style={{ background: 'none', border: 'none', color: C.red, fontSize: 16, cursor: 'pointer', padding: '4px' }}>✕</button>
+            <button onClick={() => removeExercise(activeDay, i)} style={{ background: 'none', border: 'none', color: C.red, fontSize: 16, cursor: 'pointer', padding: '4px' }}><CloseIcon size={14} color={C.red} /></button>
           </div>
         ))}
       </div>
@@ -819,7 +821,7 @@ export default function WorkoutSection({ weekPlan, setWeekPlan, user, gymId, set
                             <div style={{ fontSize: 14, fontWeight: 700, color: isActive ? C.accent : C.text }}>{opt.label}</div>
                             <div style={{ fontSize: 11, color: C.sub, marginTop: 3 }}>{opt.sub}</div>
                           </div>
-                          {isActive && <div style={{ color: C.accent, fontSize: 16 }}>✓</div>}
+                          {isActive && <CheckIcon size={16} color={C.accent} />}
                         </button>
                       );
                     })}

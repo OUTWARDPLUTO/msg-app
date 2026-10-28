@@ -259,7 +259,10 @@ export default function StoreSection({ gymId, setBackHandler }) {
                   color: p.inStock ? C.green : C.red,
                   border: `1px solid ${p.inStock ? C.green + '33' : C.red + '33'}`,
                 }}>
-                  {p.inStock ? '● IN STOCK' : '○ OUT OF STOCK'}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: p.inStock ? C.green : C.red, display: 'inline-block' }} />
+                    {p.inStock ? 'IN STOCK' : 'OUT OF STOCK'}
+                  </span>
                 </div>
               </div>
             </button>
@@ -307,7 +310,10 @@ function ProductDetailSheet({ product, gymInfo, onClose }) {
           color: product.inStock ? C.green : C.red,
           border: `1px solid ${product.inStock ? C.green + '33' : C.red + '33'}`,
         }}>
-          {product.inStock ? '● IN STOCK' : '○ OUT OF STOCK'}
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: product.inStock ? C.green : C.red, display: 'inline-block' }} />
+            {product.inStock ? 'IN STOCK' : 'OUT OF STOCK'}
+          </span>
         </div>
 
         {product.description && (
@@ -338,7 +344,7 @@ function ProductDetailSheet({ product, gymInfo, onClose }) {
                     <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{pm.label}</div>
                     <div style={{ fontSize: 11, color: C.muted, marginTop: 1 }}>{pm.sub}</div>
                   </div>
-                  {payMethod === pm.key && <span style={{ color: C.accent, fontSize: 16 }}>✓</span>}
+                  {payMethod === pm.key && <CheckIcon size={16} color={C.accent} />}
                 </button>
               ))}
             </div>
@@ -506,7 +512,7 @@ function PlansBottomSheet({ plans, onClose }) {
             {plan.features?.length > 0 && (
               <div style={{ marginTop: 8 }}>
                 {plan.features.filter(Boolean).map((f, i) => (
-                  <div key={i} style={{ fontSize: 11, color: C.sub, padding: '2px 0' }}>✓ {f}</div>
+                  <div key={i} style={{ fontSize: 11, color: C.sub, padding: '2px 0', display: 'flex', alignItems: 'center', gap: 6 }}><CheckIcon size={12} color={C.green} />{f}</div>
                 ))}
               </div>
             )}
@@ -523,12 +529,12 @@ function PlansBottomSheet({ plans, onClose }) {
                 border: `1px solid ${payMethod === pm.key ? C.accent : C.border}`,
                 borderRadius: 12, cursor: 'pointer', textAlign: 'left', marginBottom: 7,
               }}>
-                <span style={{ fontSize: 20 }}>{pm.icon}</span>
+                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><PaymentMethodIcon method={pm.key} size={20} color={payMethod === pm.key ? C.accent : C.muted} /></span>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: C.text }}>{pm.label}</div>
                   <div style={{ fontSize: 10, color: C.muted }}>{pm.sub}</div>
                 </div>
-                {payMethod === pm.key && <span style={{ color: C.accent }}>✓</span>}
+                {payMethod === pm.key && <CheckIcon size={16} color={C.accent} />}
               </button>
             ))}
             {payMethod && (

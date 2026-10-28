@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+import {
+  CloseIcon,
+  CheckIcon, useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import {
   DumbbellIcon,
@@ -242,7 +244,7 @@ export default function MemberDetailSheet({ member, gymId, onClose }) {
       <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: C.bg, display: 'flex', flexDirection: 'column', padding: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
           <div style={{ fontSize: 20, fontFamily: fb, fontWeight: 700, color: C.text }}>Edit Member</div>
-          <button onClick={() => setActiveModal(null)} style={{ background: 'none', border: 'none', color: C.text, cursor: 'pointer' }}>✕</button>
+          <button onClick={() => setActiveModal(null)} style={{ background: 'none', border: 'none', color: C.text, cursor: 'pointer', display: 'flex', alignItems: 'center' }}><CloseIcon size={18} color={C.text} /></button>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
@@ -363,7 +365,7 @@ export default function MemberDetailSheet({ member, gymId, onClose }) {
       <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: C.bg, display: 'flex', flexDirection: 'column', padding: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
           <div style={{ fontSize: 20, fontFamily: fb, fontWeight: 700, color: C.text }}>Workout Plan</div>
-          <button onClick={() => setActiveModal(null)} style={{ background: 'none', border: 'none', color: C.text, cursor: 'pointer' }}>✕</button>
+          <button onClick={() => setActiveModal(null)} style={{ background: 'none', border: 'none', color: C.text, cursor: 'pointer', display: 'flex', alignItems: 'center' }}><CloseIcon size={18} color={C.text} /></button>
         </div>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ fontSize: 13, fontFamily: fn, color: C.sub }}>
@@ -619,8 +621,8 @@ export default function MemberDetailSheet({ member, gymId, onClose }) {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                 <div style={{ fontSize: 18, fontFamily: fb, fontWeight: 700, color: C.text }}>Coaching Notes</div>
                 {notesSaved && (
-                  <span style={{ fontSize: 12, color: C.green, fontFamily: fb, fontWeight: 600 }}>
-                    ✓ Saved
+                  <span style={{ fontSize: 12, color: C.green, fontFamily: fb, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <CheckIcon size={12} color={C.green} strokeWidth={3} /> Saved
                   </span>
                 )}
               </div>
