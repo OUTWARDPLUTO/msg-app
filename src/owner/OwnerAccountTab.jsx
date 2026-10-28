@@ -1,7 +1,9 @@
-import {
-  CheckIcon, useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
-import { CameraIcon } from '../components/visuals/index.js';
+import {
+  CameraIcon,
+  CheckIcon,
+} from '../components/visuals/index.js';
 import { Card, Lbl, UserAvatar } from '../shared/primitives.jsx';
 import { updateUserDoc } from '../shared/firebase.js';
 

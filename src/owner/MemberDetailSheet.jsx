@@ -1,6 +1,4 @@
-import {
-  CloseIcon,
-  CheckIcon, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import {
   DumbbellIcon,
@@ -9,7 +7,9 @@ import {
   CheckCircleIcon,
   CalendarIcon,
   LightbulbIcon,
-  ZapIcon
+  ZapIcon,
+  CheckIcon,
+  CloseIcon,
 } from '../components/visuals/index.js';
 import { Card, Lbl, ScoreRing, ModalShell, Spinner, Skeleton } from '../shared/primitives.jsx';
 import { getFBFirestore, getFBAuth, recordManualCheckIn, getTodayCheckIn } from '../shared/firebase.js';

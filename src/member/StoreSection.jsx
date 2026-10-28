@@ -9,7 +9,8 @@ import {
   CreditCardIcon,
   WarningIcon,
   ClockIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
+  CheckIcon,
 } from '../components/visuals/index.js';
 import { AnatomicalFigure } from '../AnatomicalFigure';
 import { Card, Tag, Lbl, ExCard } from './primitives.jsx';

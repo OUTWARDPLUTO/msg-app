@@ -1,10 +1,10 @@
-import {
-  RefreshIcon, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import {
   AnimatedWarning,
   CalendarIcon,
-  WarningIcon
+  WarningIcon,
+  RefreshIcon,
 } from '../components/visuals/index.js';
 import { Card, Lbl, Spinner, Skeleton } from '../shared/primitives.jsx';
 import { getFBFirestore, serverTimestamp, recordManualCheckIn } from '../shared/firebase.js';
@@ -235,7 +235,7 @@ export default function AttendanceTab({ gymId, onViewMemberProfile, onBack, init
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><AnimatedWarning size={36} /></div>
           <div style={{ fontFamily: fb, fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 8 }}>Unable to load attendance</div>
           <div style={{ color: C.sub, fontSize: 13, fontFamily: fn, marginBottom: 20 }}>{error}</div>
-          <button onClick={load} style={{ background: C.accent, color: '#111', border: 'none', borderRadius: 12, padding: '10px 24px', fontFamily: fn, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}> style={{ background: C.accent, color: '#111', border: 'none', borderRadius: 12, padding: '10px 24px', fontFamily: fn, fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}><RefreshIcon size={14} color="#111" /> Retry</button>
+          <button onClick={load} style={{ background: C.accent, color: '#111', border: 'none', borderRadius: 12, padding: '10px 24px', fontFamily: fn, fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}><RefreshIcon size={14} color="#111" /> Retry</button>
         </div>
       ) : loading ? (
         <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -336,8 +336,7 @@ export default function AttendanceTab({ gymId, onViewMemberProfile, onBack, init
                   onClick={() => {
                     setSelectedDateFilter(null);
                     if (onClearDateFilter) onClearDateFilter();
-                  }}
-                  style={{
+                  }} style={{
                     background: C.bg, border: `1px solid ${C.border}`, borderRadius: 10,
                     padding: '6px 12px', fontSize: 12, fontFamily: fb, fontWeight: 600,
                     color: C.text, cursor: 'pointer',

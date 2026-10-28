@@ -1,7 +1,4 @@
-import {
-  RefreshIcon,
-  CheckIcon,
-  CloseIcon, useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { C, fn, fb, MC } from '../shared/theme.js';
 import {
   AnimatedFlame,
@@ -16,7 +13,10 @@ import {
   SettingsIcon,
   SearchIcon,
   CheckCircleIcon,
-  WorkoutModalityIcon
+  WorkoutModalityIcon,
+  CheckIcon,
+  CloseIcon,
+  RefreshIcon,
 } from '../components/visuals/index.js';
 import { AnatomicalFigure } from '../AnatomicalFigure';
 import { API_URL, callClaude } from './memberData.js';
@@ -161,7 +161,7 @@ function WarmupBlock() {
           </div>
           <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
             <button onClick={e => { e.stopPropagation(); startAll(); }} style={{ flex: 1, padding: '10px', background: C.accent, border: 'none', borderRadius: 10, color: '#111', fontFamily: fb, fontWeight: 800, fontSize: 12, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><PlayIcon size={12} color="#111" />Start All</button>
-            <button onClick={e => { e.stopPropagation(); resetAll(); }} style={{ padding: '10px 16px', background: C.s4, border: `1px solid ${C.border}`, borderRadius: 10, color: C.sub, fontFamily: fb, fontWeight: 700, fontSize: 12, cursor: 'pointer' }} style={{ padding: '10px 16px', background: C.s4, border: `1px solid ${C.border}`, borderRadius: 10, color: C.sub, fontFamily: fb, fontWeight: 700, fontSize: 12, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}><RefreshIcon size={12} color={C.sub} /> Reset</button>
+            <button onClick={e => { e.stopPropagation(); resetAll(); }} style={{ padding: '10px 16px', background: C.s4, border: `1px solid ${C.border}`, borderRadius: 10, color: C.sub, fontFamily: fb, fontWeight: 700, fontSize: 12, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}><RefreshIcon size={12} color={C.sub} /> Reset</button>
           </div>
           {WARMUP_ROUTINE.map((w, i) => {
             const maxSec = parseDurSec(w.duration);
@@ -196,7 +196,7 @@ function WarmupBlock() {
                   {isActive && !running && (
                     <button onClick={e => { e.stopPropagation(); startItem(i, autoRef.current); }} style={{ background: C.accent + '20', border: `1px solid ${C.accent}44`, borderRadius: 8, padding: '4px 10px', color: C.accent, fontFamily: fb, fontWeight: 700, fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><PlayIcon size={11} color={C.accent} /></button>
                   )}
-                  <button onClick={e => { e.stopPropagation(); resetItem(i); }} style={{ background: 'none', border: 'none', color: C.muted, fontSize: 12, cursor: 'pointer', padding: '2px 6px' }} style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', padding: '2px 6px', display: 'flex', alignItems: 'center' }} title="Reset exercise"><RefreshIcon size={12} color={C.muted} /></button>
+                  <button onClick={e => { e.stopPropagation(); resetItem(i); }} style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', padding: '2px 6px', display: 'flex', alignItems: 'center' }} title="Reset exercise"><RefreshIcon size={12} color={C.muted} /></button>
                   <div style={{ fontSize: 9, color: isDone ? C.green : isActive ? C.accent : C.muted, fontFamily: fb, fontWeight: 600, whiteSpace: 'nowrap' }}>{isDone ? 'Done!' : isActive ? fmt(rem) : w.duration}</div>
                 </div>
               </div>

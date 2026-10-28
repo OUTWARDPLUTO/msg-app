@@ -3,9 +3,7 @@
 // live AnatomicalFigure target muscle highlighting, set-by-set reps/kg logging,
 // previous/next exercise flow, unfinished-session recovery, and truthful completion summary.
 
-import {
-  CheckIcon,
-  CloseIcon, useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { C, fn, fb, MC } from '../shared/theme.js';
 import { AnatomicalFigure } from '../AnatomicalFigure.jsx';
 import {
@@ -25,7 +23,9 @@ import {
   ClockIcon,
   CycleViewIcon,
   BookOpenIcon,
-  LightbulbIcon
+  LightbulbIcon,
+  CheckIcon,
+  CloseIcon,
 } from '../components/visuals/index.js';
 
 export default function ActiveWorkoutSession({

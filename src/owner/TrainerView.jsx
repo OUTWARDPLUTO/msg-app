@@ -13,8 +13,7 @@
  *  - Resilient states: Loading skeleton, offline banner, empty states, and error handling with retry.
  */
 
-import {
-  RefreshIcon, useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import {
   LogoutIcon,
@@ -23,7 +22,8 @@ import {
   AnimatedCelebration,
   SearchIcon,
   BarChartIcon,
-  UsersIcon
+  UsersIcon,
+  RefreshIcon,
 } from '../components/visuals/index.js';
 import { Card, Lbl, Spinner, UserAvatar, Skeleton } from '../shared/primitives.jsx';
 import { getFBFirestore } from '../shared/firebase.js';
@@ -300,10 +300,7 @@ export default function TrainerView({ gymId, user, onLogout }) {
               Connection Error
             </div>
             <div style={{ color: C.sub, fontSize: 13, marginBottom: 20 }}>{error}</div>
-            <button onClick={fetchAssignedMembers} style={{
-              background: C.accent, color: '#111', border: 'none', borderRadius: 12,
-              padding: '12px 24px', fontFamily: fn, fontWeight: 800, fontSize: 13, cursor: 'pointer',
-            }}> style={{ background: C.accent, color: '#111', border: 'none', borderRadius: 12, padding: '12px 24px', fontFamily: fn, fontWeight: 800, fontSize: 13, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}><RefreshIcon size={14} color="#111" /> Retry Loading</button>
+            <button onClick={fetchAssignedMembers} style={{ background: C.accent, color: '#111', border: 'none', borderRadius: 12, padding: '12px 24px', fontFamily: fn, fontWeight: 800, fontSize: 13, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}><RefreshIcon size={14} color="#111" /> Retry Loading</button>
           </div>
         ) : loading ? (
           <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16 }}>

@@ -1,5 +1,4 @@
-import {
-  CheckIcon, useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { Spinner, Skeleton } from '../shared/primitives.jsx';
 import {
@@ -27,6 +26,7 @@ import {
   BadgeTrainerIcon,
   CameraIcon,
   StoreIcon,
+  CheckIcon,
 } from '../components/visuals';
 
 // ─── Keyframe injector ───────────────────────────────────────────────────────

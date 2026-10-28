@@ -2,8 +2,7 @@
 // Workout Plan Library & Details: multiple plan cards, approximate duration,
 // exercise inspection, and launching active guided workout sessions.
 
-import {
-  CloseIcon, useState } from 'react';
+import { useState } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import {
   EmptyWorkoutsIllustration,
@@ -12,7 +11,8 @@ import {
   TrashIcon,
   ClockIcon,
   DumbbellIcon,
-  RocketIcon
+  RocketIcon,
+  CloseIcon,
 } from '../components/visuals/index.js';
 import {
   getSavedPlans,

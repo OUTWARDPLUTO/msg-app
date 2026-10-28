@@ -1,5 +1,4 @@
-import {
-  CheckIcon, useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import {
   AnimatedFlame,
@@ -8,7 +7,8 @@ import {
   CameraIcon,
   LocationPinIcon,
   LockIcon,
-  LightbulbIcon
+  LightbulbIcon,
+  CheckIcon,
 } from '../components/visuals/index.js';
 import { UserAvatar } from '../shared/primitives.jsx';
 import { Card, Lbl, Hd } from './primitives.jsx';

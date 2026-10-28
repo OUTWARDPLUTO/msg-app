@@ -1,8 +1,10 @@
-import {
-  CheckIcon, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { Lbl } from '../shared/primitives.jsx';
-import { RocketIcon } from '../components/visuals';
+import {
+  RocketIcon,
+  CheckIcon,
+} from '../components/visuals';
 
 export default function ProfileSetupScreen({ user, onComplete, onBackToLogin }) {
   const [step, setStep] = useState(0);

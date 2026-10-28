@@ -1,6 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { MC, C, fn, fb } from '../shared/theme.js';
-import { AnimatedStopwatch, ZapIcon, LightbulbIcon, ClockIcon } from '../components/visuals';
+import {
+  AnimatedStopwatch,
+  ZapIcon,
+  LightbulbIcon,
+  ClockIcon,
+  CheckIcon,
+  TrendUpIcon,
+  TrendDownIcon,
+} from '../components/visuals';
 // ─── Primitives ─────────────────────────────────────────────────────────────
 export const Card = ({ children, style: s = {}, onClick }) => {
   const isDark = !C.isLight;

@@ -91,26 +91,22 @@ export default function MSG() {
     const next = !darkMode;
     const nextTheme = THEMES[next ? 'dark' : 'light'];
 
-    const perform = () => {
-      // 1. Write CSS variables FIRST — the browser's CSS engine starts
-      //    interpolating all var(--msg-*) usages before React re-renders.
-      applyThemeVars(nextTheme);
-      // 2. Update the mutable C so components reading C get correct values.
-      Object.assign(C, nextTheme);
-      // 3. Persist & trigger React re-render.
-      save('msg_dark', next);
-      // 4. Force synchronous DOM flush before View Transition snapshot is taken
-      flushSync(() => {
-        setDarkMode(next);
-      });
-    };
-
     if (typeof document !== 'undefined' && 'startViewTransition' in document) {
-      // View Transition API: snapshots old frame, runs perform (React re-renders
-      // + CSS vars update), then compositor cross-fades old → new.
-      document.startViewTransition(perform);
+      // View Transition API: snapshots old frame, runs synchronous render,
+      // then compositor cross-fades old → new at 60/120fps.
+      document.startViewTransition(() => {
+        applyThemeVars(nextTheme);
+        Object.assign(C, nextTheme);
+        save('msg_dark', next);
+        flushSync(() => {
+          setDarkMode(next);
+        });
+      });
     } else {
-      perform();
+      applyThemeVars(nextTheme);
+      Object.assign(C, nextTheme);
+      save('msg_dark', next);
+      setDarkMode(next);
     }
   };
 

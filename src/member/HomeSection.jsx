@@ -22,6 +22,8 @@ import {
   TrendUpIcon,
   SleepIcon,
   SaladIcon,
+  CheckIcon,
+  ChevronRightIcon,
 } from '../components/visuals';
 
 export default function HomeSection({ mealLog, progressLogs, dietGoal, onLogClick, user, gymId, onAchievementsClick, setBackHandler }) {

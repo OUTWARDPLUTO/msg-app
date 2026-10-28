@@ -1,11 +1,11 @@
-import {
-  CheckIcon, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import {
   ShieldLockIcon,
   ZapIcon,
   NotesIcon,
-  PrinterIcon
+  PrinterIcon,
+  CheckIcon,
 } from '../components/visuals/index.js';
 import { Card, Lbl, SettingsToggle, Spinner } from '../shared/primitives.jsx';
 import { getFBFirestore, checkSubscription } from '../shared/firebase.js';
