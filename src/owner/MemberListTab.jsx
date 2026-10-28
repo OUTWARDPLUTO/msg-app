@@ -1,4 +1,5 @@
 import {
+  RefreshIcon,
   CheckIcon, useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { AnimatedWarning, CopyIcon } from '../components/visuals/index.js';
@@ -198,9 +199,7 @@ export default function MemberListTab({ gymId, gymCode = '', setBackHandler, onV
                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}><AnimatedWarning size={32} /></div>
                 <div style={{ fontFamily: fb, fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 4 }}>Unable to load roster</div>
                 <div style={{ color: C.sub, fontSize: 13, fontFamily: fn, marginBottom: 16 }}>{error}</div>
-                <button onClick={loadMembers} style={{ background: C.accent, color: '#111', border: 'none', borderRadius: 12, padding: '10px 24px', fontFamily: fn, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
-                  ↻ Retry
-                </button>
+                <button onClick={loadMembers} style={{ background: C.accent, color: '#111', border: 'none', borderRadius: 12, padding: '10px 24px', fontFamily: fn, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}> style={{ background: C.accent, color: '#111', border: 'none', borderRadius: 12, padding: '10px 24px', fontFamily: fn, fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}><RefreshIcon size={14} color="#111" /> Retry</button>
               </div>
             ) : loading ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

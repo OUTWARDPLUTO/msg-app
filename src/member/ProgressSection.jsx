@@ -1,5 +1,5 @@
-import {
-  CheckIcon, useState } from 'react';
+import { useState } from 'react';
+import { CheckIcon, TrendUpIcon, TrendDownIcon } from '../components/visuals/index.js';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { C, fn, fb } from '../shared/theme.js';
 import { Card, Lbl } from './primitives.jsx';
@@ -80,7 +80,7 @@ export default function ProgressSection({ logs, onLogClick, onDelete }) {
               <Lbl text={s.label} style={{ marginBottom: 4 }} />
               <div style={{ fontFamily: fn, fontSize: 26, color: s.c, lineHeight: 1.2 }}>{s.val}</div>
               {s.diff && <div style={{ fontSize: 11, color: parseFloat(s.diff) < 0 ? C.green : C.orange, fontFamily: fb, fontWeight: 700, marginTop: 3 }}>
-                {parseFloat(s.diff) < 0 ? '↓' : '↑'} {Math.abs(s.diff)} kg total
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>{parseFloat(s.diff) < 0 ? <TrendDownIcon size={12} color={C.green} /> : <TrendUpIcon size={12} color={C.orange} />}{Math.abs(s.diff)} kg total</span>
               </div>}
             </Card>
           ))}
@@ -101,7 +101,7 @@ export default function ProgressSection({ logs, onLogClick, onDelete }) {
         </div>
         {weekDiff && (
           <div style={{ fontSize: 12, color: parseFloat(weekDiff) <= 0 && metric === 'weight' ? C.green : parseFloat(weekDiff) >= 0 && metric !== 'weight' ? C.green : C.orange, fontFamily: fb, fontWeight: 700, marginBottom: 8 }}>
-            {parseFloat(weekDiff) <= 0 ? '↓' : '↑'} {Math.abs(weekDiff)}{cur.unit} this week
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>{parseFloat(weekDiff) <= 0 ? <TrendDownIcon size={12} color={C.green} /> : <TrendUpIcon size={12} color={C.orange} />}{Math.abs(weekDiff)}{cur.unit} this week</span>
           </div>
         )}
         <Card style={{ padding: '16px 4px 8px' }}>

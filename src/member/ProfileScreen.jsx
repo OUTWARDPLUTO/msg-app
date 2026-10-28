@@ -422,7 +422,7 @@ export default function ProfileScreen({ onClose, progressLogs, dietGoal, mealLog
                   {a.unlocked && !isOpen && (
                     <div style={{ position: 'absolute', top: 5, right: 6, width: 9, height: 9, borderRadius: '50%', background: rc, boxShadow: `0 0 6px ${rc}` }} />
                   )}
-                  <div style={{ fontSize: 8, color: C.muted, marginTop: 4 }}>{isOpen ? '▲ tap to close' : '▼ tap for details'}</div>
+                  <div style={{ fontSize: 8, color: C.muted, marginTop: 4 }}>{isOpen ? 'Tap to close' : 'Tap for details'}</div>
                 </div>
                 {/* Expanded detail panel */}
                 {isOpen && (

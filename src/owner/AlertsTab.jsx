@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
-import { AnimatedWarning } from '../components/visuals/index.js';
+import { AnimatedWarning, RefreshIcon } from '../components/visuals/index.js';
 import { Card, Lbl, StatusBadge, Spinner, Skeleton } from '../shared/primitives.jsx';
 import { getFBFirestore } from '../shared/firebase.js';
 
@@ -81,9 +81,7 @@ export default function AlertsTab({ gymId, onViewMemberProfile, onBack, hideHead
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><AnimatedWarning size={36} /></div>
           <div style={{ fontFamily: fb, fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 8 }}>Unable to load alerts</div>
           <div style={{ color: C.sub, fontSize: 13, fontFamily: fn, marginBottom: 20 }}>{error}</div>
-          <button onClick={load} style={{ background: C.accent, color: '#111', border: 'none', borderRadius: 12, padding: '10px 24px', fontFamily: fn, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
-            ↻ Retry
-          </button>
+          <button onClick={load} style={{ background: C.accent, color: '#111', border: 'none', borderRadius: 12, padding: '10px 24px', fontFamily: fn, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>><RefreshIcon size={14} color="#111" /> Retry</button>
         </div>
       ) : loading ? (
         <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>

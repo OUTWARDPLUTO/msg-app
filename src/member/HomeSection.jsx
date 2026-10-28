@@ -19,6 +19,7 @@ import {
   WarningIcon,
   CopyIcon,
   TrendDownIcon,
+  TrendUpIcon,
   SleepIcon,
   SaladIcon,
 } from '../components/visuals';
@@ -328,7 +329,7 @@ export default function HomeSection({ mealLog, progressLogs, dietGoal, onLogClic
               <Lbl text="Weight Trend" />
               <span style={{ fontFamily: fn, fontSize: 13, fontWeight: 700, color: wDiff && parseFloat(wDiff) < 0 ? C.green : C.orange }}>
                 {last ? `${last.weight} kg` : '—'}
-                {wDiff && <span style={{ fontSize: 10, marginLeft: 4 }}>{parseFloat(wDiff) < 0 ? '↓' : '↑'}{Math.abs(wDiff)}</span>}
+                {wDiff && <span style={{ fontSize: 10, marginLeft: 4, display: 'inline-flex', alignItems: 'center', gap: 2 }}>{parseFloat(wDiff) < 0 ? <TrendDownIcon size={10} color={C.green} /> : <TrendUpIcon size={10} color={C.orange} />}{Math.abs(wDiff)}</span>}
               </span>
             </div>
             <ResponsiveContainer width="100%" height={70}>

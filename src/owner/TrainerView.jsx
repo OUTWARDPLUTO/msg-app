@@ -13,7 +13,8 @@
  *  - Resilient states: Loading skeleton, offline banner, empty states, and error handling with retry.
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import {
+  RefreshIcon, useState, useEffect, useMemo } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import {
   LogoutIcon,
@@ -302,9 +303,7 @@ export default function TrainerView({ gymId, user, onLogout }) {
             <button onClick={fetchAssignedMembers} style={{
               background: C.accent, color: '#111', border: 'none', borderRadius: 12,
               padding: '12px 24px', fontFamily: fn, fontWeight: 800, fontSize: 13, cursor: 'pointer',
-            }}>
-              ↻ Retry Loading
-            </button>
+            }}> style={{ background: C.accent, color: '#111', border: 'none', borderRadius: 12, padding: '12px 24px', fontFamily: fn, fontWeight: 800, fontSize: 13, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}><RefreshIcon size={14} color="#111" /> Retry Loading</button>
           </div>
         ) : loading ? (
           <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16 }}>

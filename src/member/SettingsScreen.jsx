@@ -1,4 +1,5 @@
 import {
+  RefreshIcon,
   CheckIcon, useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import {
@@ -416,7 +417,7 @@ export default function SettingsScreen({ onClose, onResetDiet, onResetWorkout, d
           <div style={{ background: C.s2, border: `1px solid ${C.border}`, borderRadius: 14, padding: '14px 16px' }}>
             <div style={{ fontSize: 14, color: C.text, fontWeight: 600, marginBottom: 4 }}>Reset Weekly Workout Plan</div>
             <div style={{ fontSize: 12, color: C.muted, marginBottom: 14, lineHeight: 1.5 }}>Clears your current plan and lets you rebuild from scratch with new goals, days, or equipment.</div>
-            <button onClick={() => { onResetWorkout(); onClose(); }} style={{ width: '100%', background: C.blue + '18', border: `1px solid ${C.blue}44`, borderRadius: 10, padding: '11px', color: C.blue, fontFamily: fn, fontWeight: 700, fontSize: 12, letterSpacing: '0.02em', cursor: 'pointer' }}>↺ Reset &amp; Rebuild Workout</button>
+            <button onClick={() => { onResetWorkout(); onClose(); }} style={{ width: '100%', background: C.blue + '18', border: `1px solid ${C.blue}44`, borderRadius: 10, padding: '11px', color: C.blue, fontFamily: fn, fontWeight: 700, fontSize: 12, letterSpacing: '0.02em', cursor: 'pointer' }} style={{ width: '100%', background: C.blue + '18', border: `1px solid ${C.blue}44`, borderRadius: 10, padding: '11px', color: C.blue, fontFamily: fn, fontWeight: 700, fontSize: 12, letterSpacing: '0.02em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><RefreshIcon size={14} color={C.blue} /> Reset &amp; Rebuild Workout</button>
           </div>
         </div>
         {/* Reconfigure diet plan */}
