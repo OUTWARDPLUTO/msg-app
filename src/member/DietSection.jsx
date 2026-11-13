@@ -682,7 +682,7 @@ export default function DietSection({ dietGoal, setDietGoal, mealLog, setMealLog
     if (local) { setMealLog(p => [local, ...p]); setLoading(false); return; }
 
     // ── USDA FDC API lookup (if Local fails) ──────────────────────────────────
-    const USDA_KEY = import.meta.env.VITE_USDA_KEY ?? '';
+    const USDA_KEY = import.meta.env.VITE_USDA_KEY || 'ATtDYsthmzyhhMbNg6b7Wca8DkNVWYyKjDW1m1Xk';
     const USDA_NUTRIENT_MAP = {
       1008: 'calories', 1003: 'protein', 1005: 'carbs', 1004: 'fat',
       1079: 'fiber', 1093: 'sodium', 1092: 'potassium', 1087: 'calcium',

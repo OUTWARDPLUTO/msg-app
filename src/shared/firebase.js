@@ -11,7 +11,7 @@ if (typeof window !== 'undefined') {
 
 // ─── Firebase Config ──────────────────────────────────────────────────────────
 export const FB_CONFIG = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDhFd7sd_qioRmGoWgOkJweDkvqgMUKznE",
   authDomain: "msg2-3da02.firebaseapp.com",
   projectId: "msg2-3da02",
   storageBucket: "msg2-3da02.firebasestorage.app",

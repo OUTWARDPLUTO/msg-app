@@ -213,7 +213,7 @@ const WEEK_STRUCTURES = WEEK_SPLIT_DEFINITIONS;
 
 // ─── Manual Plan Builder (wger API + local EX fallback) ──────────────────────
 function ManualPlanBuilder({ setWeekPlan, onBack }) {
-  const WGER_KEY = import.meta.env.VITE_WGER_KEY ?? '';
+  const WGER_KEY = import.meta.env.VITE_WGER_KEY || 'dbff5b28a793e01152b0fa45572698e710cb731a';
   const [step, setStep] = useState(0); // 0=pick days, 1=enter exercises
   const [days, setDays] = useState(null);
   const [planDays, setPlanDays] = useState([]); // [{dayName, exercises:[]}]

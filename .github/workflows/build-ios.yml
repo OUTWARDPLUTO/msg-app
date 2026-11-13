@@ -25,6 +25,12 @@ jobs:
         run: npm ci --legacy-peer-deps
 
       - name: Build Web Application
+        env:
+          VITE_FIREBASE_API_KEY: "AIzaSyDhFd7sd_qioRmGoWgOkJweDkvqgMUKznE"
+          VITE_GOOGLE_CLIENT_ID: "924373588150-g5hhp1hiu6db6tduir3fr9ekfqkavhir.apps.googleusercontent.com"
+          VITE_API_URL: "https://msg-app-7pco.onrender.com"
+          VITE_USDA_KEY: "ATtDYsthmzyhhMbNg6b7Wca8DkNVWYyKjDW1m1Xk"
+          VITE_WGER_KEY: "dbff5b28a793e01152b0fa45572698e710cb731a"
         run: npm run build
 
       - name: Sync Capacitor iOS
