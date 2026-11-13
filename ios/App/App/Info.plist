@@ -47,6 +47,17 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>GIDClientID</key>
+	<string>924373588150-oprq2d3hmurp0ab08tfshh0ctcqent5u.apps.googleusercontent.com</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.924373588150-oprq2d3hmurp0ab08tfshh0ctcqent5u</string>
+			</array>
+		</dict>
+	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>MSG requires camera access to scan your gym's check-in QR code.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

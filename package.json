@@ -17,7 +17,7 @@
     "@capacitor/app": "^8.1.0",
     "@capacitor/local-notifications": "^8.2.0",
     "@capacitor/push-notifications": "^8.1.1",
-    "@codetrix-studio/capacitor-google-auth": "^3.4.0-rc.4",
+    "@capgo/capacitor-social-login": "^8.7.11",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "firebase": "^12.13.0",

@@ -1,10 +1,22 @@
 import { useState, useEffect } from 'react';
 import { C, fn, fb } from '../shared/theme.js';
 import { getFBAuth, setUserDoc, serverTimestamp } from '../shared/firebase.js';
-import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import { SocialLogin } from '@capgo/capacitor-social-login';
 import msgLogoExact from '../assets/msg_logo_exact.svg';
 import msgLogoWhite from '../assets/msg_logo_white.svg';
 import { WarningIcon, AnimatedSpinner } from '../components/visuals';
+
+const getSocialLoginConfig = () => {
+  const webClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '924373588150-g5hhp1hiu6db6tduir3fr9ekfqkavhir.apps.googleusercontent.com';
+  return {
+    google: {
+      webClientId,
+      iOSClientId: '924373588150-oprq2d3hmurp0ab08tfshh0ctcqent5u.apps.googleusercontent.com',
+      iOSServerClientId: webClientId,
+      mode: 'online',
+    },
+  };
+};
 
 export default function LoginScreen({ onLogin, darkMode }) {
   const [mode, setMode]       = useState('login');
@@ -16,13 +28,11 @@ export default function LoginScreen({ onLogin, darkMode }) {
   const [fbStatus, setFbStatus] = useState('ready'); // Bundled locally — ready immediately
 
   useEffect(() => {
-    // Pre-initialize GoogleAuth in background so clicking Google sign-in is instant
+    // Pre-initialize SocialLogin in background so clicking Google sign-in is instant
     try {
-      GoogleAuth.initialize({
-        clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-        scopes: ['profile', 'email'],
-        grantOfflineAccess: true,
-      }).catch(() => {});
+      SocialLogin.initialize(getSocialLoginConfig()).catch(e => {
+        console.warn('[MSG] SocialLogin init error:', e);
+      });
     } catch {}
   }, []);
 
@@ -114,27 +124,30 @@ export default function LoginScreen({ onLogin, darkMode }) {
     if (!checkRateLimit()) { setError('Too many attempts. Try again in 15 minutes.'); return; }
     setLoading(true); setError('');
     try {
-      await GoogleAuth.initialize({
-        clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-        scopes: ['profile', 'email'],
-        grantOfflineAccess: true,
+      await SocialLogin.initialize(getSocialLoginConfig()).catch(() => {});
+      const res = await SocialLogin.login({
+        provider: 'google',
+        options: {
+          scopes: ['email', 'profile'],
+        },
       });
-      const googleUser = await GoogleAuth.signIn();
-      const idToken = googleUser.authentication.idToken;
+      const idToken = res?.result?.idToken || res?.result?.accessToken?.token;
       if (!idToken) throw new Error('Google sign-in did not return an ID token.');
       const auth = await getFBAuth();
       const credential = window.firebase.auth.GoogleAuthProvider.credential(idToken);
       const cred = await auth.signInWithCredential(credential);
       onLogin({
         uid: cred.user.uid,
-        name: cred.user.displayName,
-        email: cred.user.email,
-        photo: cred.user.photoURL,
+        name: cred.user.displayName || res?.result?.profile?.name || '',
+        email: cred.user.email || res?.result?.profile?.email || '',
+        photo: cred.user.photoURL || res?.result?.profile?.imageUrl || null,
       });
     } catch (e) {
-      const cancelled = e.code === 'auth/popup-closed-by-user'
-        || e.message === 'The user canceled the sign-in flow.'
-        || e.message === 'The user canceled the Google sign-in flow.';
+      const cancelled = e?.code === 'USER_CANCELLED'
+        || e?.code === 'auth/popup-closed-by-user'
+        || e?.message === 'The user canceled the sign-in flow.'
+        || e?.message === 'The user canceled the Google sign-in flow.'
+        || (e?.message && /cancel/i.test(e.message));
       if (!cancelled) {
         console.error('[MSG] Google sign-in error:', e);
         setError(e.message || 'Google sign-in failed. Please try again.');

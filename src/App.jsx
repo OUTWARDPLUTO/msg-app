@@ -20,7 +20,7 @@ import {
   findMemberRecordsByUid,
 } from './shared/firebase.js';
 import { App as CapApp } from '@capacitor/app';
-import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import { SocialLogin } from '@capgo/capacitor-social-login';
 import {
   setNotifSessionContext,
   clearNotifSessionContext,
@@ -668,17 +668,11 @@ export default function MSG() {
       console.warn('Firebase signOut failed to initiate:', e);
     }
     try {
-      GoogleAuth.initialize({
-        clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-        scopes: ['profile', 'email'],
-        grantOfflineAccess: true,
-      }).then(() => {
-        GoogleAuth.signOut().catch(e => console.warn('GoogleAuth.signOut promise error:', e));
-      }).catch(e => {
-        console.warn('GoogleAuth initialize failed during signOut:', e);
+      SocialLogin.logout({ provider: 'google' }).catch(e => {
+        console.warn('SocialLogin.logout promise error:', e);
       });
     } catch (e) {
-      console.warn('GoogleAuth signOut failed to initiate:', e);
+      console.warn('SocialLogin logout failed to initiate:', e);
     }
   };
 

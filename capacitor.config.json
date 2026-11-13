@@ -21,12 +21,6 @@
       "launchShowDuration": 0,
       "backgroundColor": "#09090C",
       "showSpinner": false
-    },
-    "GoogleAuth": {
-      "scopes": ["profile", "email"],
-      "serverClientId": "924373588150-g5hhp1hiu6db6tduir3fr9ekfqkavhir.apps.googleusercontent.com",
-      "androidClientId": "924373588150-eotko208n3u73uaavoduvf75cjhtta5f.apps.googleusercontent.com",
-      "forceCodeForRefreshToken": true
     }
   }
 }
