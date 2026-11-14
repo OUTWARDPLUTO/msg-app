@@ -489,9 +489,9 @@ function PlansBottomSheet({ plans, onClose }) {
   const [payMethod, setPayMethod] = useState(null);
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'flex-end' }}
+    <div className="msg-apple-backdrop" style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'flex-end' }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{ background: C.s1, borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '80dvh', overflowY: 'auto', padding: '20px 20px calc(env(safe-area-inset-bottom,0) + 24px)' }}>
+      <div className="msg-apple-sheet" style={{ background: C.s1, borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '80dvh', overflowY: 'auto', padding: '20px 20px calc(env(safe-area-inset-bottom,0) + 24px)' }}>
         <div style={{ fontFamily: fn, fontSize: 18, fontWeight: 800, color: C.text, marginBottom: 4 }}>Membership Plans</div>
         <div style={{ fontSize: 12, color: C.muted, marginBottom: 16 }}>Contact gym to activate after payment.</div>
 

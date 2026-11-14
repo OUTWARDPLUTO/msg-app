@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { C, fn, fb } from '../shared/theme.js';
@@ -464,7 +464,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
       {/* Content */}
       <div className="msg-scroll" style={{ flex: 1, overflowY: 'auto' }}>
         <ErrorBoundary C={C} fn={fn} onRetry={() => setTab('dashboard')}>
-          <div key={moreScreen || tab} className="msg-anim-slide-l">
+          <div key={moreScreen || tab} className="msg-apple-tab-pane">
             {tab === 'more' && moreScreen && renderMoreScreen()}
             {tab === 'more' && !moreScreen && (
               <MoreTab gymId={gymId} gymName={gymName} ownerUid={user?.uid} onNavigate={handleMoreNavigate} pendingTrainersCount={pendingTrainersCount} />

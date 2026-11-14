@@ -10,11 +10,12 @@ import {
   TrendDownIcon,
 } from '../components/visuals';
 // ─── Primitives ─────────────────────────────────────────────────────────────
-export const Card = ({ children, style: s = {}, onClick }) => {
+export const Card = ({ children, style: s = {}, onClick, className = '' }) => {
   const isDark = !C.isLight;
   return (
     <div
       onClick={onClick}
+      className={`msg-card-scale ${onClick ? 'msg-interactive' : ''} ${className}`}
       style={{
         background: isDark ? 'rgba(26, 26, 26, 0.65)' : 'rgba(255, 255, 255, 0.70)',
         backdropFilter: 'blur(20px)',
@@ -24,7 +25,6 @@ export const Card = ({ children, style: s = {}, onClick }) => {
         padding: 16,
         boxShadow: C.cardShadow,
         cursor: onClick ? 'pointer' : 'default',
-        transition: 'box-shadow 0.2s, transform 0.15s, background-color 0.2s, border-color 0.2s',
         ...s,
       }}
     >

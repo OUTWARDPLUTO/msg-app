@@ -441,7 +441,11 @@ export default function GymOnboarding({ user, onGymJoined, darkMode, onBackToLog
     <button onClick={() => { setScreen(to); setError(''); }} style={{
       background: 'none', border: 'none', color: C.muted, fontSize: 13,
       cursor: 'pointer', fontFamily: fn, marginBottom: 20, textAlign: 'left', padding: 0,
-    }} className="ob-btn">← Back</button>
+      display: 'inline-flex', alignItems: 'center', gap: 6,
+    }} className="ob-btn msg-press">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+      Back
+    </button>
   );
 
   const logoBlock = (
@@ -461,7 +465,7 @@ export default function GymOnboarding({ user, onGymJoined, darkMode, onBackToLog
   );
 
   const wrap = (children) => (
-    <div style={{
+    <div className="msg-motion-page" style={{
       background: C.bg, color: C.text, fontFamily: fn,
       height: '100dvh', width: '100%', maxWidth: 430, margin: '0 auto',
       padding: 'max(32px, calc(env(safe-area-inset-top, 0px) + 20px)) 24px max(24px, calc(env(safe-area-inset-bottom, 0px) + 16px))',

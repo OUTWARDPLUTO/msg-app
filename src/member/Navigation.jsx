@@ -15,8 +15,8 @@ export function ProfileDropdown({ onClose, onNavigate, onLogout, user, darkMode 
   ];
   return (
     <>
-      <div onClick={onClose} style={{ position: 'absolute', inset: 0, zIndex: 49 }} />
-      <div style={{
+      <div onClick={onClose} className="msg-apple-backdrop" style={{ position: 'absolute', inset: 0, zIndex: 49 }} />
+      <div className="msg-apple-dialog" style={{
         position: 'absolute', top: 56, right: 16, zIndex: 50,
         background: darkMode ? 'rgba(18, 18, 18, 0.60)' : 'rgba(255, 255, 255, 0.65)',
         backdropFilter: 'blur(24px)',
@@ -77,9 +77,9 @@ export function LogProgressModal({ onSave, onClose, darkMode }) {
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-end' }}
+    <div className="msg-apple-backdrop" style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-end' }}
       onClick={onClose}>
-      <div style={{
+      <div className="msg-apple-sheet" style={{
         width: '100%',
         background: darkMode ? 'rgba(18, 18, 18, 0.96)' : 'rgba(255, 255, 255, 0.97)',
         backdropFilter: 'blur(20px)',
@@ -90,7 +90,9 @@ export function LogProgressModal({ onSave, onClose, darkMode }) {
         onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div style={{ fontFamily: fn, fontSize: 22, fontWeight: 800, color: C.text, letterSpacing: '-0.02em' }}>Log Progress</div>
-          <button onClick={onClose} style={{ background: C.s3, border: 'none', width: 32, height: 32, borderRadius: '50%', color: C.sub, fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+          <button onClick={onClose} className="msg-press" style={{ background: C.s3, border: 'none', width: 32, height: 32, borderRadius: '50%', color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+          </button>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>

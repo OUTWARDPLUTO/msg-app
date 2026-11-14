@@ -613,11 +613,11 @@ export default function ActiveWorkoutSession({
 
       {/* ── EXIT WORKOUT CONFIRMATION MODAL ─────────────────────────────── */}
       {showExitModal && (
-        <div style={{
+        <div className="msg-apple-backdrop" style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 20
         }}>
-          <div className="msg-motion-sheet" style={{
+          <div className="msg-apple-dialog" style={{
             background: C.s1, border: `1px solid ${C.border}`, borderRadius: 20, padding: '24px 20px',
             maxWidth: 380, width: '100%', textAlign: 'center'
           }}>

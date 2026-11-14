@@ -211,11 +211,11 @@ export default function WorkoutPlanLibrary({
 
       {/* ── PLAN DETAILS MODAL ─────────────────────────────────────────── */}
       {selectedPlan && (
-        <div style={{
+        <div className="msg-apple-backdrop" style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)',
           display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 90
         }}>
-          <div className="msg-motion-sheet" style={{
+          <div className="msg-apple-sheet" style={{
             background: C.s1, border: `1px solid ${C.border}`, borderRadius: '24px 24px 0 0',
             width: '100%', maxWidth: 540, maxHeight: '90vh', overflowY: 'auto',
             padding: '20px 20px 36px', boxSizing: 'border-box'

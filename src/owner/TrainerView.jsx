@@ -310,9 +310,11 @@ export default function TrainerView({ gymId, user, onLogout }) {
               {[1, 2, 3, 4].map(i => <Skeleton key={i} height={70} borderRadius={14} stagger={i} />)}
             </div>
           </div>
-        ) : tab === 'dashboard' ? (
-          /* ── 1. DASHBOARD OVERVIEW ── */
-          <div style={{ padding: '20px 20px 40px' }}>
+        ) : (
+          <div key={tab} className="msg-apple-tab-pane">
+            {tab === 'dashboard' ? (
+              /* ── 1. DASHBOARD OVERVIEW ── */
+              <div style={{ padding: '20px 20px 40px' }}>
             {/* Quick Metrics Grid */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 20 }}>
               <div style={{ background: C.s1, border: `1px solid ${C.border}`, borderRadius: 16, padding: '14px' }}>
@@ -541,6 +543,8 @@ export default function TrainerView({ gymId, user, onLogout }) {
             )}
           </div>
         ) : null}
+        </div>
+      )}
       </div>
 
       {/* Bottom Navigation */}

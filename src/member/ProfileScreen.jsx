@@ -16,26 +16,7 @@ import { sanitizeString, validateNumber } from '../shared/security.js';
 import { calcStreak } from './utils.jsx';
 import { getStatusFromScore } from '../shared/engagementScore.js';
 // ─── Modal Shell ─────────────────────────────────────────────────────────────
-export function ModalShell({ title, onClose, children }) {
-  return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 999,
-      paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)',
-      background: !C.isLight ? 'rgba(9, 9, 12, 0.95)' : 'rgba(242, 242, 247, 0.95)',
-      backdropFilter: 'blur(28px)',
-      WebkitBackdropFilter: 'blur(28px)',
-      display: 'flex', flexDirection: 'column', overflowY: 'auto'
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px 12px', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
-        <button onClick={onClose} style={{ background: C.s3, border: 'none', width: 34, height: 34, borderRadius: '50%', color: C.sub, fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>←</button>
-        <div style={{ fontFamily: fn, fontSize: 28, color: C.text, letterSpacing: '0.06em', lineHeight: 1 }}>{title}</div>
-      </div>
-      <div className="msg-scroll" style={{ flex: 1, overflowY: 'auto' }}>
-        {children}
-      </div>
-    </div>
-  );
-}
+export { ModalShell } from '../shared/primitives.jsx';
 
 // ─── Profile Screen ───────────────────────────────────────────────────────────
 export default function ProfileScreen({ onClose, progressLogs, dietGoal, mealLog = [], weekPlan, user, gymId }) {

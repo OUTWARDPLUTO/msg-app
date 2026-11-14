@@ -383,7 +383,7 @@ export default function MemberDetailSheet({ member, gymId, onClose }) {
   }
 
   return (
-    <div style={{
+    <div className="msg-apple-sheet" style={{
       position: 'fixed', inset: 0, zIndex: 9999,
       paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)',
       display: 'flex', flexDirection: 'column', overflowY: 'auto',

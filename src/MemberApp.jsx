@@ -226,7 +226,9 @@ export default function MemberApp({
       )}
 
       <div className="msg-scroll" style={{ flex: 1, overflowY: 'auto', paddingBottom: 100 }}>
-        {views[tab]}
+        <div key={tab} className="msg-apple-tab-pane">
+          {views[tab]}
+        </div>
       </div>
       <BottomNavAnimated tab={tab} setTab={navigate} darkMode={darkMode} />
     </div>

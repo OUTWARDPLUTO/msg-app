@@ -175,7 +175,7 @@ export default function LoginScreen({ onLogin, darkMode }) {
   );
 
   return (
-    <div style={{
+    <div className="msg-motion-page" style={{
       position: 'relative', background: C.bg, color: C.text, fontFamily: fn,
       display: 'flex', flexDirection: 'column', height: '100dvh', width: '100%', maxWidth: 430,
       margin: '0 auto', alignItems: 'center', justifyContent: 'center',
