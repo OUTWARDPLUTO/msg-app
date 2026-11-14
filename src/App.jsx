@@ -182,7 +182,6 @@ export default function MSG() {
         body { min-height: -webkit-fill-available; overscroll-behavior: none; }
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
         .msg-scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
-        .msg-bottom-nav { padding-bottom: env(safe-area-inset-bottom, 0px) !important; }
         @supports (height: 100dvh) { .msg-root { height: 100dvh !important; } }
         @supports not (height: 100dvh) { .msg-root { height: 100vh !important; height: -webkit-fill-available !important; } }
         /* Theme color transitions are handled by CSS custom properties (--msg-bg etc.) and View Transition API */
@@ -713,7 +712,7 @@ export default function MSG() {
   // ─────────────────────────────────────────────────────────────────────────
 
   const fullPageLoader = (
-    <div style={{ background: C.bg, height: '100dvh', maxWidth: 430, margin: '0 auto', padding: 'env(safe-area-inset-top) 20px 20px', display: 'flex', flexDirection: 'column', gap: 24, justifyContent: 'center', alignItems: 'center' }}>
+    <div style={{ background: C.bg, height: '100dvh', width: '100%', maxWidth: 430, margin: '0 auto', padding: 'env(safe-area-inset-top) 20px 20px', display: 'flex', flexDirection: 'column', gap: 24, justifyContent: 'center', alignItems: 'center' }}>
       <div className="msg-shimmer" style={{ width: 68, height: 68, borderRadius: '50%', background: C.s2, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
         <ZapIcon size={32} color={C.accent} fill />
       </div>
@@ -739,7 +738,7 @@ export default function MSG() {
   // 3. Connection / resolution error state
   if (authStatus === 'resolution_error') {
     return (
-      <div style={{ background: C.bg, height: '100dvh', maxWidth: 430, margin: '0 auto', padding: '32px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', fontFamily: fn }}>
+      <div style={{ background: C.bg, height: '100dvh', width: '100%', maxWidth: 430, margin: '0 auto', padding: '32px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', fontFamily: fn }}>
         <div style={{ marginBottom: 16 }}><AnimatedSignal size={56} color={C.accent} /></div>
         <div style={{ fontSize: 20, fontWeight: 800, color: C.text, marginBottom: 8 }}>Connection Problem</div>
         <div style={{ fontSize: 13, color: C.sub, marginBottom: 20, lineHeight: 1.6, maxWidth: 320 }}>
@@ -785,7 +784,7 @@ export default function MSG() {
   // 4. Missing profile recovery state (explicit choice to prevent duplicate accounts)
   if (authStatus === 'profile_missing') {
     return (
-      <div style={{ background: C.bg, height: '100dvh', maxWidth: 430, margin: '0 auto', padding: '32px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', fontFamily: fn }}>
+      <div style={{ background: C.bg, height: '100dvh', width: '100%', maxWidth: 430, margin: '0 auto', padding: '32px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', fontFamily: fn }}>
         <div style={{ marginBottom: 16 }}><AnimatedSearch size={52} color={C.accent} /></div>
         <div style={{ fontSize: 20, fontWeight: 800, color: C.text, marginBottom: 8 }}>Profile Recovery</div>
         <div style={{ fontSize: 13, color: C.sub, marginBottom: 24, lineHeight: 1.6, maxWidth: 320 }}>

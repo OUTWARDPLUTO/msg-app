@@ -139,7 +139,7 @@ export default function MemberApp({
   }
 
   return (
-    <div className="msg-root" style={{ position: 'relative', background: C.bg, color: C.text, fontFamily: "'Plus Jakarta Sans',sans-serif", display: 'flex', flexDirection: 'column', height: '100dvh', maxWidth: 430, margin: '0 auto', overflow: 'hidden', colorScheme: darkMode ? 'dark' : 'light' }}>
+    <div className="msg-root" style={{ position: 'relative', background: C.bg, color: C.text, fontFamily: "'Plus Jakarta Sans',sans-serif", display: 'flex', flexDirection: 'column', height: '100dvh', width: '100%', maxWidth: 430, margin: '0 auto', overflow: 'hidden', colorScheme: darkMode ? 'dark' : 'light' }}>
       <AmbientBackground />
       {showTutorial && <TutorialOverlay onDone={() => { setShowTutorial(false); localStorage.setItem('msg_tutorial_done', '1'); }} />}
       {/* Status bar background — fills the notch/status bar area on edge-to-edge devices */}

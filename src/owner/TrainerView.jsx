@@ -242,7 +242,7 @@ export default function TrainerView({ gymId, user, onLogout }) {
     <div style={{
       background: C.bg, color: C.text, fontFamily: fn,
       display: 'flex', flexDirection: 'column', height: '100dvh',
-      maxWidth: 430, margin: '0 auto', overflow: 'hidden', position: 'relative',
+      width: '100%', maxWidth: 430, margin: '0 auto', overflow: 'hidden', position: 'relative',
     }}>
       {/* Offline Banner */}
       {!isOnline && (
@@ -546,7 +546,7 @@ export default function TrainerView({ gymId, user, onLogout }) {
       {/* Bottom Navigation */}
       <div style={{
         display: 'flex', borderTop: `1px solid ${C.border}`, background: C.s1,
-        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 6px)', flexShrink: 0,
+        paddingBottom: 'max(14px, calc(env(safe-area-inset-bottom, 0px) + 8px))', flexShrink: 0,
       }}>
         <button
           onClick={() => setTab('dashboard')}

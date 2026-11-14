@@ -146,9 +146,11 @@ export function BottomNavAnimated({ tab, setTab, darkMode }) {
   return (
     <div className="msg-bottom-nav" style={{
       position: 'fixed',
-      bottom: 'max(16px, env(safe-area-inset-bottom, 16px))',
+      bottom: 'max(14px, calc(env(safe-area-inset-bottom, 0px) + 8px))',
       left: 16,
       right: 16,
+      maxWidth: 398,
+      margin: '0 auto',
       zIndex: 100,
       borderRadius: 24,
       background: isDark ? 'rgba(20, 20, 20, 0.8)' : 'rgba(255, 255, 255, 0.8)',

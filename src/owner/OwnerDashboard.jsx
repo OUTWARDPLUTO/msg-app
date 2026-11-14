@@ -383,7 +383,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
     <div className="msg-root" style={{
       background: C.bg, color: C.text, fontFamily: fn,
       display: 'flex', flexDirection: 'column', height: '100dvh',
-      maxWidth: 430, margin: '0 auto', overflow: 'hidden', position: 'relative',
+      width: '100%', maxWidth: 430, margin: '0 auto', overflow: 'hidden', position: 'relative',
     }}>
       <AmbientBackground />
 
@@ -399,7 +399,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
       )}
 
       {/* Header */}
-      <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 16px) 20px 0', flexShrink: 0 }}>
+      <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 12px) 20px 0', flexShrink: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           {moreScreen ? (
             <div style={{ width: 24 }} /> // Spacer to keep title centered
@@ -515,7 +515,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
         background: isDark ? 'rgba(12,12,12,0.92)' : 'rgba(255,255,255,0.92)',
         backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
         borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'}`,
-        display: 'flex', padding: '8px 4px calc(env(safe-area-inset-bottom, 16px) + 4px)',
+        display: 'flex', padding: '8px 4px max(14px, calc(env(safe-area-inset-bottom, 0px) + 8px))',
         zIndex: 100,
       }}>
         {NAV.map(n => {

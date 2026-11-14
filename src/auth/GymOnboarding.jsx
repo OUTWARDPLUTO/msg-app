@@ -463,7 +463,8 @@ export default function GymOnboarding({ user, onGymJoined, darkMode, onBackToLog
   const wrap = (children) => (
     <div style={{
       background: C.bg, color: C.text, fontFamily: fn,
-      height: '100dvh', maxWidth: 430, margin: '0 auto', padding: '40px 24px',
+      height: '100dvh', width: '100%', maxWidth: 430, margin: '0 auto',
+      padding: 'max(32px, calc(env(safe-area-inset-top, 0px) + 20px)) 24px max(24px, calc(env(safe-area-inset-bottom, 0px) + 16px))',
       boxSizing: 'border-box', overflowY: 'auto', display: 'flex', flexDirection: 'column',
     }}>
       {logoBlock}

@@ -30,6 +30,7 @@
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html, body, #root {
         height: 100%;
+        width: 100%;
         background-color: #09090C;
         overflow: hidden;
         -webkit-tap-highlight-color: transparent;
@@ -38,11 +39,6 @@
       }
       /* Prevent text selection on mobile */
       body { user-select: none; }
-      /* Safe area insets for notched phones */
-      #root {
-        padding-top: env(safe-area-inset-top);
-        padding-bottom: env(safe-area-inset-bottom);
-      }
     </style>
 
     <title>MSG — My Smart Gains</title>

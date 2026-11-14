@@ -177,9 +177,10 @@ export default function LoginScreen({ onLogin, darkMode }) {
   return (
     <div style={{
       position: 'relative', background: C.bg, color: C.text, fontFamily: fn,
-      display: 'flex', flexDirection: 'column', height: '100dvh', maxWidth: 430,
+      display: 'flex', flexDirection: 'column', height: '100dvh', width: '100%', maxWidth: 430,
       margin: '0 auto', alignItems: 'center', justifyContent: 'center',
-      padding: '0 24px', boxSizing: 'border-box', overflowY: 'auto',
+      padding: 'max(24px, env(safe-area-inset-top, 24px)) 24px max(24px, env(safe-area-inset-bottom, 24px))',
+      boxSizing: 'border-box', overflowY: 'auto',
     }}>
       {/* Decorative ambient glassmorphic background glow blobs */}
       <div style={{ position: 'absolute', top: '10%', left: '-15%', width: 280, height: 280, borderRadius: '50%', background: 'radial-gradient(circle, rgba(217,154,43,0.15) 0%, transparent 70%)', filter: 'blur(40px)', pointerEvents: 'none', zIndex: 0 }} />
