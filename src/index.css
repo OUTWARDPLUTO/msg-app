@@ -108,93 +108,103 @@
 /* ─── Apple-Grade Fluid Motion System (iOS & Android) ─── */
 :root {
   --apple-spring: cubic-bezier(0.32, 0.72, 0, 1);
-  --apple-spring-bouncy: cubic-bezier(0.34, 1.45, 0.64, 1);
+  --apple-spring-bouncy: cubic-bezier(0.34, 1.56, 0.64, 1);
   --apple-press: cubic-bezier(0.2, 0.8, 0.2, 1);
   --apple-decelerate: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Universal Tactile Press / Squish Feedback for all interactive elements */
+/* Resting state: bouncy spring recovery */
 button:not(:disabled),
 [role="button"],
 .msg-press,
 .msg-card-scale,
 .msg-interactive {
-  transition: transform 0.16s var(--apple-press), opacity 0.16s ease, filter 0.16s ease, box-shadow 0.2s ease !important;
+  transition: transform 0.28s var(--apple-spring-bouncy), opacity 0.18s ease, filter 0.18s ease, box-shadow 0.22s ease !important;
   -webkit-tap-highlight-color: transparent !important;
   will-change: transform;
 }
 
+/* Touch-down / Active state: INSTANT tactile compression (scale 0.94) */
 button:not(:disabled):active,
 [role="button"]:active,
 .msg-press:active,
 .msg-card-scale:active,
 .msg-interactive:active {
-  transform: scale(0.965) !important;
-  opacity: 0.86 !important;
+  transform: scale(0.94) !important;
+  opacity: 0.82 !important;
+  transition: transform 0.04s ease-out, opacity 0.04s ease-out !important;
 }
 
 /* Icon-only circular buttons get tighter, sharper spring press */
 button:has(svg:only-child):active {
-  transform: scale(0.92) !important;
+  transform: scale(0.88) !important;
+  transition: transform 0.04s ease-out !important;
 }
 
-/* Smooth Tab Pane Cross-Fade & Rise (Apple iOS Tab Switch) */
+/* Visible Apple Tab Switching (Scale + 18px Glide + Blur Clear) */
 @keyframes msgAppleTabEnter {
   0% {
     opacity: 0;
-    transform: translateY(8px) scale(0.995);
+    transform: translateY(18px) scale(0.975);
+    filter: blur(2px);
+  }
+  60% {
+    opacity: 0.9;
   }
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
+    filter: blur(0px);
   }
 }
 .msg-apple-tab-pane {
-  animation: msgAppleTabEnter 0.28s var(--apple-spring) both;
-  will-change: transform, opacity;
+  animation: msgAppleTabEnter 0.35s var(--apple-decelerate) both;
+  will-change: transform, opacity, filter;
   height: 100%;
 }
 
 /* Fluid Page Enters */
 .msg-motion-page {
-  animation: msgApplePageEnter 0.3s var(--apple-spring) both !important;
-  will-change: transform, opacity;
+  animation: msgApplePageEnter 0.38s var(--apple-decelerate) both !important;
+  will-change: transform, opacity, filter;
 }
 @keyframes msgApplePageEnter {
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(20px) scale(0.98); filter: blur(3px); }
+  to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0px); }
 }
 
 /* Fluid Card Enters */
 .msg-motion-card,
 .msg-card-enter {
-  animation: msgAppleCardEnter 0.32s var(--apple-spring) both !important;
+  animation: msgAppleCardEnter 0.36s var(--apple-spring) both !important;
   will-change: transform, opacity;
 }
 @keyframes msgAppleCardEnter {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* Bottom Sheets & Slide-up Modals (Native iOS Spring Physics) */
 .msg-motion-sheet,
 .msg-apple-sheet {
-  animation: msgAppleSheetUp 0.38s var(--apple-spring) both !important;
-  will-change: transform;
+  animation: msgAppleSheetUp 0.42s cubic-bezier(0.2, 0.9, 0.2, 1) both !important;
+  will-change: transform, opacity;
 }
 @keyframes msgAppleSheetUp {
-  from { opacity: 0; transform: translateY(100%); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(100%) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* Apple Dialog / Modal Zoom (Apple Pay style bounce) */
 .msg-apple-dialog {
-  animation: msgAppleDialogEnter 0.32s var(--apple-spring-bouncy) both;
+  animation: msgAppleDialogEnter 0.36s var(--apple-spring-bouncy) both;
   will-change: transform, opacity;
 }
 @keyframes msgAppleDialogEnter {
-  from { opacity: 0; transform: scale(0.88) translateY(14px); }
-  to   { opacity: 1; transform: scale(1) translateY(0); }
+  0%   { opacity: 0; transform: scale(0.84) translateY(20px); }
+  65%  { transform: scale(1.03) translateY(-2px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 /* Backdrop Blur Fade */
@@ -206,7 +216,52 @@ button:has(svg:only-child):active {
   to   { opacity: 1; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
 }
 
-/* Stagger List Animations (Apple Health & Fitness style) */
+/* Apple Navigation Active Icon Pop */
+@keyframes msgAppleNavPop {
+  0%   { transform: scale(0.85); }
+  40%  { transform: scale(1.24) translateY(-3px); }
+  75%  { transform: scale(0.96) translateY(0); }
+  100% { transform: scale(1.15) translateY(-2px); }
+}
+.msg-nav-active-pop {
+  animation: msgAppleNavPop 0.38s var(--apple-spring-bouncy) both;
+}
+
+@keyframes msgNavIndicatorIn {
+  0%   { transform: scaleX(0.2); opacity: 0; }
+  100% { transform: scaleX(1); opacity: 1; }
+}
+.msg-nav-indicator-glide {
+  animation: msgNavIndicatorIn 0.28s var(--apple-spring-bouncy) both;
+}
+
+/* Cascade Staggering (Cards cascade in like Apple Fitness/Health) */
+.msg-cascade > * {
+  animation: msgAppleCascade 0.45s var(--apple-decelerate) both;
+  will-change: transform, opacity;
+}
+@keyframes msgAppleCascade {
+  0% {
+    opacity: 0;
+    transform: translateY(22px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.msg-cascade > *:nth-child(1) { animation-delay: 0.04s; }
+.msg-cascade > *:nth-child(2) { animation-delay: 0.08s; }
+.msg-cascade > *:nth-child(3) { animation-delay: 0.12s; }
+.msg-cascade > *:nth-child(4) { animation-delay: 0.16s; }
+.msg-cascade > *:nth-child(5) { animation-delay: 0.20s; }
+.msg-cascade > *:nth-child(6) { animation-delay: 0.24s; }
+.msg-cascade > *:nth-child(7) { animation-delay: 0.28s; }
+.msg-cascade > *:nth-child(8) { animation-delay: 0.32s; }
+.msg-cascade > *:nth-child(9) { animation-delay: 0.36s; }
+.msg-cascade > *:nth-child(10) { animation-delay: 0.40s; }
+
+/* Stagger List Animations (Legacy fallback) */
 .msg-stagger > *:nth-child(1) { animation-delay: 0.03s; }
 .msg-stagger > *:nth-child(2) { animation-delay: 0.06s; }
 .msg-stagger > *:nth-child(3) { animation-delay: 0.09s; }
@@ -216,12 +271,35 @@ button:has(svg:only-child):active {
 .msg-stagger > *:nth-child(7) { animation-delay: 0.21s; }
 .msg-stagger > *:nth-child(8) { animation-delay: 0.24s; }
 
+/* Hero Breathing Glow & Premium Shimmer */
+@keyframes appleHeroGlow {
+  0%, 100% {
+    box-shadow: 0 4px 20px rgba(229, 57, 53, 0.12), 0 0 0 0 rgba(229, 57, 53, 0);
+  }
+  50% {
+    box-shadow: 0 6px 28px rgba(229, 57, 53, 0.35), 0 0 0 3px rgba(229, 57, 53, 0.22);
+  }
+}
+.msg-hero-pulse {
+  animation: appleHeroGlow 2.8s infinite ease-in-out;
+}
+
+@keyframes appleShimmer {
+  0% { background-position: -150% 0; }
+  100% { background-position: 250% 0; }
+}
+.msg-premium-shimmer {
+  background: linear-gradient(90deg, #d99a2b 0%, #ffc048 35%, #ffffff 55%, #ffc048 70%, #d99a2b 100%) !important;
+  background-size: 200% 100% !important;
+  animation: appleShimmer 3.2s infinite linear !important;
+}
+
 /* Smooth Apple Toggle Switches */
 .msg-apple-toggle {
   transition: background-color 0.28s var(--apple-spring), border-color 0.28s var(--apple-spring);
 }
 .msg-apple-toggle-knob {
-  transition: transform 0.28s var(--apple-spring), box-shadow 0.28s ease;
+  transition: transform 0.28s var(--apple-spring-bouncy), box-shadow 0.28s ease;
 }
 
 /* Smooth Inputs & Focus Rings */

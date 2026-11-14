@@ -248,6 +248,7 @@ export default function AttendanceButton({ uid, gymId, onCheckIn }) {
       <button
         onClick={handleCheckIn}
         disabled={checked || loading}
+        className={checked ? "msg-card-scale" : "msg-hero-pulse msg-card-scale"}
         style={{
           width: '100%', display: 'flex', alignItems: 'center', gap: 14,
           padding: '14px 18px',
@@ -258,8 +259,6 @@ export default function AttendanceButton({ uid, gymId, onCheckIn }) {
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
           borderRadius: 16, cursor: checked ? 'default' : 'pointer',
-          transition: 'all 0.3s ease',
-          transform: animating ? 'scale(0.97)' : 'scale(1)',
         }}
       >
         <div style={{

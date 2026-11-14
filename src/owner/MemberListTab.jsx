@@ -220,17 +220,19 @@ export default function MemberListTab({ gymId, gymCode = '', setBackHandler, onV
           <div style={{ color: C.muted, fontSize: 14, textAlign: 'center', padding: '32px 0' }}>
             No members found.
           </div>
-        ) : filtered.map(m => {
-          // Use the actual subscription status to match MemberDetailSheet
-          const statusText = (m.status || 'active') === 'inactive' ? 'Inactive' : 'Active';
-          const statusColor = statusText === 'Active' ? C.accent : C.sub;
-          
-          return (
-            <button key={m.id} onClick={() => onViewMemberProfile ? onViewMemberProfile(m) : setSelected(m)} style={{
-              width: '100%', display: 'flex', alignItems: 'center', gap: 16,
-              padding: '12px 0', background: 'none', border: 'none', borderBottom: `1px solid ${C.border}`,
-              cursor: 'pointer', textAlign: 'left',
-            }}>
+        ) : (
+          <div className="msg-cascade">
+            {filtered.map(m => {
+              // Use the actual subscription status to match MemberDetailSheet
+              const statusText = (m.status || 'active') === 'inactive' ? 'Inactive' : 'Active';
+              const statusColor = statusText === 'Active' ? C.accent : C.sub;
+              
+              return (
+                <button key={m.id} onClick={() => onViewMemberProfile ? onViewMemberProfile(m) : setSelected(m)} className="msg-press" style={{
+                  width: '100%', display: 'flex', alignItems: 'center', gap: 16,
+                  padding: '12px 0', background: 'none', border: 'none', borderBottom: `1px solid ${C.border}`,
+                  cursor: 'pointer', textAlign: 'left',
+                }}>
               {/* Avatar */}
               <div style={{
                 width: 48, height: 48, borderRadius: '50%', flexShrink: 0,
@@ -262,8 +264,10 @@ export default function MemberListTab({ gymId, gymCode = '', setBackHandler, onV
           );
         })}
           </div>
-        </>
-      )}
+        )}
+      </div>
+    </>
+  )}
 
       {showAddModal && (
         <ModalShell title="Add Gym Member" onClose={() => setShowAddModal(false)}>

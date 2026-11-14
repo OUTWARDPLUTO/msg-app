@@ -415,8 +415,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
               {/* Right: Premium chip + Bell */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 {!isPremium && (
-                  <button onClick={() => setShowPremiumPopup(true)} style={{
-                    background: `linear-gradient(135deg, ${C.accent}, #ff6b35)`,
+                  <button onClick={() => setShowPremiumPopup(true)} className="msg-premium-shimmer msg-press" style={{
                     border: 'none', borderRadius: 20, padding: '5px 10px',
                     color: '#111', fontFamily: fb, fontWeight: 800, fontSize: 10,
                     cursor: 'pointer', letterSpacing: '0.04em',
@@ -425,7 +424,7 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><StarBadge size={12} color="#111" />PREMIUM</span>
                   </button>
                 )}
-                <button onClick={() => handleMoreNavigate('alerts')} style={{ background: 'none', border: 'none', color: C.text, padding: 0, position: 'relative', cursor: 'pointer' }}>
+                <button onClick={() => handleMoreNavigate('alerts')} className="msg-press" style={{ background: 'none', border: 'none', color: C.text, padding: 0, position: 'relative', cursor: 'pointer' }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                   <div style={{ position: 'absolute', top: 0, right: 2, width: 8, height: 8, background: C.accent, borderRadius: '50%', border: `2px solid ${C.bg}` }} />
                 </button>
@@ -521,21 +520,21 @@ export default function OwnerDashboard({ gymId, gymName, user, onLogout, darkMod
         {NAV.map(n => {
           const active = tab === n.key;
           return (
-            <button key={n.key} onClick={() => handleTabChange(n.key)} style={{
+            <button key={n.key} onClick={() => handleTabChange(n.key)} className="msg-press" style={{
               flex: 1, padding: '8px 4px 6px', background: 'none', border: 'none',
               cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
               position: 'relative',
             }}>
               {/* Active pill background */}
               {active && (
-                <div style={{
+                <div className="msg-nav-indicator-glide" style={{
                   position: 'absolute', top: 4, left: '50%', transform: 'translateX(-50%)',
                   width: 48, height: 32, borderRadius: 12,
                   background: `${C.accent}18`,
                   transition: 'all 0.3s cubic-bezier(.22,.68,0,1.2)',
                 }} />
               )}
-              <div style={{
+              <div className={active ? 'msg-nav-active-pop' : ''} style={{
                 position: 'relative',
                 transform: active ? 'scale(1.1) translateY(-1px)' : 'scale(1) translateY(0)',
                 transition: 'transform 0.28s cubic-bezier(.22,.68,0,1.4)',
@@ -744,12 +743,12 @@ function DashboardTab({
   return (
     <div style={{ paddingBottom: 110 }}>
       {/* 2×2 KPI Grid — all cards are clickable with direct drilldown */}
-      <div style={{ padding: '0 20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
+      <div className="msg-cascade" style={{ padding: '0 20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
         {/* Check-ins → Today's Attendance */}
         <button
           type="button"
           onClick={() => navigateToAttendance ? navigateToAttendance(todayKey) : setTab('attendance')}
-          className={`msg-card-scale msg-fadein-up msg-stagger-1`}
+          className="msg-card-scale"
           style={{
             borderRadius: 20, padding: '16px', textAlign: 'left', cursor: 'pointer',
             border: `1px solid ${isDark ? 'rgba(229,57,53,0.2)' : 'rgba(229,57,53,0.15)'}`,
@@ -773,7 +772,7 @@ function DashboardTab({
         <button
           type="button"
           onClick={() => navigateToRevenue ? navigateToRevenue() : (setMembersSubTab('stats'), setTab('members'))}
-          className={`msg-card-scale msg-fadein-up msg-stagger-2`}
+          className="msg-card-scale"
           style={{
             borderRadius: 20, padding: '16px', textAlign: 'left', cursor: 'pointer',
             border: `1px solid ${isDark ? 'rgba(51,136,255,0.2)' : 'rgba(46,127,223,0.15)'}`,
@@ -797,7 +796,7 @@ function DashboardTab({
         <button
           type="button"
           onClick={() => navigateToMemberships ? navigateToMemberships('Expiring Soon') : onNavigate('memberships')}
-          className={`msg-card-scale msg-fadein-up msg-stagger-3`}
+          className="msg-card-scale"
           style={{
             borderRadius: 20, padding: '16px', textAlign: 'left', cursor: 'pointer',
             border: `1px solid ${isDark ? 'rgba(255,92,51,0.2)' : 'rgba(229,90,60,0.15)'}`,
@@ -821,7 +820,7 @@ function DashboardTab({
         <button
           type="button"
           onClick={() => navigateToMembers ? navigateToMembers('At-Risk', 'alerts') : (setMembersSubTab('alerts'), setTab('members'))}
-          className={`msg-card-scale msg-fadein-up msg-stagger-4`}
+          className="msg-card-scale"
           style={{
             borderRadius: 20, padding: '16px', textAlign: 'left', cursor: 'pointer',
             border: `1px solid ${(stats?.atRisk || 0) > 0 ? (isDark ? 'rgba(229,57,53,0.3)' : 'rgba(229,57,53,0.2)') : (isDark ? 'rgba(34,197,94,0.2)' : 'rgba(45,181,98,0.15)')}`,
@@ -862,7 +861,7 @@ function DashboardTab({
               View Roster →
             </button>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+          <div className="msg-cascade" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
             {[
               { label: 'Total', count: stats?.total ?? 0, filter: 'All', color: C.text, sub: 'All registered' },
               { label: 'Active', count: stats?.active ?? 0, filter: 'Active', color: C.green, sub: 'Score ≥ 60' },

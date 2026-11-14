@@ -166,11 +166,11 @@ export function BottomNavAnimated({ tab, setTab, darkMode }) {
       {tabs.map(id => {
         const active = tab === id;
         return (
-          <button key={id} id={`tut-tab-${id}`} onClick={() => setTab(id)} style={{
+          <button key={id} id={`tut-tab-${id}`} onClick={() => setTab(id)} className="msg-press" style={{
             flex: 1, background: 'none', border: 'none', cursor: 'pointer',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '10px 4px 8px', position: 'relative'
           }}>
-            <div style={{
+            <div className={active ? 'msg-nav-active-pop' : ''} style={{
               transform: active ? 'scale(1.15) translateY(-2px)' : 'scale(1) translateY(0)',
               transition: 'transform 0.25s cubic-bezier(.22,.68,0,1.4)',
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
@@ -186,7 +186,7 @@ export function BottomNavAnimated({ tab, setTab, darkMode }) {
               {id}
             </span>
             {active && (
-              <div className="msg-anim-scalein" style={{ position: 'absolute', bottom: -1, width: 24, height: 3, borderRadius: '3px 3px 0 0', background: C.accent, boxShadow: C.accentShadow }} />
+              <div className="msg-nav-indicator-glide" style={{ position: 'absolute', bottom: -1, width: 28, height: 3.5, borderRadius: '4px 4px 0 0', background: C.accent, boxShadow: C.accentShadow }} />
             )}
           </button>
         );

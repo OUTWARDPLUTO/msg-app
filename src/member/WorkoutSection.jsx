@@ -718,7 +718,7 @@ export default function WorkoutSection({ weekPlan, setWeekPlan, user, gymId, set
 
   // ── Main render ──
   return (
-    <div>
+    <div className="msg-cascade">
       <Hd t="Workout" s="Week Plan · Library · Execute" />
       <div style={{ padding: '0 16px', display: 'flex', gap: 6, marginBottom: 16 }}>
         {[
@@ -727,7 +727,7 @@ export default function WorkoutSection({ weekPlan, setWeekPlan, user, gymId, set
           ['library', 'Exercise DB'],
           ['explore', 'Muscle Map']
         ].map(([k, l]) => (
-          <button key={k} onClick={() => setView(k)} style={{
+          <button key={k} onClick={() => setView(k)} className="msg-card-scale" style={{
             flex: 1, padding: '10px 6px', background: view === k ? C.accent : C.s2,
             border: `1px solid ${view === k ? C.accent : C.border}`, borderRadius: 10,
             color: view === k ? '#000' : C.sub, fontFamily: fn, fontWeight: 700, fontSize: 10.5,

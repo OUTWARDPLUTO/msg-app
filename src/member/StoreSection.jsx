@@ -99,13 +99,13 @@ export function AttendanceHeatMap({ uid, gymId }) {
         {/* 10 columns × 3 rows static grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: 6, marginBottom: 12 }}>
           {daysList.map((day, i) => (
-            <div key={i} title={`${day.key}${day.hasCheckIn ? ' (Checked In)' : ' (Absent)'}`} style={{
+            <div key={i} className="msg-card-scale" title={`${day.key}${day.hasCheckIn ? ' (Checked In)' : ' (Absent)'}`} style={{
               aspectRatio: '1', borderRadius: 6,
               background: cellColor(day),
               boxShadow: day.isToday && day.hasCheckIn ? `0 0 6px ${C.accent}88` : 'none',
               border: day.isToday ? `1.5px solid ${C.accent}` : `1px solid ${C.border}`,
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              cursor: 'default', transition: 'background 0.2s', position: 'relative'
+              cursor: 'pointer', position: 'relative'
             }}>
               <span style={{
                 fontSize: 8, fontFamily: fb, fontWeight: 800,

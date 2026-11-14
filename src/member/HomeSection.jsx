@@ -82,9 +82,9 @@ export default function HomeSection({ mealLog, progressLogs, dietGoal, onLogClic
       </div>
 
       {/* Smart Insights */}
-      <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 7 }}>
+      <div className="msg-cascade" style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 7 }}>
         {insights.map((ins, i) => (
-          <div key={i} style={{ display: 'flex', gap: 10, padding: '10px 14px', background: ins.c + '0D', border: `1px solid ${ins.c}28`, borderRadius: 10, alignItems: 'flex-start' }}>
+          <div key={i} className="msg-card-scale" style={{ display: 'flex', gap: 10, padding: '10px 14px', background: ins.c + '0D', border: `1px solid ${ins.c}28`, borderRadius: 10, alignItems: 'flex-start' }}>
             <span style={{ fontSize: 13, lineHeight: '20px' }}>{ins.icon}</span>
             <span style={{ fontSize: 12.5, color: ins.c, lineHeight: 1.45, fontWeight: 500 }}>{ins.text}</span>
           </div>
@@ -116,7 +116,7 @@ export default function HomeSection({ mealLog, progressLogs, dietGoal, onLogClic
             </div>
             <div style={{ marginTop: 4, display: 'flex', justifyContent: 'center' }}>{streak > 0 ? <AnimatedFlame size={20} /> : <SleepIcon size={18} color={C.muted} />}</div>
           </Card>
-          <button onClick={onLogClick} style={{
+          <button onClick={onLogClick} className="msg-card-scale" style={{
             background: C.s2, border: `1px solid ${C.border}`, borderRadius: 14, padding: '10px 6px',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, cursor: 'pointer',
           }}>
@@ -390,6 +390,7 @@ export default function HomeSection({ mealLog, progressLogs, dietGoal, onLogClic
         <div
           id="tut-achievements"
           onClick={onAchievementsClick}
+          className="msg-card-scale"
           style={{
             background: `linear-gradient(135deg,${C.s2},${C.s3})`,
             border: `1px solid ${C.accent}30`,
@@ -402,10 +403,7 @@ export default function HomeSection({ mealLog, progressLogs, dietGoal, onLogClic
             position: 'relative',
             overflow: 'hidden',
             boxShadow: `0 4px 18px ${C.accent}18`,
-            transition: 'transform 0.18s, box-shadow 0.18s',
           }}
-          onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
-          onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
         >
           {/* Glow blob */}
           <div style={{ position: 'absolute', right: -20, top: -20, width: 80, height: 80, background: C.accent + '18', borderRadius: '50%', filter: 'blur(18px)', pointerEvents: 'none' }} />

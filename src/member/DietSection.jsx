@@ -809,7 +809,7 @@ export default function DietSection({ dietGoal, setDietGoal, mealLog, setMealLog
   const catMeta = NMETA.filter(n => n.cat === nutriTab);
 
   return (
-    <div>
+    <div className="msg-cascade">
       <Hd t="DIET" s={`${dietGoal.goal} · ${dietGoal.calories} kcal target`} />
 
       {/* Goal tags + notepad toggle */}

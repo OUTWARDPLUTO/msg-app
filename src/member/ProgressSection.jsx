@@ -59,7 +59,7 @@ export default function ProgressSection({ logs, onLogClick, onDelete }) {
           <div style={{ fontFamily: fn, fontSize: 34, letterSpacing: '0.05em', color: C.text, lineHeight: 1 }}>PROGRESS</div>
           <div style={{ color: C.sub, fontSize: 13, marginTop: 4 }}>Track your transformation</div>
         </div>
-        <button onClick={onLogClick} style={{
+        <button onClick={onLogClick} className="msg-press" style={{
           background: C.accent, border: 'none', borderRadius: 12, padding: '10px 16px',
           color: '#000', fontFamily: fb, fontWeight: 700, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
         }}>+ Log Entry</button>
@@ -67,7 +67,7 @@ export default function ProgressSection({ logs, onLogClick, onDelete }) {
 
       {/* Stat grid */}
       {last && (
-        <div style={{ padding: '0 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+        <div className="msg-cascade" style={{ padding: '0 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
           {[
             { label: 'Body Weight', val: `${last.weight} kg`, diff: totalDiff, c: C.accent },
             { label: 'Body Fat', val: last.bodyFat > 0 ? `${last.bodyFat}%` : '—', diff: null, c: C.orange },
